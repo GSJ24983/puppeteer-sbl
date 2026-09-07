@@ -1,0 +1,150 @@
+{
+  "deckTitle": "The Puppeteer",
+  "scenarios": [
+    {
+      "id": "signoff",
+      "title": "The Requirement That Wasn't",
+      "kicker": "Business analysis scenario",
+      "tag": "Business analysis",
+      "meta": "6 min - 3 decisions - 1 graded",
+      "thumb": "office",
+      "blurb": "Sign-off is on Friday, the spec says 'notify the customer', and nobody has asked what happens when the customer has no phone number.",
+      "highlight": false,
+      "steps": ["Briefing", "Your first move", "The gap", "Write it down", "Debrief"],
+      "start": "brief",
+      "nodes": {
+        "brief": {
+          "type": "narrative",
+          "step": 0,
+          "scene": "office",
+          "eyebrow": "Briefing",
+          "title": "Two days to sign-off",
+          "text": "You are the BA on a refunds release. The spec line reads: 'When a refund is approved, notify the customer.' Ops has signed it. Tech has estimated it. Everyone is comfortable. You are not, and you cannot yet say why.",
+          "media": [],
+          "to": "n1"
+        },
+        "n1": {
+          "type": "choice",
+          "step": 1,
+          "scene": "office",
+          "prompt": "Sign-off is Friday. What do you do with the discomfort?",
+          "choices": [
+            {
+              "k": "A",
+              "label": "Let it go - it is one line and everyone has signed",
+              "sub": "Protect the date",
+              "tag": "Signed as-is",
+              "chip": "Signed",
+              "consequence": {
+                "scene": "storm",
+                "title": "Week three of production",
+                "text": "Refunds approve fine. Then a customer with no mobile number on file gets nothing, complains to the regulator, and the ticket lands back on your desk with a severity tag on it.",
+                "lesson": "A requirement everyone agrees on is not the same as a requirement everyone read the same way. Consensus hides ambiguity, it does not resolve it."
+              },
+              "to": "n2"
+            },
+            {
+              "k": "B",
+              "label": "Ask ops for a concrete case: a refund last week and exactly what the customer received",
+              "sub": "Probe with a real example",
+              "tag": "Probed",
+              "chip": "Probed",
+              "consequence": {
+                "scene": "team",
+                "good": true,
+                "title": "The example does the work",
+                "text": "Ops pulls a real refund. Turns out 'notify' means SMS, and about one in nine customers has no mobile number. Nobody had decided what those customers get. It was never a disagreement - it was a blank.",
+                "lesson": "Concrete cases surface gaps that abstract review never will. Ask what happened last Tuesday, not whether the requirement is clear."
+              },
+              "to": "n2"
+            },
+            {
+              "k": "C",
+              "label": "Send the spec round again asking everyone to re-read carefully",
+              "sub": "Reconfirm in writing",
+              "tag": "Re-circulated",
+              "chip": "Re-read",
+              "consequence": {
+                "scene": "office",
+                "title": "Three replies, all 'looks fine'",
+                "text": "You get three thumbs-ups within the hour. Nobody read it again. The same line means SMS to ops, email to tech, and 'something automatic' to the sponsor, and the round trip cost you half a day.",
+                "lesson": "Re-reading the same words produces the same interpretation. Change the question, not the number of reviewers."
+              },
+              "to": "n2"
+            }
+          ]
+        },
+        "n2": {
+          "type": "multi",
+          "step": 2,
+          "scene": "matrix",
+          "prompt": "You have twenty minutes with ops. Which of these must be nailed down before Friday? Pick every one that matters.",
+          "options": [
+            { "label": "Which channel counts as a notification", "sub": "SMS, email, in-app, or any of them" },
+            { "label": "What happens when the chosen channel is unavailable for that customer" },
+            { "label": "The wording of the notification message" },
+            { "label": "Who owns the decision when the channel fails" },
+            { "label": "Which font the message template uses" }
+          ],
+          "correct": [0, 1, 3],
+          "successNote": "Channel definition, the failure case, and the decision owner. Wording can be drafted later; it does not change the build.",
+          "missNote": "Before Friday you still need: ",
+          "to": "n3"
+        },
+        "n3": {
+          "type": "evaluate",
+          "step": 3,
+          "scene": "data",
+          "prompt": "Rewrite the requirement line so a developer could not build it two different ways. Two or three sentences.",
+          "placeholder": "When a refund is approved...",
+          "criteria": [
+            {
+              "label": "Names the specific channel rather than 'notify'",
+              "keywords": ["sms", "email", "text message", "in-app", "push"],
+              "hint": "say which channel actually fires"
+            },
+            {
+              "label": "Handles the case where the channel is not available",
+              "keywords": ["no mobile", "missing", "unavailable", "fallback", "if the customer has no", "absent", "not on file"],
+              "hint": "the customer with no number on file"
+            },
+            {
+              "label": "States who or what decides the fallback",
+              "keywords": ["ops", "owner", "decides", "system", "default", "escalat", "responsible"],
+              "hint": "who owns the call when it fails"
+            }
+          ],
+          "pass": 3,
+          "passNote": "Channel, failure case, and owner. That line cannot be built two ways.",
+          "toPass": "good",
+          "toFail": "partial"
+        }
+      },
+      "endings": {
+        "good": {
+          "step": 4,
+          "scene": "launch",
+          "title": "The blank cell had nowhere to hide",
+          "moral": "A good requirement is not one everyone agrees with. It is one nobody can misread.",
+          "verdict": "You shipped on Friday, and the one-in-nine customer got a defined outcome instead of silence. The same line became the test case, which is why QA found nothing in week three.",
+          "revealed": [
+            ["The probe", "You asked for a real refund instead of asking whether the spec was clear."],
+            ["The gap", "You separated what mattered before Friday from what could wait."],
+            ["The write-up", "Channel, failure case and owner - all three in one line."]
+          ]
+        },
+        "partial": {
+          "step": 4,
+          "scene": "storm",
+          "title": "Better, but still readable two ways",
+          "moral": "Ambiguity does not announce itself. It shows up as a support ticket in week three.",
+          "verdict": "Your line is sharper than the original, but a developer reading it still has a decision left to make - and they will make it quietly, at 6pm, without you.",
+          "revealed": [
+            ["What held", "You found the gap before sign-off, which is most of the job."],
+            ["What slipped", "The written requirement left at least one thing to interpretation."]
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Puppeteer Studio</title>
+<style>
+:root{
+  --indigo:#201A3E;--deep:#15112B;--surface:#2B2456;--surf2:#352C68;--coral:#FF6B4A;
+  --teal:#16B5A4;--lav:#B9AEE8;--ink:#F3F0FF;--mute:#A79EC9;--line:#463C7F;--gold:#F2C14E;
+  --serif:'Fraunces','Iowan Old Style',Georgia,serif;
+  --sans:'Instrument Sans','Segoe UI',system-ui,-apple-system,Calibri,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--deep);color:var(--ink);font-family:var(--sans);display:flex;flex-direction:column}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.bar{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);background:var(--indigo);flex:none}
+.bar svg{width:26px;height:26px;flex:none}
+.bar h1{font-family:var(--serif);font-size:16px;margin:0;font-weight:600}
+.bar .sp{flex:1}
+.bar .st{font-size:12.5px;color:var(--mute);font-family:var(--mono)}
+.bar .st.ok{color:var(--teal)}
+.bar .st.bad{color:var(--coral)}
+.btn{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+  padding:7px 13px;font-size:13.5px;cursor:pointer}
+.btn:hover{border-color:var(--lav)}
+.btn.go{background:var(--coral);border-color:var(--coral);color:#25100A;font-weight:650}
+.btn.go:hover{background:#FF835F}
+.btn.tl{background:var(--teal);border-color:var(--teal);color:#04211E;font-weight:650}
+
+main{flex:1;display:grid;grid-template-columns:minmax(340px,44%) 1fr;min-height:0}
+.left{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
+.tabs{display:flex;gap:2px;padding:8px 10px 0;flex:none}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--mute);
+  padding:7px 12px;font-size:13.5px;cursor:pointer}
+.tab.on{color:var(--ink);border-bottom-color:var(--coral)}
+.pane{flex:1;min-height:0;display:none}
+.pane.on{display:flex;flex-direction:column}
+textarea{flex:1;width:100%;background:var(--deep);color:#DCD6F5;border:0;border-top:1px solid var(--line);
+  padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.6;resize:none}
+textarea:focus{outline:none}
+.doc{overflow:auto;padding:16px 20px 40px;border-top:1px solid var(--line);font-size:14px;line-height:1.6}
+.doc h2{font-family:var(--serif);font-size:17px;margin:20px 0 6px;font-weight:600}
+.doc h2:first-child{margin-top:0}
+.doc p{color:#DCD6F5;margin:0 0 10px;max-width:62ch}
+.doc code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:4px;color:var(--lav)}
+.doc pre{background:var(--indigo);border:1px solid var(--line);border-radius:9px;padding:12px 14px;
+  overflow:auto;font-family:var(--mono);font-size:11.5px;line-height:1.55;color:#CFC7F0}
+.doc ul{margin:0 0 12px;padding-left:19px;color:#DCD6F5}
+.doc li{margin-bottom:5px}
+.doc .k{color:var(--gold)}
+.right{min-height:0;display:flex;flex-direction:column;background:var(--indigo)}
+.phead{padding:9px 14px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mute);
+  display:flex;align-items:center;gap:10px;flex:none}
+.phead .seg{margin-left:auto;display:flex;gap:2px;background:var(--deep);border-radius:7px;padding:2px}
+.phead .seg button{background:none;border:0;color:var(--mute);font-size:12px;padding:4px 10px;border-radius:5px;cursor:pointer}
+.phead .seg button.on{background:var(--surface);color:var(--ink)}
+.frameWrap{flex:1;min-height:0;display:grid;place-items:center;overflow:auto;padding:14px}
+iframe{border:1px solid var(--line);border-radius:12px;background:var(--deep);width:100%;height:100%}
+iframe.mob{width:390px;max-width:100%;height:100%;max-height:780px}
+.err{margin:0;padding:11px 16px;background:rgba(255,107,74,.12);border-top:1px solid var(--coral);
+  color:#FFC5B5;font-family:var(--mono);font-size:12px;white-space:pre-wrap;flex:none}
+.err.hidden{display:none}
+@media (max-width:900px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.left{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <path d="M6 8h28" stroke="#FF6B4A" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M12 8v13M20 8v19M28 8v13" stroke="#463C7F" stroke-width="1.3"/>
+    <rect x="8.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 12 24.5)" fill="#16B5A4"/>
+    <rect x="16.5" y="27" width="7" height="7" rx="1.4" transform="rotate(45 20 30.5)" fill="#B9AEE8"/>
+    <rect x="24.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 28 24.5)" fill="#F2C14E"/>
+  </svg>
+  <h1>Puppeteer Studio</h1>
+  <span class="st" id="status">ready</span>
+  <span class="sp"></span>
+  <button class="btn" id="btnSkel">New skeleton</button>
+  <button class="btn" id="btnSample">Load sample</button>
+  <button class="btn go" id="btnRun">Preview</button>
+  <button class="btn tl" id="btnExport">Export standalone HTML</button>
+</header>
+
+<main>
+  <section class="left">
+    <div class="tabs">
+      <button class="tab on" data-p="edit">Scenario JSON</button>
+      <button class="tab" data-p="docs">Schema</button>
+    </div>
+    <div class="pane on" id="p-edit"><textarea id="src" spellcheck="false"></textarea></div>
+    <div class="pane" id="p-docs"><div class="doc" id="docs"></div></div>
+    <pre class="err hidden" id="err"></pre>
+  </section>
+  <section class="right">
+    <div class="phead">
+      <span>Live preview - this is exactly what exports</span>
+      <span class="seg"><button class="on" data-w="desk">Laptop</button><button data-w="mob">Mobile</button></span>
+    </div>
+    <div class="frameWrap"><iframe id="frame" title="Preview"></iframe></div>
+  </section>
+</main>
+
+<script type="text/plain" id="engine">__ENGINE_SRC__</script>
+<script type="text/plain" id="sample">__SAMPLE_JSON__</script>
+<script type="text/plain" id="docsrc">__DOCS__</script>
+
+<script>
+var srcEl=document.getElementById('src'),errEl=document.getElementById('err'),
+    frame=document.getElementById('frame'),stEl=document.getElementById('status');
+
+function engineSrc(){
+  return document.getElementById('engine').textContent.split(/<\\\/script>/g).join('<'+'/script>');
+}
+function build(json){
+  var s=engineSrc();
+  var title=(json.deckTitle||'The Puppeteer')+(json.scenarios&&json.scenarios.length===1?' - '+json.scenarios[0].title:'');
+  s=s.replace('__DECK_TITLE__',title.replace(/[<>]/g,''));
+  var a=s.indexOf('/*__SCENARIO_JSON__*/'), b=s.indexOf('/*__END__*/');
+  return s.slice(0,a)+JSON.stringify(json,null,1)+s.slice(b+'/*__END__*/'.length);
+}
+
+var VALID_NODE={narrative:1,choice:1,multi:1,evaluate:1};
+function validate(json){
+  var e=[];
+  if(!json.scenarios||!json.scenarios.length){e.push('no scenarios array');return e;}
+  json.scenarios.forEach(function(s,si){
+    var p='scenario['+si+'] '+(s.id||'(no id)')+': ';
+    if(!s.id)e.push(p+'missing id');
+    if(!s.title)e.push(p+'missing title');
+    if(!s.start)e.push(p+'missing start');
+    var nodes=s.nodes||{},ends=s.endings||{};
+    var targets=function(id){return nodes[id]||ends[id];};
+    if(s.start&&!targets(s.start))e.push(p+'start "'+s.start+'" does not exist');
+    Object.keys(nodes).forEach(function(k){
+      var n=nodes[k],q=p+'node "'+k+'" ';
+      if(!VALID_NODE[n.type]){e.push(q+'has unknown type "'+n.type+'"');return;}
+      function chk(t,where){if(t&&!targets(t))e.push(q+where+' points at "'+t+'" which does not exist');}
+      if(n.type==='narrative'){if(!n.to)e.push(q+'has no "to"');chk(n.to,'to');}
+      if(n.type==='choice'){
+        if(!n.choices||!n.choices.length)e.push(q+'has no choices');
+        (n.choices||[]).forEach(function(c,ci){
+          var t=c.to||n.to;
+          if(!t&&c.correct!==false)e.push(q+'choice '+ci+' has no "to"');
+          chk(t,'choice '+ci);
+          if(n.gate&&c.correct===false&&!(c.lesson||c.note))e.push(q+'gated wrong choice '+ci+' has no coaching lesson');
+          if(c.consequence&&!c.consequence.text)e.push(q+'choice '+ci+' consequence has no text');
+        });
+      }
+      if(n.type==='multi'){
+        if(!n.options||!n.options.length)e.push(q+'has no options');
+        if(!n.correct||!n.correct.length)e.push(q+'has no correct[] indexes');
+        (n.correct||[]).forEach(function(i){if(!(n.options||[])[i])e.push(q+'correct index '+i+' out of range');});
+        chk(n.to,'to');
+      }
+      if(n.type==='evaluate'){
+        if(!n.criteria||!n.criteria.length)e.push(q+'has no rubric criteria');
+        (n.criteria||[]).forEach(function(c,ci){
+          if(!c.label)e.push(q+'criterion '+ci+' has no label');
+          if(!c.keywords||!c.keywords.length)e.push(q+'criterion '+ci+' has no keywords - it can never be met');
+        });
+        chk(n.toPass,'toPass');chk(n.toFail,'toFail');chk(n.to,'to');
+        if(!n.toPass&&!n.to)e.push(q+'has no destination');
+      }
+    });
+    var reach={},walk=function(id){
+      if(!id||reach[id])return;reach[id]=1;
+      var n=nodes[id];if(!n)return;
+      if(n.to)walk(n.to);if(n.toPass)walk(n.toPass);if(n.toFail)walk(n.toFail);
+      (n.choices||[]).forEach(function(c){walk(c.to||n.to);});
+    };
+    walk(s.start);
+    Object.keys(nodes).concat(Object.keys(ends)).forEach(function(k){
+      if(!reach[k])e.push(p+'"'+k+'" is unreachable from start');});
+    Object.keys(ends).forEach(function(k){
+      if(!ends[k].verdict)e.push(p+'ending "'+k+'" has no verdict');});
+  });
+  return e;
+}
+
+function run(){
+  var json;
+  try{json=JSON.parse(srcEl.value);}
+  catch(ex){fail('JSON syntax: '+ex.message);return null;}
+  var errs=validate(json);
+  if(errs.length){fail(errs.length+' problem'+(errs.length>1?'s':'')+':\n- '+errs.join('\n- '));}
+  else{errEl.classList.add('hidden');stEl.textContent='valid';stEl.className='st ok';}
+  frame.srcdoc=build(json);
+  return json;
+}
+function fail(msg){
+  errEl.textContent=msg;errEl.classList.remove('hidden');
+  stEl.textContent='check errors';stEl.className='st bad';
+}
+function download(){
+  var json;try{json=JSON.parse(srcEl.value);}catch(ex){fail('JSON syntax: '+ex.message);return;}
+  var name=(json.scenarios&&json.scenarios.length===1?json.scenarios[0].id:'puppeteer_deck')+'.html';
+  var blob=new Blob([build(json)],{type:'text/html'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
+}
+
+var SKELETON={deckTitle:'The Puppeteer',scenarios:[{
+  id:'new_scenario',title:'Untitled scenario',kicker:'',tag:'Training',meta:'5 min - 2 decisions',
+  thumb:'stage',blurb:'One sentence of tension. Something is at stake and the learner has to decide.',
+  steps:['Briefing','The decision','Write it down','Debrief'],start:'brief',
+  nodes:{
+    brief:{type:'narrative',step:0,scene:'office',eyebrow:'Briefing',title:'',text:'',to:'n1'},
+    n1:{type:'choice',step:1,scene:'office',prompt:'',choices:[
+      {k:'A',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:''},to:'n2'},
+      {k:'B',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:'',good:true},to:'n2'}
+    ]},
+    n2:{type:'evaluate',step:2,scene:'data',prompt:'',criteria:[
+      {label:'',keywords:[''],hint:''},{label:'',keywords:[''],hint:''}
+    ],pass:2,showRubric:false,toPass:'good',toFail:'partial'}
+  },
+  endings:{
+    good:{step:3,scene:'launch',title:'',moral:'',verdict:'',revealed:[['','']]},
+    partial:{step:3,scene:'storm',title:'',moral:'',verdict:'',revealed:[['','']]}
+  }
+}]};
+
+document.getElementById('btnRun').addEventListener('click',run);
+document.getElementById('btnExport').addEventListener('click',download);
+document.getElementById('btnSample').addEventListener('click',function(){
+  srcEl.value=document.getElementById('sample').textContent.trim();run();});
+document.getElementById('btnSkel').addEventListener('click',function(){
+  srcEl.value=JSON.stringify(SKELETON,null,2);run();});
+
+Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.pane').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');document.getElementById('p-'+t.getAttribute('data-p')).classList.add('on');
+  });
+});
+Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.seg button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    frame.className=b.getAttribute('data-w')==='mob'?'mob':'';
+  });
+});
+srcEl.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&(e.key==='Enter'||e.key==='s')){e.preventDefault();run();}
+  if(e.key==='Tab'){e.preventDefault();var s=srcEl.selectionStart;
+    srcEl.value=srcEl.value.slice(0,s)+'  '+srcEl.value.slice(srcEl.selectionEnd);
+    srcEl.selectionStart=srcEl.selectionEnd=s+2;}
+});
+
+document.getElementById('docs').innerHTML=document.getElementById('docsrc').textContent;
+srcEl.value=document.getElementById('sample').textContent.trim();
+run();
+</script>
+</body>
+</html>

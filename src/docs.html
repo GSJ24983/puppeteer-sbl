@@ -1,0 +1,95 @@
+<h2>How this works</h2>
+<p>Left pane is content. The engine is frozen and lives inside this file. Preview runs the real engine in an iframe, so <b>what you see is byte-for-byte what exports</b>. Export gives you one self-contained HTML - offline, no dependencies, mail it to anyone.</p>
+<p><code>Cmd/Ctrl + Enter</code> re-runs the preview.</p>
+
+<h2>Scenario shape</h2>
+<pre>{
+  "deckTitle": "The Puppeteer",
+  "scenarios": [{
+    "id": "signoff",              <span class="k">// slug, appears in the session code</span>
+    "title": "...", "kicker": "...", "tag": "Business analysis",
+    "meta": "6 min - 3 decisions", "thumb": "office",
+    "blurb": "One sentence of tension.",
+    "highlight": false,           <span class="k">// true = teal pill on the hub card</span>
+    "steps": ["Briefing","Decision","Write it down","Debrief"],
+    "start": "brief",
+    "nodes": { ... },
+    "endings": { ... }
+  }]
+}</pre>
+<p>One scenario in the array and the hub is skipped - it opens straight into the run. Several, and you get a hub of cards.</p>
+
+<h2>Node types</h2>
+<p><b>narrative</b> - sets the scene, one Continue button.</p>
+<pre>{"type":"narrative","step":0,"scene":"office","eyebrow":"Briefing",
+ "title":"...","text":"...","media":[],"to":"n1"}</pre>
+
+<p><b>choice</b> - the core mechanic. Each choice may carry a consequence screen before it routes on.</p>
+<pre>{"type":"choice","step":1,"scene":"office","prompt":"...",
+ "gate": false,                  <span class="k">// true = wrong answers disable and retry, no advance</span>
+ "choices":[
+   {"k":"A","label":"...","sub":"...","tag":"Signed as-is","chip":"Signed",
+    "correct": false,            <span class="k">// only meaningful when gate:true</span>
+    "lesson":"coaching note shown on a gated wrong answer",
+    "consequence":{"scene":"storm","title":"...","text":"...",
+                   "lesson":"what this cost you","good":false},
+    "to":"n2"}]}</pre>
+
+<p><b>multi</b> - multi-select, rules-graded against <code>correct</code> indexes. No partial credit routing; it always continues to <code>to</code>, but the feedback names what was missed.</p>
+<pre>{"type":"multi","step":2,"scene":"matrix","prompt":"...",
+ "options":[{"label":"...","sub":"..."}],
+ "correct":[0,1,3],
+ "successNote":"...","missNote":"Before Friday you still need: ","to":"n3"}</pre>
+
+<p><b>evaluate</b> - free text against a visible rubric. Criteria light up as they are met. Routes to <code>toPass</code> or <code>toFail</code>.</p>
+<pre>{"type":"evaluate","step":3,"scene":"data","prompt":"...",
+ "criteria":[{"label":"Names the specific channel",
+              "keywords":["sms","email","in-app"],
+              "hint":"say which channel actually fires"}],
+ "pass":3,"passNote":"...","toPass":"good","toFail":"partial"}</pre>
+<p><code>showRubric: true</code> starts the rubric expanded. Default is collapsed behind the <b>e</b> button, so the criteria are not on screen when you are projecting or screen-sharing. Press <b>e</b> after pasting an answer to reveal the ticks.</p>
+
+<h2>The i button - context on demand</h2>
+<p>Every choice, multi, evaluate and ending node carries an <b>i</b> button. It opens what the learner has seen so far - briefing text and the consequences of their own decisions - so nobody has to scroll back while writing. The engine assembles it automatically; you only add <code>context</code> when you want to inject something extra.</p>
+<pre>"context":[{"label":"Policy note","text":"Refunds over 5000 need a second approver."}]</pre>
+
+<p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
+
+<h2>Endings</h2>
+<pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",
+ "verdict":"what actually happened",
+ "revealed":[["The probe","what the learner did and why it mattered"]],
+ "media":[]}</pre>
+
+<h2>Media links</h2>
+<p>Any node takes a <code>media</code> array. Links, never embeds - the file stays small and portable.</p>
+<pre>"media":[{"type":"ppt","label":"Case pack","url":"https://..."},
+         {"type":"video","label":"2-min setup","url":"https://..."}]</pre>
+
+<h2>Scenes</h2>
+<p>Procedural backdrops, no art needed: <code>stage</code> <code>river</code> <code>office</code> <code>data</code> <code>conflict</code> <code>team</code> <code>ai</code> <code>matrix</code> <code>launch</code> <code>storm</code>. Unknown names fall back to <code>stage</code>.</p>
+
+<h2>What the validator checks</h2>
+<ul>
+<li>Every <code>to</code>, <code>toPass</code>, <code>toFail</code> resolves to a real node or ending</li>
+<li>No unreachable nodes or orphan endings</li>
+<li>Every rubric criterion has keywords - one without them can never be met</li>
+<li>Every gated wrong answer carries a coaching note</li>
+<li>Every ending has a verdict</li>
+</ul>
+
+<h2>Theme</h2>
+<p>Every exported file carries a dark and a light theme, toggled from the sun icon in the header and remembered per device. Light is a white and blue scheme for projectors and printed handouts. Scene art follows the theme automatically - it is drawn from the same tokens as the text.</p>
+
+<h2>Layout</h2>
+<p>The scene is a banner, capped at roughly a fifth of the viewport, so the words get the page. If you are writing long narrative text, that is the ratio to design for - do not expect the picture to carry meaning it cannot carry.</p>
+
+<h2>Classroom</h2>
+<p>Each run ends with a copyable summary in plain sentences, with a compact code as the last line:</p>
+<pre>The Requirement That Wasn't - Business analysis scenario
+Chose: Ask ops for a concrete case
+Gap check: 3/3 of the must-haves
+Written answer: 2/3 rubric criteria, short on who owns the call when it fails
+Ending: Better, but still readable two ways
+PUP|signoff|B>0+1+3(3/3)>written(2/3)|partial</pre>
+<p>Students drop it in the class channel. You read decisions, not just endings, and the debrief runs off what actually happened in the room.</p>
