@@ -24,6 +24,8 @@ Three things fall out of shaping the authoring loop this way.
 
 **Questions are rationed.** `/check` is required to ask only what blocks it and to state assumptions for everything else. Open-ended interviewing produces better scenarios and never gets used, because the author is a working professional with forty minutes.
 
+**A scenario cannot ship with an untested rubric.** `/build` is required to write a model answer, grade it against its own rubric, and fix the criteria if it does not pass. The model answer then ships inside the scenario rather than staying in the chat, so a learner working alone can read a worked answer and compare. The Studio validator enforces the same rule independently - a rubric that cannot recognise a good answer fails validation.
+
 **The loop closes.** `/tune` takes real cohort data back in. A scenario is not finished when it is written; it is finished when the decision split shows the distractors did their job. Most authoring tools stop at generation.
 
 ## What the commands do not include

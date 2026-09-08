@@ -8,6 +8,8 @@
   "scenarios": [{
     "id": "signoff",              <span class="k">// slug, appears in the session code</span>
     "title": "...", "kicker": "...", "tag": "Business analysis",
+    "competency": "Listens Actively",   <span class="k">// ICF competency this scenario trains</span>
+    "behaviour": "Recognizes and inquires when there is more to what the client is communicating",
     "meta": "6 min - 3 decisions", "thumb": "office",
     "blurb": "One sentence of tension.",
     "highlight": false,           <span class="k">// true = teal pill on the hub card</span>
@@ -41,13 +43,34 @@
  "correct":[0,1,3],
  "successNote":"...","missNote":"Before Friday you still need: ","to":"n3"}</pre>
 
-<p><b>evaluate</b> - free text against a visible rubric. Criteria light up as they are met. Routes to <code>toPass</code> or <code>toFail</code>.</p>
-<pre>{"type":"evaluate","step":3,"scene":"data","prompt":"...",
- "criteria":[{"label":"Names the specific channel",
-              "keywords":["sms","email","in-app"],
-              "hint":"say which channel actually fires"}],
- "pass":3,"passNote":"...","toPass":"good","toFail":"partial"}</pre>
-<p><code>showRubric: true</code> starts the rubric expanded. Default is collapsed behind the <b>e</b> button, so the criteria are not on screen when you are projecting or screen-sharing. Press <b>e</b> after pasting an answer to reveal the ticks.</p>
+<p><b>evaluate</b> - free text against a rubric. Criteria light up as they are met, and the grade arrives with coaching, not just a score. Routes to <code>toPass</code> or <code>toFail</code>.</p>
+<pre>{"type":"evaluate","step":3,"scene":"data",
+ "speaker":"The delivery lead:",       <span class="k">// renders as in-character dialogue</span>
+ "question":"Write me the line...",    <span class="k">// use "prompt" instead for a plain instruction</span>
+ "criteria":[{
+   "label":"Names the specific channel",
+   "keywords":["sms","email","in-app","sends an sms", ...],
+   "hint":"say which channel fires",   <span class="k">// short - used in the session summary</span>
+   "coach":"name the channel that actually fires - 'notify' is the word that let two teams build two different things"
+ }],
+ "pass":3,
+ "coachLead":"To make this un-misreadable, ",
+ "passNote":"...",
+ "model":"When a refund is approved, the system sends...",
+ "modelExplain":"This covers all three: it &lt;b&gt;names the channel&lt;/b&gt;...",
+ "toPass":"good","toFail":"partial"}</pre>
+
+<p><b>Keywords: aim for 15-25 per criterion, mostly phrases.</b> Single words either fire on everything or miss how people actually write. Include contractions, partial words (<code>escalat</code> catches the whole family), and the sideways phrasings. The validator complains below 8.</p>
+
+<p><b>coach vs hint.</b> <code>hint</code> is a fragment for the session summary. <code>coach</code> is a full sentence naming the mechanism - what breaks, when, and who pays. Missed criteria are joined into one paragraph after <code>coachLead</code>. This is where the teaching happens, so it is required.</p>
+
+<p><b>model and modelExplain.</b> A 'Show me a model answer' button loads the model into the box with its explanation, and the learner can edit it or submit as it stands. Without this, a scenario run alone scores but does not teach. The validator grades the model against its own rubric and fails the scenario if it does not reach <code>pass</code> - so a rubric that cannot recognise a good answer never ships.</p>
+
+<p><b>Attempts.</b> A weak first answer cannot skip ahead. Continue unlocks when the score reaches pass, or is one short, or on the second attempt - so nobody is ever trapped. Grading shows a spinner, then a score pill and criteria revealing in sequence; set <code>GRADE_DELAY = 0</code> in the exported file to make it instant.</p>
+
+<h2>Competency tagging</h2>
+<p>Scenarios are tagged to a competency and to the specific behaviour statement they train. The behaviour is where rubric criteria come from - it is already written as an observable behaviour, which is what a criterion has to be.</p>
+<p>The tag shows on the hub card and the rail, and travels in every session summary and compact code, so a term of sessions pivots by competency in a spreadsheet: which competencies a cohort is weak on, not just which scenarios they found hard.</p>
 
 <h2>The i button - context on demand</h2>
 <p>Every choice, multi, evaluate and ending node carries an <b>i</b> button. It opens what the learner has seen so far - briefing text and the consequences of their own decisions - so nobody has to scroll back while writing. The engine assembles it automatically; you only add <code>context</code> when you want to inject something extra.</p>

@@ -3,6 +3,113 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Puppeteer Studio</title>
+<style>
+:root{
+  --indigo:#201A3E;--deep:#15112B;--surface:#2B2456;--surf2:#352C68;--coral:#FF6B4A;
+  --teal:#16B5A4;--lav:#B9AEE8;--ink:#F3F0FF;--mute:#A79EC9;--line:#463C7F;--gold:#F2C14E;
+  --serif:'Fraunces','Iowan Old Style',Georgia,serif;
+  --sans:'Instrument Sans','Segoe UI',system-ui,-apple-system,Calibri,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--deep);color:var(--ink);font-family:var(--sans);display:flex;flex-direction:column}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.bar{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);background:var(--indigo);flex:none}
+.bar svg{width:26px;height:26px;flex:none}
+.bar h1{font-family:var(--serif);font-size:16px;margin:0;font-weight:600}
+.bar .sp{flex:1}
+.bar .st{font-size:12.5px;color:var(--mute);font-family:var(--mono)}
+.bar .st.ok{color:var(--teal)}
+.bar .st.bad{color:var(--coral)}
+.btn{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+  padding:7px 13px;font-size:13.5px;cursor:pointer}
+.btn:hover{border-color:var(--lav)}
+.btn.go{background:var(--coral);border-color:var(--coral);color:#25100A;font-weight:650}
+.btn.go:hover{background:#FF835F}
+.btn.tl{background:var(--teal);border-color:var(--teal);color:#04211E;font-weight:650}
+
+main{flex:1;display:grid;grid-template-columns:minmax(340px,44%) 1fr;min-height:0}
+.left{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
+.tabs{display:flex;gap:2px;padding:8px 10px 0;flex:none}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--mute);
+  padding:7px 12px;font-size:13.5px;cursor:pointer}
+.tab.on{color:var(--ink);border-bottom-color:var(--coral)}
+.pane{flex:1;min-height:0;display:none}
+.pane.on{display:flex;flex-direction:column}
+textarea{flex:1;width:100%;background:var(--deep);color:#DCD6F5;border:0;border-top:1px solid var(--line);
+  padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.6;resize:none}
+textarea:focus{outline:none}
+.doc{overflow:auto;padding:16px 20px 40px;border-top:1px solid var(--line);font-size:14px;line-height:1.6}
+.doc h2{font-family:var(--serif);font-size:17px;margin:20px 0 6px;font-weight:600}
+.doc h2:first-child{margin-top:0}
+.doc p{color:#DCD6F5;margin:0 0 10px;max-width:62ch}
+.doc code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:4px;color:var(--lav)}
+.doc pre{background:var(--indigo);border:1px solid var(--line);border-radius:9px;padding:12px 14px;
+  overflow:auto;font-family:var(--mono);font-size:11.5px;line-height:1.55;color:#CFC7F0}
+.doc ul{margin:0 0 12px;padding-left:19px;color:#DCD6F5}
+.doc li{margin-bottom:5px}
+.doc .k{color:var(--gold)}
+.right{min-height:0;display:flex;flex-direction:column;background:var(--indigo)}
+.phead{padding:9px 14px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mute);
+  display:flex;align-items:center;gap:10px;flex:none}
+.phead .seg{margin-left:auto;display:flex;gap:2px;background:var(--deep);border-radius:7px;padding:2px}
+.phead .seg button{background:none;border:0;color:var(--mute);font-size:12px;padding:4px 10px;border-radius:5px;cursor:pointer}
+.phead .seg button.on{background:var(--surface);color:var(--ink)}
+.frameWrap{flex:1;min-height:0;display:grid;place-items:center;overflow:auto;padding:14px}
+iframe{border:1px solid var(--line);border-radius:12px;background:var(--deep);width:100%;height:100%}
+iframe.mob{width:390px;max-width:100%;height:100%;max-height:780px}
+.err{margin:0;padding:11px 16px;background:rgba(255,107,74,.12);border-top:1px solid var(--coral);
+  color:#FFC5B5;font-family:var(--mono);font-size:12px;white-space:pre-wrap;flex:none}
+.err.hidden{display:none}
+@media (max-width:900px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.left{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <path d="M6 8h28" stroke="#FF6B4A" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M12 8v13M20 8v19M28 8v13" stroke="#463C7F" stroke-width="1.3"/>
+    <rect x="8.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 12 24.5)" fill="#16B5A4"/>
+    <rect x="16.5" y="27" width="7" height="7" rx="1.4" transform="rotate(45 20 30.5)" fill="#B9AEE8"/>
+    <rect x="24.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 28 24.5)" fill="#F2C14E"/>
+  </svg>
+  <h1>Puppeteer Studio</h1>
+  <span class="st" id="status">ready</span>
+  <span class="sp"></span>
+  <button class="btn" id="btnSkel">New skeleton</button>
+  <button class="btn" id="btnSample">Load sample</button>
+  <button class="btn go" id="btnRun">Preview</button>
+  <button class="btn tl" id="btnExport">Export standalone HTML</button>
+</header>
+
+<main>
+  <section class="left">
+    <div class="tabs">
+      <button class="tab on" data-p="edit">Scenario JSON</button>
+      <button class="tab" data-p="docs">Schema</button>
+    </div>
+    <div class="pane on" id="p-edit"><textarea id="src" spellcheck="false"></textarea></div>
+    <div class="pane" id="p-docs"><div class="doc" id="docs"></div></div>
+    <pre class="err hidden" id="err"></pre>
+  </section>
+  <section class="right">
+    <div class="phead">
+      <span>Live preview - this is exactly what exports</span>
+      <span class="seg"><button class="on" data-w="desk">Laptop</button><button data-w="mob">Mobile</button></span>
+    </div>
+    <div class="frameWrap"><iframe id="frame" title="Preview"></iframe></div>
+  </section>
+</main>
+
+<script type="text/plain" id="engine"><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>__DECK_TITLE__</title>
 <style>
 :root{
@@ -671,6 +778,539 @@ function sessionSummary(endKey,e){
 })();
 
 renderHub();
+<\/script>
+</body>
+</html>
+</script>
+<script type="text/plain" id="sample">{
+  "deckTitle": "The Puppeteer",
+  "scenarios": [
+    {
+      "id": "signoff",
+      "title": "The Requirement That Wasn't",
+      "kicker": "Business analysis scenario",
+      "competency": "Listens Actively",
+      "behaviour": "Recognizes and inquires when there is more to what the client is communicating",
+      "tag": "Business analysis",
+      "meta": "6 min - 3 decisions - 1 graded",
+      "thumb": "office",
+      "blurb": "Sign-off is on Friday, the spec says 'notify the customer', and nobody has asked what happens when the customer has no phone number.",
+      "highlight": false,
+      "steps": [
+        "Briefing",
+        "Your first move",
+        "The gap",
+        "Write it down",
+        "Debrief"
+      ],
+      "start": "brief",
+      "nodes": {
+        "brief": {
+          "type": "narrative",
+          "step": 0,
+          "scene": "office",
+          "eyebrow": "Briefing",
+          "title": "Two days to sign-off",
+          "text": "You are the BA on a refunds release. The spec line reads: 'When a refund is approved, notify the customer.' Ops has signed it. Tech has estimated it. Everyone is comfortable. You are not, and you cannot yet say why.",
+          "media": [],
+          "to": "n1"
+        },
+        "n1": {
+          "type": "choice",
+          "step": 1,
+          "scene": "office",
+          "prompt": "Sign-off is Friday. What do you do with the discomfort?",
+          "choices": [
+            {
+              "k": "A",
+              "label": "Let it go - it is one line and everyone has signed",
+              "sub": "Protect the date",
+              "tag": "Signed as-is",
+              "chip": "Signed",
+              "consequence": {
+                "scene": "storm",
+                "title": "Week three of production",
+                "text": "Refunds approve fine. Then a customer with no mobile number on file gets nothing, complains to the regulator, and the ticket lands back on your desk with a severity tag on it.",
+                "lesson": "A requirement everyone agrees on is not the same as a requirement everyone read the same way. Consensus hides ambiguity, it does not resolve it."
+              },
+              "to": "n2"
+            },
+            {
+              "k": "B",
+              "label": "Ask ops for a concrete case: a refund last week and exactly what the customer received",
+              "sub": "Probe with a real example",
+              "tag": "Probed",
+              "chip": "Probed",
+              "consequence": {
+                "scene": "team",
+                "good": true,
+                "title": "The example does the work",
+                "text": "Ops pulls a real refund. Turns out 'notify' means SMS, and about one in nine customers has no mobile number. Nobody had decided what those customers get. It was never a disagreement - it was a blank.",
+                "lesson": "Concrete cases surface gaps that abstract review never will. Ask what happened last Tuesday, not whether the requirement is clear."
+              },
+              "to": "n2"
+            },
+            {
+              "k": "C",
+              "label": "Send the spec round again asking everyone to re-read carefully",
+              "sub": "Reconfirm in writing",
+              "tag": "Re-circulated",
+              "chip": "Re-read",
+              "consequence": {
+                "scene": "office",
+                "title": "Three replies, all 'looks fine'",
+                "text": "You get three thumbs-ups within the hour. Nobody read it again. The same line means SMS to ops, email to tech, and 'something automatic' to the sponsor, and the round trip cost you half a day.",
+                "lesson": "Re-reading the same words produces the same interpretation. Change the question, not the number of reviewers."
+              },
+              "to": "n2"
+            }
+          ]
+        },
+        "n2": {
+          "type": "multi",
+          "step": 2,
+          "scene": "matrix",
+          "prompt": "You have twenty minutes with ops. Which of these must be nailed down before Friday? Pick every one that matters.",
+          "options": [
+            {
+              "label": "Which channel counts as a notification",
+              "sub": "SMS, email, in-app, or any of them"
+            },
+            {
+              "label": "What happens when the chosen channel is unavailable for that customer"
+            },
+            {
+              "label": "The wording of the notification message"
+            },
+            {
+              "label": "Who owns the decision when the channel fails"
+            },
+            {
+              "label": "Which font the message template uses"
+            }
+          ],
+          "correct": [
+            0,
+            1,
+            3
+          ],
+          "successNote": "Channel definition, the failure case, and the decision owner. Wording can be drafted later; it does not change the build.",
+          "missNote": "Before Friday you still need: ",
+          "to": "n3"
+        },
+        "n3": {
+          "type": "evaluate",
+          "step": 3,
+          "scene": "data",
+          "placeholder": "When a refund is approved...",
+          "criteria": [
+            {
+              "label": "Names the specific channel rather than 'notify'",
+              "keywords": [
+                "sms",
+                "email",
+                "text message",
+                "in-app",
+                "in app",
+                "push",
+                "whatsapp",
+                "e-mail",
+                "messages the customer by",
+                "sends an sms",
+                "send an sms",
+                "by email",
+                "via email",
+                "notification channel"
+              ],
+              "hint": "say which channel actually fires",
+              "coach": "name the channel that actually fires - 'notify' is the word that let two teams build two different things, and replacing it with 'SMS' or 'email' is what closes the gap"
+            },
+            {
+              "label": "Handles the case where the channel is not available",
+              "keywords": [
+                "no mobile",
+                "missing",
+                "unavailable",
+                "fallback",
+                "fall back",
+                "falls back",
+                "if the customer has no",
+                "absent",
+                "not on file",
+                "no number",
+                "without a mobile",
+                "no phone",
+                "cannot be reached",
+                "blank",
+                "empty",
+                "otherwise"
+              ],
+              "hint": "the customer with no number on file",
+              "coach": "say what happens to the customer with no number on file - that is the one in nine who got silence in production, and a requirement that ignores them is where the regulator complaint came from"
+            },
+            {
+              "label": "States who or what decides the fallback",
+              "keywords": [
+                "ops",
+                "owner",
+                "owns",
+                "decides",
+                "decision",
+                "system",
+                "default",
+                "escalat",
+                "responsible",
+                "accountable",
+                "refunds team",
+                "support",
+                "assigned to",
+                "routed to",
+                "raises a task",
+                "flags it to"
+              ],
+              "hint": "who owns the call when it fails",
+              "coach": "name who or what makes the call when the channel fails - unowned edge cases get decided quietly by whoever is on shift at 6pm, and you will not know it happened"
+            }
+          ],
+          "pass": 3,
+          "passNote": "Channel, failure case, and owner. That line cannot be built two ways.",
+          "toPass": "good",
+          "toFail": "partial",
+          "speaker": "The delivery lead:",
+          "question": "Fine - so write me the line. If two developers read it, I want them building the same thing.",
+          "title": "Write the line",
+          "model": "When a refund is approved, the system sends the customer an SMS to the mobile number on file. If no mobile number is on file, it sends the same notification by email instead. If neither is available, the refund is flagged to the ops queue and ops owns the decision on how the customer is told.",
+          "modelExplain": "This covers all three: it <b>names the channel</b> (SMS), <b>handles the customer with no number</b> (email fallback), and <b>names the owner</b> when both fail (ops). Edit it or submit it as it stands to see the grade.",
+          "coachLead": "To make this un-misreadable, "
+        }
+      },
+      "endings": {
+        "good": {
+          "step": 4,
+          "scene": "launch",
+          "title": "The blank cell had nowhere to hide",
+          "moral": "A good requirement is not one everyone agrees with. It is one nobody can misread.",
+          "verdict": "You shipped on Friday, and the one-in-nine customer got a defined outcome instead of silence. The same line became the test case, which is why QA found nothing in week three.",
+          "revealed": [
+            [
+              "The probe",
+              "You asked for a real refund instead of asking whether the spec was clear."
+            ],
+            [
+              "The gap",
+              "You separated what mattered before Friday from what could wait."
+            ],
+            [
+              "The write-up",
+              "Channel, failure case and owner - all three in one line."
+            ]
+          ]
+        },
+        "partial": {
+          "step": 4,
+          "scene": "storm",
+          "title": "Better, but still readable two ways",
+          "moral": "Ambiguity does not announce itself. It shows up as a support ticket in week three.",
+          "verdict": "Your line is sharper than the original, but a developer reading it still has a decision left to make - and they will make it quietly, at 6pm, without you.",
+          "revealed": [
+            [
+              "What held",
+              "You found the gap before sign-off, which is most of the job."
+            ],
+            [
+              "What slipped",
+              "The written requirement left at least one thing to interpretation."
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}</script>
+<script type="text/plain" id="docsrc"><h2>How this works</h2>
+<p>Left pane is content. The engine is frozen and lives inside this file. Preview runs the real engine in an iframe, so <b>what you see is byte-for-byte what exports</b>. Export gives you one self-contained HTML - offline, no dependencies, mail it to anyone.</p>
+<p><code>Cmd/Ctrl + Enter</code> re-runs the preview.</p>
+
+<h2>Scenario shape</h2>
+<pre>{
+  "deckTitle": "The Puppeteer",
+  "scenarios": [{
+    "id": "signoff",              <span class="k">// slug, appears in the session code</span>
+    "title": "...", "kicker": "...", "tag": "Business analysis",
+    "competency": "Listens Actively",   <span class="k">// ICF competency this scenario trains</span>
+    "behaviour": "Recognizes and inquires when there is more to what the client is communicating",
+    "meta": "6 min - 3 decisions", "thumb": "office",
+    "blurb": "One sentence of tension.",
+    "highlight": false,           <span class="k">// true = teal pill on the hub card</span>
+    "steps": ["Briefing","Decision","Write it down","Debrief"],
+    "start": "brief",
+    "nodes": { ... },
+    "endings": { ... }
+  }]
+}</pre>
+<p>One scenario in the array and the hub is skipped - it opens straight into the run. Several, and you get a hub of cards.</p>
+
+<h2>Node types</h2>
+<p><b>narrative</b> - sets the scene, one Continue button.</p>
+<pre>{"type":"narrative","step":0,"scene":"office","eyebrow":"Briefing",
+ "title":"...","text":"...","media":[],"to":"n1"}</pre>
+
+<p><b>choice</b> - the core mechanic. Each choice may carry a consequence screen before it routes on.</p>
+<pre>{"type":"choice","step":1,"scene":"office","prompt":"...",
+ "gate": false,                  <span class="k">// true = wrong answers disable and retry, no advance</span>
+ "choices":[
+   {"k":"A","label":"...","sub":"...","tag":"Signed as-is","chip":"Signed",
+    "correct": false,            <span class="k">// only meaningful when gate:true</span>
+    "lesson":"coaching note shown on a gated wrong answer",
+    "consequence":{"scene":"storm","title":"...","text":"...",
+                   "lesson":"what this cost you","good":false},
+    "to":"n2"}]}</pre>
+
+<p><b>multi</b> - multi-select, rules-graded against <code>correct</code> indexes. No partial credit routing; it always continues to <code>to</code>, but the feedback names what was missed.</p>
+<pre>{"type":"multi","step":2,"scene":"matrix","prompt":"...",
+ "options":[{"label":"...","sub":"..."}],
+ "correct":[0,1,3],
+ "successNote":"...","missNote":"Before Friday you still need: ","to":"n3"}</pre>
+
+<p><b>evaluate</b> - free text against a rubric. Criteria light up as they are met, and the grade arrives with coaching, not just a score. Routes to <code>toPass</code> or <code>toFail</code>.</p>
+<pre>{"type":"evaluate","step":3,"scene":"data",
+ "speaker":"The delivery lead:",       <span class="k">// renders as in-character dialogue</span>
+ "question":"Write me the line...",    <span class="k">// use "prompt" instead for a plain instruction</span>
+ "criteria":[{
+   "label":"Names the specific channel",
+   "keywords":["sms","email","in-app","sends an sms", ...],
+   "hint":"say which channel fires",   <span class="k">// short - used in the session summary</span>
+   "coach":"name the channel that actually fires - 'notify' is the word that let two teams build two different things"
+ }],
+ "pass":3,
+ "coachLead":"To make this un-misreadable, ",
+ "passNote":"...",
+ "model":"When a refund is approved, the system sends...",
+ "modelExplain":"This covers all three: it &lt;b&gt;names the channel&lt;/b&gt;...",
+ "toPass":"good","toFail":"partial"}</pre>
+
+<p><b>Keywords: aim for 15-25 per criterion, mostly phrases.</b> Single words either fire on everything or miss how people actually write. Include contractions, partial words (<code>escalat</code> catches the whole family), and the sideways phrasings. The validator complains below 8.</p>
+
+<p><b>coach vs hint.</b> <code>hint</code> is a fragment for the session summary. <code>coach</code> is a full sentence naming the mechanism - what breaks, when, and who pays. Missed criteria are joined into one paragraph after <code>coachLead</code>. This is where the teaching happens, so it is required.</p>
+
+<p><b>model and modelExplain.</b> A 'Show me a model answer' button loads the model into the box with its explanation, and the learner can edit it or submit as it stands. Without this, a scenario run alone scores but does not teach. The validator grades the model against its own rubric and fails the scenario if it does not reach <code>pass</code> - so a rubric that cannot recognise a good answer never ships.</p>
+
+<p><b>Attempts.</b> A weak first answer cannot skip ahead. Continue unlocks when the score reaches pass, or is one short, or on the second attempt - so nobody is ever trapped. Grading shows a spinner, then a score pill and criteria revealing in sequence; set <code>GRADE_DELAY = 0</code> in the exported file to make it instant.</p>
+
+<h2>Competency tagging</h2>
+<p>Scenarios are tagged to a competency and to the specific behaviour statement they train. The behaviour is where rubric criteria come from - it is already written as an observable behaviour, which is what a criterion has to be.</p>
+<p>The tag shows on the hub card and the rail, and travels in every session summary and compact code, so a term of sessions pivots by competency in a spreadsheet: which competencies a cohort is weak on, not just which scenarios they found hard.</p>
+
+<h2>The i button - context on demand</h2>
+<p>Every choice, multi, evaluate and ending node carries an <b>i</b> button. It opens what the learner has seen so far - briefing text and the consequences of their own decisions - so nobody has to scroll back while writing. The engine assembles it automatically; you only add <code>context</code> when you want to inject something extra.</p>
+<pre>"context":[{"label":"Policy note","text":"Refunds over 5000 need a second approver."}]</pre>
+
+<p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
+
+<h2>Endings</h2>
+<pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",
+ "verdict":"what actually happened",
+ "revealed":[["The probe","what the learner did and why it mattered"]],
+ "media":[]}</pre>
+
+<h2>Media links</h2>
+<p>Any node takes a <code>media</code> array. Links, never embeds - the file stays small and portable.</p>
+<pre>"media":[{"type":"ppt","label":"Case pack","url":"https://..."},
+         {"type":"video","label":"2-min setup","url":"https://..."}]</pre>
+
+<h2>Scenes</h2>
+<p>Procedural backdrops, no art needed: <code>stage</code> <code>river</code> <code>office</code> <code>data</code> <code>conflict</code> <code>team</code> <code>ai</code> <code>matrix</code> <code>launch</code> <code>storm</code>. Unknown names fall back to <code>stage</code>.</p>
+
+<h2>What the validator checks</h2>
+<ul>
+<li>Every <code>to</code>, <code>toPass</code>, <code>toFail</code> resolves to a real node or ending</li>
+<li>No unreachable nodes or orphan endings</li>
+<li>Every rubric criterion has keywords - one without them can never be met</li>
+<li>Every gated wrong answer carries a coaching note</li>
+<li>Every ending has a verdict</li>
+</ul>
+
+<h2>Theme</h2>
+<p>Every exported file carries a dark and a light theme, toggled from the sun icon in the header and remembered per device. Light is a white and blue scheme for projectors and printed handouts. Scene art follows the theme automatically - it is drawn from the same tokens as the text.</p>
+
+<h2>Layout</h2>
+<p>The scene is a banner, capped at roughly a fifth of the viewport, so the words get the page. If you are writing long narrative text, that is the ratio to design for - do not expect the picture to carry meaning it cannot carry.</p>
+
+<h2>Classroom</h2>
+<p>Each run ends with a copyable summary in plain sentences, with a compact code as the last line:</p>
+<pre>The Requirement That Wasn't - Business analysis scenario
+Chose: Ask ops for a concrete case
+Gap check: 3/3 of the must-haves
+Written answer: 2/3 rubric criteria, short on who owns the call when it fails
+Ending: Better, but still readable two ways
+PUP|signoff|B>0+1+3(3/3)>written(2/3)|partial</pre>
+<p>Students drop it in the class channel. You read decisions, not just endings, and the debrief runs off what actually happened in the room.</p>
+</script>
+
+<script>
+var srcEl=document.getElementById('src'),errEl=document.getElementById('err'),
+    frame=document.getElementById('frame'),stEl=document.getElementById('status');
+
+function engineSrc(){
+  return document.getElementById('engine').textContent.split(/<\\\/script>/g).join('<'+'/script>');
+}
+function build(json){
+  var s=engineSrc();
+  var title=(json.deckTitle||'The Puppeteer')+(json.scenarios&&json.scenarios.length===1?' - '+json.scenarios[0].title:'');
+  s=s.replace('__DECK_TITLE__',title.replace(/[<>]/g,''));
+  var a=s.indexOf('/*__SCENARIO_JSON__*/'), b=s.indexOf('/*__END__*/');
+  return s.slice(0,a)+JSON.stringify(json,null,1)+s.slice(b+'/*__END__*/'.length);
+}
+
+var VALID_NODE={narrative:1,choice:1,multi:1,evaluate:1};
+function validate(json){
+  var e=[];
+  if(!json.scenarios||!json.scenarios.length){e.push('no scenarios array');return e;}
+  json.scenarios.forEach(function(s,si){
+    var p='scenario['+si+'] '+(s.id||'(no id)')+': ';
+    if(!s.id)e.push(p+'missing id');
+    if(!s.title)e.push(p+'missing title');
+    if(!s.start)e.push(p+'missing start');
+    var nodes=s.nodes||{},ends=s.endings||{};
+    var targets=function(id){return nodes[id]||ends[id];};
+    if(s.start&&!targets(s.start))e.push(p+'start "'+s.start+'" does not exist');
+    Object.keys(nodes).forEach(function(k){
+      var n=nodes[k],q=p+'node "'+k+'" ';
+      if(!VALID_NODE[n.type]){e.push(q+'has unknown type "'+n.type+'"');return;}
+      function chk(t,where){if(t&&!targets(t))e.push(q+where+' points at "'+t+'" which does not exist');}
+      if(n.type==='narrative'){if(!n.to)e.push(q+'has no "to"');chk(n.to,'to');}
+      if(n.type==='choice'){
+        if(!n.choices||!n.choices.length)e.push(q+'has no choices');
+        (n.choices||[]).forEach(function(c,ci){
+          var t=c.to||n.to;
+          if(!t&&c.correct!==false)e.push(q+'choice '+ci+' has no "to"');
+          chk(t,'choice '+ci);
+          if(n.gate&&c.correct===false&&!(c.lesson||c.note))e.push(q+'gated wrong choice '+ci+' has no coaching lesson');
+          if(c.consequence&&!c.consequence.text)e.push(q+'choice '+ci+' consequence has no text');
+        });
+      }
+      if(n.type==='multi'){
+        if(!n.options||!n.options.length)e.push(q+'has no options');
+        if(!n.correct||!n.correct.length)e.push(q+'has no correct[] indexes');
+        (n.correct||[]).forEach(function(i){if(!(n.options||[])[i])e.push(q+'correct index '+i+' out of range');});
+        chk(n.to,'to');
+      }
+      if(n.type==='evaluate'){
+        if(!n.criteria||!n.criteria.length)e.push(q+'has no rubric criteria');
+        (n.criteria||[]).forEach(function(c,ci){
+          if(!c.label)e.push(q+'criterion '+ci+' has no label');
+          if(!c.keywords||!c.keywords.length)e.push(q+'criterion '+ci+' has no keywords - it can never be met');
+          else if(c.keywords.length<8)e.push(q+'criterion '+ci+' has only '+c.keywords.length+
+            ' keywords - aim for 15-25, mostly phrases, or real answers will fail it');
+          if(!c.coach)e.push(q+'criterion '+ci+' has no coach sentence - feedback would only name the gap, not teach it');
+        });
+        if(!n.model)e.push(q+'has no model answer - learners working alone have nothing to compare against');
+        if(n.model&&!n.modelExplain)e.push(q+'has a model answer but no modelExplain');
+        if(n.model){
+          var mres=(function(){
+            var t=(' '+String(n.model).toLowerCase()+' ').replace(/[^a-z0-9\s]/g,' ');
+            return (n.criteria||[]).filter(function(c){
+              return (c.keywords||[]).some(function(k){return t.indexOf(k.toLowerCase())>-1;});}).length;
+          })();
+          if(mres<(n.pass||(n.criteria||[]).length))
+            e.push(q+'model answer scores '+mres+'/'+(n.criteria||[]).length+
+              ' against its own rubric - the keywords are too narrow or the model answer is wrong');
+        }
+        if(!n.speaker&&!n.prompt&&!n.question)e.push(q+'has no prompt or question');
+        chk(n.toPass,'toPass');chk(n.toFail,'toFail');chk(n.to,'to');
+        if(!n.toPass&&!n.to)e.push(q+'has no destination');
+      }
+    });
+    var reach={},walk=function(id){
+      if(!id||reach[id])return;reach[id]=1;
+      var n=nodes[id];if(!n)return;
+      if(n.to)walk(n.to);if(n.toPass)walk(n.toPass);if(n.toFail)walk(n.toFail);
+      (n.choices||[]).forEach(function(c){walk(c.to||n.to);});
+    };
+    walk(s.start);
+    Object.keys(nodes).concat(Object.keys(ends)).forEach(function(k){
+      if(!reach[k])e.push(p+'"'+k+'" is unreachable from start');});
+    Object.keys(ends).forEach(function(k){
+      if(!ends[k].verdict)e.push(p+'ending "'+k+'" has no verdict');});
+  });
+  return e;
+}
+
+function run(){
+  var json;
+  try{json=JSON.parse(srcEl.value);}
+  catch(ex){fail('JSON syntax: '+ex.message);return null;}
+  var errs=validate(json);
+  if(errs.length){fail(errs.length+' problem'+(errs.length>1?'s':'')+':\n- '+errs.join('\n- '));}
+  else{errEl.classList.add('hidden');stEl.textContent='valid';stEl.className='st ok';}
+  frame.srcdoc=build(json);
+  return json;
+}
+function fail(msg){
+  errEl.textContent=msg;errEl.classList.remove('hidden');
+  stEl.textContent='check errors';stEl.className='st bad';
+}
+function download(){
+  var json;try{json=JSON.parse(srcEl.value);}catch(ex){fail('JSON syntax: '+ex.message);return;}
+  var name=(json.scenarios&&json.scenarios.length===1?json.scenarios[0].id:'puppeteer_deck')+'.html';
+  var blob=new Blob([build(json)],{type:'text/html'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
+}
+
+var SKELETON={deckTitle:'The Puppeteer',scenarios:[{
+  id:'new_scenario',title:'Untitled scenario',kicker:'',tag:'Training',meta:'5 min - 2 decisions',
+  thumb:'stage',blurb:'One sentence of tension. Something is at stake and the learner has to decide.',
+  steps:['Briefing','The decision','Write it down','Debrief'],start:'brief',
+  nodes:{
+    brief:{type:'narrative',step:0,scene:'office',eyebrow:'Briefing',title:'',text:'',to:'n1'},
+    n1:{type:'choice',step:1,scene:'office',prompt:'',choices:[
+      {k:'A',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:''},to:'n2'},
+      {k:'B',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:'',good:true},to:'n2'}
+    ]},
+    n2:{type:'evaluate',step:2,scene:'data',speaker:'',question:'',criteria:[
+      {label:'',keywords:[],hint:'',coach:''},{label:'',keywords:[],hint:'',coach:''}
+    ],pass:2,showRubric:false,model:'',modelExplain:'',coachLead:'To make this land, ',
+    toPass:'good',toFail:'partial'}
+  },
+  endings:{
+    good:{step:3,scene:'launch',title:'',moral:'',verdict:'',revealed:[['','']]},
+    partial:{step:3,scene:'storm',title:'',moral:'',verdict:'',revealed:[['','']]}
+  }
+}]};
+
+document.getElementById('btnRun').addEventListener('click',run);
+document.getElementById('btnExport').addEventListener('click',download);
+document.getElementById('btnSample').addEventListener('click',function(){
+  srcEl.value=document.getElementById('sample').textContent.trim();run();});
+document.getElementById('btnSkel').addEventListener('click',function(){
+  srcEl.value=JSON.stringify(SKELETON,null,2);run();});
+
+Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.pane').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');document.getElementById('p-'+t.getAttribute('data-p')).classList.add('on');
+  });
+});
+Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.seg button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    frame.className=b.getAttribute('data-w')==='mob'?'mob':'';
+  });
+});
+srcEl.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&(e.key==='Enter'||e.key==='s')){e.preventDefault();run();}
+  if(e.key==='Tab'){e.preventDefault();var s=srcEl.selectionStart;
+    srcEl.value=srcEl.value.slice(0,s)+'  '+srcEl.value.slice(srcEl.selectionEnd);
+    srcEl.selectionStart=srcEl.selectionEnd=s+2;}
+});
+
+document.getElementById('docs').innerHTML=document.getElementById('docsrc').textContent;
+srcEl.value=document.getElementById('sample').textContent.trim();
+run();
 </script>
 </body>
 </html>

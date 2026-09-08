@@ -4,6 +4,7 @@ const ok=(c,m)=>{c?pass++:(fail++,console.log('FAIL:',m));};
 
 function load(file){
   const dom=new JSDOM(fs.readFileSync(file,'utf8'),{runScripts:'dangerously',pretendToBeVisual:true});
+  if(dom.window.GRADE_DELAY!==undefined)dom.window.GRADE_DELAY=0;   // grade synchronously in tests
   return dom;
 }
 const dom=load('/mnt/user-data/outputs/sample_signoff_standalone.html');
@@ -44,27 +45,66 @@ d.getElementById('ans').value=model;
 d.getElementById('sub').click();
 const met=d.querySelectorAll('.crit.met').length;
 ok(met===3,'model answer scores 3/3, got '+met);
-ok(!!d.querySelector('#fb .lesson.good'),'pass note shown');
+ok(!!d.querySelector('#fb .scorepill.full'),'full-marks pill shown');
 d.getElementById('go').click();
 ok(d.querySelector('.moral'),'ending rendered');
 ok(d.querySelector('.stitle').textContent.includes('blank cell'),'routed to good ending');
 const sum=d.getElementById('code').textContent.split('\n');
 ok(sum[0].includes("The Requirement That Wasn't"),'summary names the scenario');
+ok(sum.some(l=>l.startsWith('Competency: Listens Actively')),'summary carries the competency and behaviour');
 ok(sum.some(l=>l.startsWith('Chose:')),'summary states the choice in words');
 ok(sum.some(l=>l.startsWith('Written answer: 3/3')),'summary states the rubric score');
 ok(sum.some(l=>l.startsWith('Ending: ')),'summary names the ending');
-ok(sum[sum.length-1].startsWith('PUP|signoff|'),'compact code is the last line');
+ok(sum[sum.length-1].startsWith('PUP|signoff|Listens Actively|'),'compact code carries the competency for pivoting');
 
 // weak answer routes to partial
 w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[0].click();d.getElementById('go').click();
 d.querySelectorAll('.opt input')[0].checked=true;d.getElementById('sub').click();
 ok(d.querySelector('#fb .lesson')&&!d.querySelector('#fb .lesson.good'),'partial multi flagged');
 d.getElementById('go').click();
-d.getElementById('ans').value='We will notify the customer promptly after approval.';
+const weak='We will notify the customer promptly after approval.';
+d.getElementById('ans').value=weak;
 d.getElementById('sub').click();
 ok(!!d.getElementById('retry'),'retry offered on fail');
+ok(!d.getElementById('go'),'a weak first attempt cannot skip ahead');
+ok(d.querySelector('#fb .aifb').textContent.startsWith('Not yet.'),'coaching lead shown');
+ok(d.querySelector('#fb .aifb').textContent.includes('name the channel that actually fires'),'coach sentence names the mechanism');
+d.getElementById('retry').click();
+ok(d.getElementById('rlab').textContent.startsWith('Attempt 2'),'retry shows the attempt count');
+d.getElementById('ans').value=weak;
+d.getElementById('sub').click();
+ok(!!d.getElementById('go'),'second attempt unlocks continue anyway');
+ok(d.getElementById('go').textContent==='Continue anyway','continue is labelled honestly');
 d.getElementById('go').click();
 ok(d.querySelector('.stitle').textContent.includes('readable two ways'),'routed to partial ending');
+
+// near-miss unlocks immediately
+w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
+[0,1,3].forEach(i=>{d.querySelectorAll('.opt input')[i].checked=true;});
+d.getElementById('sub').click();d.getElementById('go').click();
+d.getElementById('ans').value='We send an SMS, and if the customer has no mobile number on file we use email.';
+d.getElementById('sub').click();
+ok(d.querySelector('.scorepill').textContent.trim()==='2 / 3','near miss scores 2/3');
+ok(!!d.getElementById('go'),'a near miss can proceed on the first attempt');
+
+// model answer button
+w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
+[0,1,3].forEach(i=>{d.querySelectorAll('.opt input')[i].checked=true;});
+d.getElementById('sub').click();d.getElementById('go').click();
+ok(!!d.getElementById('modelBtn'),'model answer button present');
+d.getElementById('modelBtn').click();
+ok(d.getElementById('ans').value.length>40,'model answer loads into the box');
+ok(d.querySelector('#fb .aifb'),'model explanation shown');
+d.getElementById('sub').click();
+ok(d.querySelector('.scorepill.full'),'the shipped model answer scores full marks');
+
+// speaker-framed prompt
+const jd=JSON.parse(fs.readFileSync('/home/claude/sample_scenario.json','utf8'));
+ok(!!jd.scenarios[0].nodes.n3.speaker,'sample uses an in-character prompt');
+w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
+[0,1,3].forEach(i=>{d.querySelectorAll('.opt input')[i].checked=true;});
+d.getElementById('sub').click();d.getElementById('go').click();
+ok(!!d.querySelector('.vpq'),'speaker prompt renders as dialogue');
 
 // referential integrity across all nodes
 const targets=id=>sc.nodes[id]||sc.endings[id];
@@ -153,6 +193,27 @@ const css=fs.readFileSync('/mnt/user-data/outputs/sample_signoff_standalone.html
 ok(css.includes("html[data-theme='light']"),'light tokens present');
 ok(!/fill="#[0-9A-Fa-f]{6}"/.test(css.split('var SCENES=')[1].split('function sceneHTML')[0]),'scene art uses tokens, not hex');
 ok(/\.scene\{[^}]*height:clamp/.test(css),'banner height capped');
+
+/* ---- validator: new evaluate rules ---- */
+const sv=load('/mnt/user-data/outputs/puppeteer_studio_v0_1.html').window;
+const thin={deckTitle:'x',scenarios:[{id:'t',title:'t',start:'a',steps:['s'],
+  nodes:{a:{type:'evaluate',criteria:[{label:'L',keywords:['sms','email'],coach:'c'}],
+    prompt:'p',model:'nothing relevant here',modelExplain:'x',toPass:'e',toFail:'e'}},
+  endings:{e:{title:'x',verdict:'v'}}}]};
+const te=sv.validate(thin);
+ok(te.some(x=>x.includes('only 2 keywords')),'validator flags thin keyword lists');
+ok(te.some(x=>x.includes('model answer scores 0/1')),'validator grades the model answer against its own rubric');
+const nocoach=JSON.parse(JSON.stringify(thin));
+nocoach.scenarios[0].nodes.a.criteria[0]={label:'L',keywords:['a','b','c','d','e','f','g','h']};
+delete nocoach.scenarios[0].nodes.a.model;
+const nc=sv.validate(nocoach);
+ok(nc.some(x=>x.includes('no coach sentence')),'validator requires a coach sentence');
+ok(nc.some(x=>x.includes('no model answer')),'validator requires a model answer');
+ok(sv.validate(JSON.parse(fs.readFileSync('/home/claude/sample_scenario.json','utf8'))).length===0,'sample passes the stricter validator');
+
+/* ---- competency tagging ---- */
+const cd=load('/mnt/user-data/outputs/sample_signoff_standalone.html').window.document;
+ok(cd.getElementById('railKicker').textContent.startsWith('Listens Actively'),'rail shows the competency');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

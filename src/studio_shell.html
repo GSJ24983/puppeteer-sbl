@@ -162,7 +162,23 @@ function validate(json){
         (n.criteria||[]).forEach(function(c,ci){
           if(!c.label)e.push(q+'criterion '+ci+' has no label');
           if(!c.keywords||!c.keywords.length)e.push(q+'criterion '+ci+' has no keywords - it can never be met');
+          else if(c.keywords.length<8)e.push(q+'criterion '+ci+' has only '+c.keywords.length+
+            ' keywords - aim for 15-25, mostly phrases, or real answers will fail it');
+          if(!c.coach)e.push(q+'criterion '+ci+' has no coach sentence - feedback would only name the gap, not teach it');
         });
+        if(!n.model)e.push(q+'has no model answer - learners working alone have nothing to compare against');
+        if(n.model&&!n.modelExplain)e.push(q+'has a model answer but no modelExplain');
+        if(n.model){
+          var mres=(function(){
+            var t=(' '+String(n.model).toLowerCase()+' ').replace(/[^a-z0-9\s]/g,' ');
+            return (n.criteria||[]).filter(function(c){
+              return (c.keywords||[]).some(function(k){return t.indexOf(k.toLowerCase())>-1;});}).length;
+          })();
+          if(mres<(n.pass||(n.criteria||[]).length))
+            e.push(q+'model answer scores '+mres+'/'+(n.criteria||[]).length+
+              ' against its own rubric - the keywords are too narrow or the model answer is wrong');
+        }
+        if(!n.speaker&&!n.prompt&&!n.question)e.push(q+'has no prompt or question');
         chk(n.toPass,'toPass');chk(n.toFail,'toFail');chk(n.to,'to');
         if(!n.toPass&&!n.to)e.push(q+'has no destination');
       }
@@ -215,9 +231,10 @@ var SKELETON={deckTitle:'The Puppeteer',scenarios:[{
       {k:'A',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:''},to:'n2'},
       {k:'B',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:'',good:true},to:'n2'}
     ]},
-    n2:{type:'evaluate',step:2,scene:'data',prompt:'',criteria:[
-      {label:'',keywords:[''],hint:''},{label:'',keywords:[''],hint:''}
-    ],pass:2,showRubric:false,toPass:'good',toFail:'partial'}
+    n2:{type:'evaluate',step:2,scene:'data',speaker:'',question:'',criteria:[
+      {label:'',keywords:[],hint:'',coach:''},{label:'',keywords:[],hint:'',coach:''}
+    ],pass:2,showRubric:false,model:'',modelExplain:'',coachLead:'To make this land, ',
+    toPass:'good',toFail:'partial'}
   },
   endings:{
     good:{step:3,scene:'launch',title:'',moral:'',verdict:'',revealed:[['','']]},
