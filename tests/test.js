@@ -1,4 +1,6 @@
-const {JSDOM}=require('jsdom'),fs=require('fs');
+const {JSDOM}=require('jsdom'),fs=require('fs'),path=require('path'),os=require('os');
+const R=p=>path.join(__dirname,'..',p);   // paths relative to the repo root
+const STUDIO=R('index.html'),DEMO=R('demo/signoff.html'),SAMPLE=R('src/sample_scenario.json');
 let pass=0,fail=0;
 const ok=(c,m)=>{c?pass++:(fail++,console.log('FAIL:',m));};
 
@@ -7,7 +9,7 @@ function load(file){
   if(dom.window.GRADE_DELAY!==undefined)dom.window.GRADE_DELAY=0;   // grade synchronously in tests
   return dom;
 }
-const dom=load('/mnt/user-data/outputs/sample_signoff_standalone.html');
+const dom=load(DEMO);
 const w=dom.window,d=w.document;
 ok(!!w.DATA,'DATA parsed');
 const sc=w.DATA.scenarios[0];
@@ -51,11 +53,11 @@ ok(d.querySelector('.moral'),'ending rendered');
 ok(d.querySelector('.stitle').textContent.includes('blank cell'),'routed to good ending');
 const sum=d.getElementById('code').textContent.split('\n');
 ok(sum[0].includes("The Requirement That Wasn't"),'summary names the scenario');
-ok(sum.some(l=>l.startsWith('Competency: Listens Actively')),'summary carries the competency and behaviour');
+ok(sum.some(l=>l.startsWith('Competency: Challenges assumptions, reframes and holds a point of view')),'summary carries the competency and behaviour');
 ok(sum.some(l=>l.startsWith('Chose:')),'summary states the choice in words');
 ok(sum.some(l=>l.startsWith('Written answer: 3/3')),'summary states the rubric score');
 ok(sum.some(l=>l.startsWith('Ending: ')),'summary names the ending');
-ok(sum[sum.length-1].startsWith('PUP|signoff|Listens Actively|'),'compact code carries the competency for pivoting');
+ok(sum[sum.length-1].startsWith('PUP|signoff|Challenges assumptions, reframes and holds a point of view|'),'compact code carries the competency for pivoting');
 
 // weak answer routes to partial
 w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[0].click();d.getElementById('go').click();
@@ -99,7 +101,7 @@ d.getElementById('sub').click();
 ok(d.querySelector('.scorepill.full'),'the shipped model answer scores full marks');
 
 // speaker-framed prompt
-const jd=JSON.parse(fs.readFileSync('/home/claude/sample_scenario.json','utf8'));
+const jd=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
 ok(!!jd.scenarios[0].nodes.n3.speaker,'sample uses an in-character prompt');
 w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
 [0,1,3].forEach(i=>{d.querySelectorAll('.opt input')[i].checked=true;});
@@ -114,7 +116,7 @@ Object.entries(sc.nodes).forEach(([k,n])=>{
 });
 
 // studio: validator catches a broken deck
-const st=load('/mnt/user-data/outputs/puppeteer_studio_v0_1.html');
+const st=load(STUDIO);
 const sw=st.window;
 ok(sw.document.getElementById('status').textContent==='valid','studio loads sample as valid');
 const broken=JSON.parse(JSON.stringify(sw.JSON?sc:sc));
@@ -129,19 +131,19 @@ const e2=sw.validate(bad2);
 ok(e2.some(x=>x.includes('no keywords')),'validator catches keywordless criterion');
 ok(e2.some(x=>x.includes('no verdict')),'validator catches ending without verdict');
 // build() round trip
-const built=sw.build(JSON.parse(fs.readFileSync('sample_scenario.json','utf8')));
+const built=sw.build(JSON.parse(fs.readFileSync(SAMPLE,'utf8')));
 ok(built.indexOf('__SCENARIO_JSON__')<0,'placeholder replaced on export');
 ok(built.indexOf('<\\/script>')<0,'script tags unescaped on export');
 ok(built.trim().endsWith('</html>'),'export is a complete document');
 
 // house style sweep on all output
-['/mnt/user-data/outputs/puppeteer_studio_v0_1.html','/mnt/user-data/outputs/sample_signoff_standalone.html'].forEach(f=>{
+[STUDIO,DEMO].forEach(f=>{
   const t=fs.readFileSync(f,'utf8');
   ok(!t.includes('\u2014'),'no em dash in '+f.split('/').pop());
   ['leverage','robust','seamless','delve'].forEach(bw=>ok(!new RegExp('\\b'+bw+'\\b','i').test(t),'no "'+bw+'" in '+f.split('/').pop()));
 });
 /* ---- affordances ---- */
-const d2=load('/mnt/user-data/outputs/sample_signoff_standalone.html').window;
+const d2=load(DEMO).window;
 d2.start('signoff');
 const doc=d2.document;
 doc.getElementById('go').click();                       // n1
@@ -169,11 +171,11 @@ doc.getElementById('go').click();
 ok(doc.querySelector('[data-aff="i"]'),'i button on the ending');
 
 /* showRubric:true starts open */
-const j=JSON.parse(fs.readFileSync('/home/claude/sample_scenario.json','utf8'));
+const j=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
 j.scenarios[0].nodes.n3.showRubric=true;
-const st2=load('/mnt/user-data/outputs/puppeteer_studio_v0_1.html').window;
-fs.writeFileSync('/tmp/open.html',st2.build(j));
-const d3=load('/tmp/open.html').window.document;
+const st2=load(STUDIO).window;
+fs.writeFileSync(path.join(os.tmpdir(),'open.html'),st2.build(j));
+const d3=load(path.join(os.tmpdir(),'open.html')).window.document;
 d3.getElementById('go').click();d3.querySelectorAll('.choice')[1].click();d3.getElementById('go').click();
 [0,1,3].forEach(i=>{d3.querySelectorAll('.opt input')[i].checked=true;});
 d3.getElementById('sub').click();d3.getElementById('go').click();
@@ -181,7 +183,7 @@ ok(!d3.getElementById('rub').classList.contains('folded'),'showRubric:true start
 ok(d3.getElementById('eBtn').classList.contains('on'),'e button reflects expanded state');
 
 /* ---- theme ---- */
-const td=load('/mnt/user-data/outputs/sample_signoff_standalone.html').window;
+const td=load(DEMO).window;
 const tdoc=td.document;
 ok(tdoc.getElementById('themeBtn'),'theme button present');
 ok(!tdoc.documentElement.getAttribute('data-theme'),'starts dark');
@@ -189,13 +191,13 @@ tdoc.getElementById('themeBtn').click();
 ok(tdoc.documentElement.getAttribute('data-theme')==='light','toggles to light');
 tdoc.getElementById('themeBtn').click();
 ok(!tdoc.documentElement.getAttribute('data-theme'),'toggles back to dark');
-const css=fs.readFileSync('/mnt/user-data/outputs/sample_signoff_standalone.html','utf8');
+const css=fs.readFileSync(DEMO,'utf8');
 ok(css.includes("html[data-theme='light']"),'light tokens present');
 ok(!/fill="#[0-9A-Fa-f]{6}"/.test(css.split('var SCENES=')[1].split('function sceneHTML')[0]),'scene art uses tokens, not hex');
 ok(/\.scene\{[^}]*height:clamp/.test(css),'banner height capped');
 
 /* ---- validator: new evaluate rules ---- */
-const sv=load('/mnt/user-data/outputs/puppeteer_studio_v0_1.html').window;
+const sv=load(STUDIO).window;
 const thin={deckTitle:'x',scenarios:[{id:'t',title:'t',start:'a',steps:['s'],
   nodes:{a:{type:'evaluate',criteria:[{label:'L',keywords:['sms','email'],coach:'c'}],
     prompt:'p',model:'nothing relevant here',modelExplain:'x',toPass:'e',toFail:'e'}},
@@ -209,11 +211,11 @@ delete nocoach.scenarios[0].nodes.a.model;
 const nc=sv.validate(nocoach);
 ok(nc.some(x=>x.includes('no coach sentence')),'validator requires a coach sentence');
 ok(nc.some(x=>x.includes('no model answer')),'validator requires a model answer');
-ok(sv.validate(JSON.parse(fs.readFileSync('/home/claude/sample_scenario.json','utf8'))).length===0,'sample passes the stricter validator');
+ok(sv.validate(JSON.parse(fs.readFileSync(SAMPLE,'utf8'))).length===0,'sample passes the stricter validator');
 
 /* ---- competency tagging ---- */
-const cd=load('/mnt/user-data/outputs/sample_signoff_standalone.html').window.document;
-ok(cd.getElementById('railKicker').textContent.startsWith('Listens Actively'),'rail shows the competency');
+const cd=load(DEMO).window.document;
+ok(cd.getElementById('railKicker').textContent.startsWith('Challenges assumptions, reframes and holds a point of view'),'rail shows the competency');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

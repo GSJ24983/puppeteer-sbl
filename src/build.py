@@ -1,4 +1,7 @@
 import json,io,os
+# run from anywhere: python3 src/build.py  -> writes index.html and demo/signoff.html at the repo root
+HERE=os.path.dirname(os.path.abspath(__file__)); ROOT=os.path.dirname(HERE)
+os.chdir(HERE)
 eng=open('player_template.html').read()
 sample=open('sample_scenario.json').read()
 docs=open('docs.html').read()
@@ -10,8 +13,7 @@ docs_esc=docs.replace('</script>','<\\/script>')
 sample_esc=sample.replace('</script>','<\\/script>')
 
 out=shell.replace('__ENGINE_SRC__',eng_esc).replace('__SAMPLE_JSON__',sample_esc).replace('__DOCS__',docs_esc)
-os.makedirs('/mnt/user-data/outputs',exist_ok=True)
-open('/mnt/user-data/outputs/puppeteer_studio_v0_1.html','w').write(out)
+open(os.path.join(ROOT,'index.html'),'w').write(out)
 print('studio bytes',len(out))
 # also emit a ready standalone of the sample by doing the same substitution the browser does
 j=json.loads(sample)
@@ -19,5 +21,6 @@ title=(j.get('deckTitle','The Puppeteer'))+' - '+j['scenarios'][0]['title']
 s=eng.replace('__DECK_TITLE__',title)
 a=s.index('/*__SCENARIO_JSON__*/'); b=s.index('/*__END__*/')
 s=s[:a]+json.dumps(j,indent=1)+s[b+len('/*__END__*/'):]
-open('/mnt/user-data/outputs/sample_signoff_standalone.html','w').write(s)
+os.makedirs(os.path.join(ROOT,'demo'),exist_ok=True)
+open(os.path.join(ROOT,'demo','signoff.html'),'w').write(s)
 print('standalone bytes',len(s))

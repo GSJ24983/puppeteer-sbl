@@ -27,7 +27,11 @@ The run ends with a plain-English summary of their decisions that they paste int
 
 ## Competency grounding
 
-Every scenario is tagged to a competency and to the specific behaviour statement it trains, drawn from the ICF competency framework mapped onto product and business analysis practice. Rubric criteria are derived from that behaviour statement rather than invented, which is what keeps them observable instead of adjectival. The tag travels in every session summary, so a term of sessions pivots by competency in a spreadsheet: which competencies a cohort is weak on, not just which scenarios they found hard.
+Every scenario is tagged to one of eight behavioural anchors from **Swanubhava™ - The Product Management Behavioural Model**, and to the specific behaviour it trains. Swanubhava is my own framework, ICF-inspired and rebuilt for product work: it covers the human side of a product role - integrity under pressure, listening past the ask, holding a point of view - not the deliverables.
+
+Scenarios come from a library built on Klein's Recognition-Primed Decision model. Each one names the cues an expert notices, what happens if they are missed, the move a novice makes, and the move an expert makes. The novice move becomes the distractor and the weak end of the rubric; the expert move becomes the model answer and the strong end. Criteria are derived, not invented, which is what keeps them observable instead of adjectival.
+
+The tag travels in every session summary, so a term of sessions pivots by anchor in a spreadsheet: which anchors a cohort is weak on, not just which scenarios they found hard. The framework itself - indicators, levels and the scenario library - is not published.
 
 ## What is built
 
@@ -58,8 +62,8 @@ The trade-offs are the interesting part. A few, with what each one rules out, ar
 |---|---|
 | `index.html` | the built Studio |
 | `demo/` | exported standalone scenarios |
-| `src/` | engine template, studio shell, schema docs, sample scenario, build script |
-| `tests/` | 97 jsdom checks |
+| `src/` | engine template, studio shell, schema docs, sample scenario, build script (`python3 src/build.py` rebuilds `index.html` and `demo/`) |
+| `tests/` | 97 jsdom checks (`npm i jsdom`, then `node tests/test.js`) |
 | `docs/` | delivery workflow, authoring interface, decision log |
 
 ## Status

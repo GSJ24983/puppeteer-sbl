@@ -1,6 +1,6 @@
 # The SBL Author - authoring interface
 
-Scenarios are not written by hand. They are authored through a command-driven LLM brief that interviews the author, fills the gaps, and emits validated scenario JSON against the [schema](SCHEMA.md).
+Scenarios are not written by hand. They are authored through a command-driven LLM brief that interviews the author, fills the gaps, and emits validated scenario JSON against the [schema](../src/docs.html). Each scenario starts from an entry in the Swanubhava™ scenario library, so the author brings a known decision pattern rather than a blank page.
 
 The brief itself is not published. The interface is below.
 

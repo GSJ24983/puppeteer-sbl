@@ -19,7 +19,7 @@ The delivery process end to end. The authoring heuristics that sit inside the ag
 
 A topic is 'requirements elicitation'. A scenario is 'the spec says notify the customer and nobody asked what happens when there is no phone number'. The unit is a decision someone competent gets wrong.
 
-`/start` returns the intake template. Two fields do the real work:
+Start from a library entry where one fits - it already carries the cues, the wrong move and the expert move. `/start` returns the intake template. Two fields do the real work:
 
 - **The wrong move.** What capable people actually do here that costs them later.
 - **What it costs, and when.** Week three, in production, in front of the regulator. Specific.
@@ -80,7 +80,7 @@ Do not rely on the venue network.
 
 | Minutes | What happens |
 |---|---|
-| 0-5 | Frame the competency. No theory. One sentence on why this decision is hard. |
+| 0-5 | Frame the anchor. No theory. One sentence on why this decision is hard. |
 | 5-8 | They open the file. Sort out whoever's download failed. |
 | 8-25 | They run it, alone or in pairs. Walk the room and watch where they hesitate. |
 | 25-30 | Session summaries into the shared channel. |
@@ -97,14 +97,15 @@ Every run ends with a copyable summary:
 
 ```
 The Requirement That Wasn't - Business analysis scenario
-Chose: Ask ops for a concrete case
+Competency: Challenges assumptions, reframes and holds a point of view - pushes past the happy path
+Chose: Ask ops for a concrete case: a refund last week and exactly what the customer received
 Gap check: 3/3 of the must-haves
-Written answer: 2/3 rubric criteria, short on who owns the call when it fails
-Ending: Better, but still readable two ways
-PUP|signoff|B>0+1+3(3/3)>written(2/3)|partial
+Written answer: 3/3 rubric criteria - full marks
+Ending: The blank cell had nowhere to hide
+PUP|signoff|Challenges assumptions, reframes and holds a point of view|B>0+1+3(3/3)>written(3/3)|good
 ```
 
-Sentences first for skimming in the room, compact code last for sorting forty of them afterwards.
+Sentences first for skimming in the room, compact code last for sorting forty of them afterwards. The code is pipe-separated - split it on `|`, not on commas, because some competency names contain one.
 
 Twenty of these tell you what to spend the debrief on before anyone speaks.
 
