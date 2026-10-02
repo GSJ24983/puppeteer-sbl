@@ -96,7 +96,7 @@ Do not rely on the venue network.
 Every run ends with a copyable summary:
 
 ```
-The Requirement That Wasn't - Business analysis scenario
+The Requirement That Wasn't - Product analysis scenario
 Competency: Challenges assumptions, reframes and holds a point of view - pushes past the happy path
 Chose: Ask ops for a concrete case: a refund last week and exactly what the customer received
 Gap check: 3/3 of the must-haves
