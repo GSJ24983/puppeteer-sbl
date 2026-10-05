@@ -53,11 +53,13 @@ ok(d.querySelector('.moral'),'ending rendered');
 ok(d.querySelector('.stitle').textContent.includes('blank cell'),'routed to good ending');
 const sum=d.getElementById('code').textContent.split('\n');
 ok(sum[0].includes("The Requirement That Wasn't"),'summary names the scenario');
-ok(sum.some(l=>l.startsWith('Competency: Challenges assumptions, reframes and holds a point of view')),'summary carries the competency and behaviour');
+ok(sum.some(l=>l.startsWith('Anchor: Challenges assumptions, reframes and holds a point of view - pushes past the happy path')),'summary carries the anchor and behaviour');
+ok(sum.some(l=>l==='Pillar: Boundary defining posture'),'summary carries the pillar, derived from the anchor');
+ok(!sum.some(l=>l.startsWith('Competency:')),'summary no longer says Competency');
 ok(sum.some(l=>l.startsWith('Chose:')),'summary states the choice in words');
 ok(sum.some(l=>l.startsWith('Written answer: 3/3')),'summary states the rubric score');
 ok(sum.some(l=>l.startsWith('Ending: ')),'summary names the ending');
-ok(sum[sum.length-1].startsWith('PUP|signoff|Challenges assumptions, reframes and holds a point of view|'),'compact code carries the competency for pivoting');
+ok(sum[sum.length-1].startsWith('PUP|signoff|Challenges assumptions, reframes and holds a point of view|'),'compact code carries the anchor for pivoting');
 
 // weak answer routes to partial
 w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[0].click();d.getElementById('go').click();
@@ -213,9 +215,13 @@ ok(nc.some(x=>x.includes('no coach sentence')),'validator requires a coach sente
 ok(nc.some(x=>x.includes('no model answer')),'validator requires a model answer');
 ok(sv.validate(JSON.parse(fs.readFileSync(SAMPLE,'utf8'))).length===0,'sample passes the stricter validator');
 
-/* ---- competency tagging ---- */
+/* ---- anchor tagging ---- */
 const cd=load(DEMO).window.document;
-ok(cd.getElementById('railKicker').textContent.startsWith('Challenges assumptions, reframes and holds a point of view'),'rail shows the competency');
+ok(cd.getElementById('railKicker').textContent.startsWith('Challenges assumptions, reframes and holds a point of view'),'rail shows the anchor');
+const legacy=path.join(os.tmpdir(),'legacy.html');
+fs.writeFileSync(legacy,fs.readFileSync(DEMO,'utf8').replace('"anchor": "Challenges','"competency": "Challenges'));
+const ld=load(legacy).window.document;
+ok(ld.getElementById('railKicker').textContent.startsWith('Challenges assumptions, reframes and holds a point of view'),'older files tagged with competency still show the anchor');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

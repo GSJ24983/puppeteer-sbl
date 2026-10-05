@@ -8,7 +8,8 @@
   "scenarios": [{
     "id": "signoff",              <span class="k">// slug, appears in the session code</span>
     "title": "...", "kicker": "...", "tag": "Product analysis",
-    "competency": "Challenges assumptions, reframes and holds a point of view",   <span class="k">// Swanubhava anchor this scenario trains, verbatim</span>
+    "anchor": "Challenges assumptions, reframes and holds a point of view",   <span class="k">// Swanubhava anchor this scenario trains, verbatim ('competency' still accepted)</span>
+    "pillar": "Boundary defining posture",   <span class="k">// optional - derived from the anchor when left out</span>
     "behaviour": "pushes past the happy path",
     "meta": "6 min - 3 decisions", "thumb": "office",
     "blurb": "One sentence of tension.",
@@ -68,9 +69,9 @@
 
 <p><b>Attempts.</b> A weak first answer cannot skip ahead. Continue unlocks when the score reaches pass, or is one short, or on the second attempt - so nobody is ever trapped. Grading shows a spinner, then a score pill and criteria revealing in sequence; set <code>GRADE_DELAY = 0</code> in the exported file to make it instant.</p>
 
-<h2>Competency tagging</h2>
-<p>Scenarios are tagged to a competency - one of the eight Swanubhava&trade; anchors - and to the specific behaviour it trains. Use the anchor name verbatim, sentence case: the tag groups sessions, so a changed capital letter becomes a new competency in the spreadsheet. The behaviour is where rubric criteria come from - it is already written as an observable behaviour, which is what a criterion has to be.</p>
-<p>The tag shows on the hub card and the rail, and travels in every session summary and compact code, so a term of sessions pivots by competency in a spreadsheet: which competencies a cohort is weak on, not just which scenarios they found hard.</p>
+<h2>Anchor and pillar tagging</h2>
+<p>Scenarios are tagged to an anchor - one of the eight Swanubhava&trade; behavioural anchors, grouped in three pillars (Individual posture, Boundary defining posture, Collaboration posture) - and to the specific behaviour it trains. Put the anchor name in <code>anchor</code>, verbatim, sentence case: the tag groups sessions, so a changed capital letter becomes a new anchor in the spreadsheet. Older files that use <code>competency</code> still work. The pillar is filled in from the anchor; set <code>pillar</code> only to override it. The behaviour is where rubric criteria come from - it is already written as an observable behaviour, which is what a criterion has to be.</p>
+<p>The tag shows on the hub card and the rail, and travels in every session summary and compact code, so a term of sessions pivots by anchor (and pillar) in a spreadsheet: which anchors a cohort is weak on, not just which scenarios they found hard.</p>
 
 <h2>The i button - context on demand</h2>
 <p>Every choice, multi, evaluate and ending node carries an <b>i</b> button. It opens what the learner has seen so far - briefing text and the consequences of their own decisions - so nobody has to scroll back while writing. The engine assembles it automatically; you only add <code>context</code> when you want to inject something extra.</p>

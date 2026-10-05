@@ -25,19 +25,19 @@ Reads a situation. Makes a decision and lives the consequence. Presses `i` to re
 
 The run ends with a plain-English summary of their decisions that they paste into the class channel, so the debrief runs off what the room actually did rather than a show of hands.
 
-## Competency grounding
+## Swanubhava™ grounding
 
-Every scenario is tagged to one of eight behavioural anchors from **Swanubhava™ - The Product Management Behavioural Model**, and to the specific behaviour it trains. Swanubhava is my own framework, ICF-inspired and rebuilt for product work: it covers the human side of a product role - integrity under pressure, listening past the ask, holding a point of view - not the deliverables.
+Every scenario is tagged to one of eight behavioural anchors from **Swanubhava™ - The Product Management Behavioural Model**, grouped in three pillars (Individual posture, Boundary defining posture, Collaboration posture), and to the specific behaviour it trains. Swanubhava is my own framework, ICF-inspired and rebuilt for product work: it covers the human side of a product role - integrity under pressure, listening past the ask, holding a point of view - not the deliverables.
 
 Scenarios come from a library built on Klein's Recognition-Primed Decision model. Each one names the cues an expert notices, what happens if they are missed, the move a novice makes, and the move an expert makes. The novice move becomes the distractor and the weak end of the rubric; the expert move becomes the model answer and the strong end. Criteria are derived, not invented, which is what keeps them observable instead of adjectival.
 
-The tag travels in every session summary, so a term of sessions pivots by anchor in a spreadsheet: which anchors a cohort is weak on, not just which scenarios they found hard. The framework itself - indicators, levels and the scenario library - is not published.
+The tag travels in every session summary, so a term of sessions pivots by anchor and pillar in a spreadsheet: which anchors a cohort is weak on, not just which scenarios they found hard. The framework itself - indicators, levels and the scenario library - is not published.
 
 ## What is built
 
 Working: the player with four node types (narrative, branching choice, multi-select, written answer); rubric grading with per-criterion coaching, retry, and attempt-aware progression; a shipped model answer with an explanation of why it works; in-character dialogue prompts; cumulative context recall; dark and light themes; procedural scene art; standalone export; and session summaries.
 
-The validator catches dangling branches, unreachable nodes, missing coaching, thin keyword lists - and grades each model answer against its own rubric, so a rubric that cannot recognise a good answer never ships. 97 automated tests cover every branch, every validator rule, and both themes.
+The validator catches dangling branches, unreachable nodes, missing coaching, thin keyword lists - and grades each model answer against its own rubric, so a rubric that cannot recognise a good answer never ships. 100 automated tests cover every branch, every validator rule, and both themes.
 
 Not built: server-side response collection, LLM-based grading, pre and post assessment instrumentation, multi-scenario progress tracking.
 

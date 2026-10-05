@@ -97,7 +97,8 @@ Every run ends with a copyable summary:
 
 ```
 The Requirement That Wasn't - Product analysis scenario
-Competency: Challenges assumptions, reframes and holds a point of view - pushes past the happy path
+Anchor: Challenges assumptions, reframes and holds a point of view - pushes past the happy path
+Pillar: Boundary defining posture
 Chose: Ask ops for a concrete case: a refund last week and exactly what the customer received
 Gap check: 3/3 of the must-haves
 Written answer: 3/3 rubric criteria - full marks
@@ -105,7 +106,7 @@ Ending: The blank cell had nowhere to hide
 PUP|signoff|Challenges assumptions, reframes and holds a point of view|B>0+1+3(3/3)>written(3/3)|good
 ```
 
-Sentences first for skimming in the room, compact code last for sorting forty of them afterwards. The code is pipe-separated - split it on `|`, not on commas, because some competency names contain one.
+Sentences first for skimming in the room, compact code last for sorting forty of them afterwards. The code is pipe-separated - split it on `|`, not on commas, because some anchor names contain one.
 
 Twenty of these tell you what to spend the debrief on before anyone speaks.
 

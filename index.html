@@ -435,7 +435,7 @@ function renderHub(){
     var card=el('<article class="xcard"></article>');
     card.innerHTML='<div class="thumb">'+sceneHTML(s.thumb)+'</div><div class="xbody">'+
       '<div class="tagrow"><span class="tag'+(s.highlight?' hot':'')+'">'+esc(s.tag||'Scenario')+'</span>'+
-      (s.competency?'<span class="tag">'+esc(s.competency)+'</span>':'')+
+      (anchorOf(s)?'<span class="tag" title="'+esc(pillarOf(s))+'">'+esc(anchorOf(s))+'</span>':'')+
       (s.meta?'<span class="tag">'+esc(s.meta)+'</span>':'')+'</div>'+
       '<h2>'+esc(s.title)+'</h2><p>'+esc(s.blurb||'')+'</p>'+
       '<button class="play">Start</button></div>';
@@ -450,13 +450,19 @@ function backToHub(){
 }
 document.getElementById('backBtn').addEventListener('click',backToHub);
 
+/* Swanubhava tagging: 'anchor' (preferred) or the older 'competency' field; the pillar is derived from the anchor unless given */
+var PILLAR_OF={'acts with integrity under pressure':'Individual posture',"embodies a learner's mindset":'Individual posture',
+ 'strives for clarity and outcomes':'Boundary defining posture','challenges assumptions, reframes and holds a point of view':'Boundary defining posture','converts insight into owned outcomes':'Boundary defining posture',
+ 'builds trust and psychological safety':'Collaboration posture','stays present and grounded under ambiguity':'Collaboration posture','listens beyond the ask to uncover the need':'Collaboration posture'};
+function anchorOf(s){return s.anchor||s.competency||'';}
+function pillarOf(s){return s.pillar||PILLAR_OF[String(anchorOf(s)).trim().toLowerCase()]||'';}
 /* ---------------------------- run ---------------------------- */
 function start(id){
   var s=byId(id);if(!s)return;
   S={sc:id,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{}};
   document.getElementById('railTitle').textContent=s.title;
   document.getElementById('railKicker').textContent=
-    s.competency?(s.competency+(s.kicker?' - '+s.kicker:'')):(s.kicker||'');
+    anchorOf(s)?(anchorOf(s)+(s.kicker?' - '+s.kicker:'')):(s.kicker||'');
   hubEl.classList.add('hidden');playerEl.classList.remove('hidden');window.scrollTo(0,0);
   goTo(s.start);
 }
@@ -748,7 +754,8 @@ function list(a){
 function sessionSummary(endKey,e){
   var s=byId(S.sc),L=[];
   L.push(s.title+(s.kicker?' - '+s.kicker:''));
-  if(s.competency)L.push('Competency: '+s.competency+(s.behaviour?' - '+s.behaviour:''));
+  if(anchorOf(s))L.push('Anchor: '+anchorOf(s)+(s.behaviour?' - '+s.behaviour:''));
+  if(pillarOf(s))L.push('Pillar: '+pillarOf(s));
   var retries=S.log.filter(function(l){return l.gated;}).length;
   S.log.filter(function(l){return !l.gated;}).forEach(function(l){
     if(l.kind==='choice')L.push('Chose: '+l.label);
@@ -761,7 +768,7 @@ function sessionSummary(endKey,e){
   if(retries)L.push('Corrected course after '+retries+' wrong turn'+(retries>1?'s':''));
   L.push('Ending: '+((e&&e.title)||endKey));
   var picks=S.log.map(function(l){return l.pick+(l.score?'('+l.score+')':'');}).join('>');
-  L.push('PUP|'+s.id+'|'+(s.competency||'-')+'|'+picks+'|'+endKey);
+  L.push('PUP|'+s.id+'|'+(anchorOf(s)||'-')+'|'+picks+'|'+endKey);
   return L.join('\n');
 }
 
@@ -789,7 +796,7 @@ renderHub();
       "id": "signoff",
       "title": "The Requirement That Wasn't",
       "kicker": "Product analysis scenario",
-      "competency": "Challenges assumptions, reframes and holds a point of view",
+      "anchor": "Challenges assumptions, reframes and holds a point of view",
       "behaviour": "pushes past the happy path",
       "tag": "Product analysis",
       "meta": "6 min - 3 decisions - 1 graded",
@@ -1037,7 +1044,8 @@ renderHub();
   "scenarios": [{
     "id": "signoff",              <span class="k">// slug, appears in the session code</span>
     "title": "...", "kicker": "...", "tag": "Product analysis",
-    "competency": "Challenges assumptions, reframes and holds a point of view",   <span class="k">// Swanubhava anchor this scenario trains, verbatim</span>
+    "anchor": "Challenges assumptions, reframes and holds a point of view",   <span class="k">// Swanubhava anchor this scenario trains, verbatim ('competency' still accepted)</span>
+    "pillar": "Boundary defining posture",   <span class="k">// optional - derived from the anchor when left out</span>
     "behaviour": "pushes past the happy path",
     "meta": "6 min - 3 decisions", "thumb": "office",
     "blurb": "One sentence of tension.",
@@ -1097,9 +1105,9 @@ renderHub();
 
 <p><b>Attempts.</b> A weak first answer cannot skip ahead. Continue unlocks when the score reaches pass, or is one short, or on the second attempt - so nobody is ever trapped. Grading shows a spinner, then a score pill and criteria revealing in sequence; set <code>GRADE_DELAY = 0</code> in the exported file to make it instant.</p>
 
-<h2>Competency tagging</h2>
-<p>Scenarios are tagged to a competency - one of the eight Swanubhava&trade; anchors - and to the specific behaviour it trains. Use the anchor name verbatim, sentence case: the tag groups sessions, so a changed capital letter becomes a new competency in the spreadsheet. The behaviour is where rubric criteria come from - it is already written as an observable behaviour, which is what a criterion has to be.</p>
-<p>The tag shows on the hub card and the rail, and travels in every session summary and compact code, so a term of sessions pivots by competency in a spreadsheet: which competencies a cohort is weak on, not just which scenarios they found hard.</p>
+<h2>Anchor and pillar tagging</h2>
+<p>Scenarios are tagged to an anchor - one of the eight Swanubhava&trade; behavioural anchors, grouped in three pillars (Individual posture, Boundary defining posture, Collaboration posture) - and to the specific behaviour it trains. Put the anchor name in <code>anchor</code>, verbatim, sentence case: the tag groups sessions, so a changed capital letter becomes a new anchor in the spreadsheet. Older files that use <code>competency</code> still work. The pillar is filled in from the anchor; set <code>pillar</code> only to override it. The behaviour is where rubric criteria come from - it is already written as an observable behaviour, which is what a criterion has to be.</p>
+<p>The tag shows on the hub card and the rail, and travels in every session summary and compact code, so a term of sessions pivots by anchor (and pillar) in a spreadsheet: which anchors a cohort is weak on, not just which scenarios they found hard.</p>
 
 <h2>The i button - context on demand</h2>
 <p>Every choice, multi, evaluate and ending node carries an <b>i</b> button. It opens what the learner has seen so far - briefing text and the consequences of their own decisions - so nobody has to scroll back while writing. The engine assembles it automatically; you only add <code>context</code> when you want to inject something extra.</p>
