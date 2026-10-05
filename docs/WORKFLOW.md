@@ -99,11 +99,12 @@ Every run ends with a copyable summary:
 The Requirement That Wasn't - Product analysis scenario
 Anchor: Challenges assumptions, reframes and holds a point of view - pushes past the happy path
 Pillar: Boundary defining posture
-Chose: Ask ops for a concrete case: a refund last week and exactly what the customer received
+Chose: Ask Meera for one real refund from last week, and exactly what that customer received
 Gap check: 3/3 of the must-haves
 Written answer: 3/3 rubric criteria - full marks
-Ending: The blank cell had nowhere to hide
-PUP|signoff|Challenges assumptions, reframes and holds a point of view|B>0+1+3(3/3)>written(3/3)|good
+Chose: Put the cost in one line - 'one in nine customers will get nothing' - and ask her to decide with that in front of her
+Ending: The blank had nowhere to hide
+PUP|signoff|Challenges assumptions, reframes and holds a point of view|B>0+1+3(3/3)>written(3/3)>B|good
 ```
 
 Sentences first for skimming in the room, compact code last for sorting forty of them afterwards. The code is pipe-separated - split it on `|`, not on commas, because some anchor names contain one.

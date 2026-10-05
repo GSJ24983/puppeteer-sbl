@@ -9,6 +9,7 @@ function load(file){
   if(dom.window.GRADE_DELAY!==undefined)dom.window.GRADE_DELAY=0;   // grade synchronously in tests
   return dom;
 }
+const toN1=doc=>{for(let i=0;i<5&&!doc.querySelector('.choice');i++)doc.getElementById('go').click();};
 const dom=load(DEMO);
 const w=dom.window,d=w.document;
 ok(!!w.DATA,'DATA parsed');
@@ -16,13 +17,15 @@ const sc=w.DATA.scenarios[0];
 
 // single scenario auto-starts
 ok(d.getElementById('player').className.indexOf('hidden')<0,'player visible on single scenario');
+ok(d.querySelector('.stitle').textContent.includes('What is this scenario about'),'concept intro rendered first');
+d.getElementById('go').click();
 ok(d.querySelector('.stitle').textContent.includes('Two days'),'brief rendered');
 ok(d.querySelectorAll('ol.steps li').length===sc.steps.length,'rail steps rendered');
 
 // walk every choice branch of n1
 ['A','B','C'].forEach((k,i)=>{
   w.start('signoff');
-  d.getElementById('go').click();               // brief -> n1
+  toN1(d);                                      // intro -> brief -> room -> n1
   ok(!!d.querySelector('.prompt'),'n1 prompt for '+k);
   const btns=d.querySelectorAll('.choice');
   ok(btns.length===3,'3 choices');
@@ -33,7 +36,7 @@ ok(d.querySelectorAll('ol.steps li').length===sc.steps.length,'rail steps render
 });
 
 // multi grading: correct set
-w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
+w.start('signoff');toN1(d);d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
 const boxes=[...d.querySelectorAll('.opt input')];
 [0,1,3].forEach(i=>{boxes[i].checked=true;});
 d.getElementById('sub').click();
@@ -49,8 +52,12 @@ const met=d.querySelectorAll('.crit.met').length;
 ok(met===3,'model answer scores 3/3, got '+met);
 ok(!!d.querySelector('#fb .scorepill.full'),'full-marks pill shown');
 d.getElementById('go').click();
+ok(d.querySelector('.prompt').textContent.includes('scope creep'),'pass routes to the hold-the-line decision');
+d.querySelectorAll('.choice')[1].click();
+ok(d.querySelector('.lesson.good'),'holding the line with the cost visible is the good move');
+d.getElementById('go').click();
 ok(d.querySelector('.moral'),'ending rendered');
-ok(d.querySelector('.stitle').textContent.includes('blank cell'),'routed to good ending');
+ok(d.querySelector('.stitle').textContent.includes('nowhere to hide'),'routed to good ending');
 const sum=d.getElementById('code').textContent.split('\n');
 ok(sum[0].includes("The Requirement That Wasn't"),'summary names the scenario');
 ok(sum.some(l=>l.startsWith('Anchor: Challenges assumptions, reframes and holds a point of view - pushes past the happy path')),'summary carries the anchor and behaviour');
@@ -62,7 +69,7 @@ ok(sum.some(l=>l.startsWith('Ending: ')),'summary names the ending');
 ok(sum[sum.length-1].startsWith('PUP|signoff|Challenges assumptions, reframes and holds a point of view|'),'compact code carries the anchor for pivoting');
 
 // weak answer routes to partial
-w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[0].click();d.getElementById('go').click();
+w.start('signoff');toN1(d);d.querySelectorAll('.choice')[0].click();d.getElementById('go').click();
 d.querySelectorAll('.opt input')[0].checked=true;d.getElementById('sub').click();
 ok(d.querySelector('#fb .lesson')&&!d.querySelector('#fb .lesson.good'),'partial multi flagged');
 d.getElementById('go').click();
@@ -83,7 +90,7 @@ d.getElementById('go').click();
 ok(d.querySelector('.stitle').textContent.includes('readable two ways'),'routed to partial ending');
 
 // near-miss unlocks immediately
-w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
+w.start('signoff');toN1(d);d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
 [0,1,3].forEach(i=>{d.querySelectorAll('.opt input')[i].checked=true;});
 d.getElementById('sub').click();d.getElementById('go').click();
 d.getElementById('ans').value='We send an SMS, and if the customer has no mobile number on file we use email.';
@@ -92,7 +99,7 @@ ok(d.querySelector('.scorepill').textContent.trim()==='2 / 3','near miss scores 
 ok(!!d.getElementById('go'),'a near miss can proceed on the first attempt');
 
 // model answer button
-w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
+w.start('signoff');toN1(d);d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
 [0,1,3].forEach(i=>{d.querySelectorAll('.opt input')[i].checked=true;});
 d.getElementById('sub').click();d.getElementById('go').click();
 ok(!!d.getElementById('modelBtn'),'model answer button present');
@@ -105,7 +112,7 @@ ok(d.querySelector('.scorepill.full'),'the shipped model answer scores full mark
 // speaker-framed prompt
 const jd=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
 ok(!!jd.scenarios[0].nodes.n3.speaker,'sample uses an in-character prompt');
-w.start('signoff');d.getElementById('go').click();d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
+w.start('signoff');toN1(d);d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
 [0,1,3].forEach(i=>{d.querySelectorAll('.opt input')[i].checked=true;});
 d.getElementById('sub').click();d.getElementById('go').click();
 ok(!!d.querySelector('.vpq'),'speaker prompt renders as dialogue');
@@ -148,7 +155,7 @@ ok(built.trim().endsWith('</html>'),'export is a complete document');
 const d2=load(DEMO).window;
 d2.start('signoff');
 const doc=d2.document;
-doc.getElementById('go').click();                       // n1
+toN1(doc);                                              // n1
 ok(doc.querySelector('[data-aff="i"]'),'i button on choice node');
 doc.querySelector('[data-aff="i"]').click();
 ok(!doc.getElementById('ctxPanel').classList.contains('hidden'),'context panel opens');
@@ -170,6 +177,9 @@ doc.getElementById('sub').click();
 ok(doc.getElementById('rlab').textContent.startsWith('3 of 3'),'score shown on the collapsed rubric label');
 ok(doc.querySelectorAll('.crit.met').length===3,'ticks set even while collapsed');
 doc.getElementById('go').click();
+ok(doc.querySelector('[data-aff="i"]'),'i button on the hold-the-line choice');
+doc.querySelectorAll('.choice')[0].click();doc.getElementById('go').click();
+ok(doc.querySelector('.stitle').textContent.includes('wrong week'),'deferring routes to its own ending');
 ok(doc.querySelector('[data-aff="i"]'),'i button on the ending');
 
 /* showRubric:true starts open */
@@ -178,7 +188,7 @@ j.scenarios[0].nodes.n3.showRubric=true;
 const st2=load(STUDIO).window;
 fs.writeFileSync(path.join(os.tmpdir(),'open.html'),st2.build(j));
 const d3=load(path.join(os.tmpdir(),'open.html')).window.document;
-d3.getElementById('go').click();d3.querySelectorAll('.choice')[1].click();d3.getElementById('go').click();
+toN1(d3);d3.querySelectorAll('.choice')[1].click();d3.getElementById('go').click();
 [0,1,3].forEach(i=>{d3.querySelectorAll('.opt input')[i].checked=true;});
 d3.getElementById('sub').click();d3.getElementById('go').click();
 ok(!d3.getElementById('rub').classList.contains('folded'),'showRubric:true starts expanded');

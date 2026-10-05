@@ -8,52 +8,74 @@
       "anchor": "Challenges assumptions, reframes and holds a point of view",
       "behaviour": "pushes past the happy path",
       "tag": "Product analysis",
-      "meta": "6 min - 3 decisions - 1 graded",
+      "meta": "10 min - 4 decisions - 1 written",
       "thumb": "office",
-      "blurb": "Sign-off is on Friday, the spec says 'notify the customer', and nobody has asked what happens when the customer has no phone number.",
+      "blurb": "Sign-off is on Friday. The spec says 'notify the customer', everyone has signed, and nobody has asked what happens when the customer has no phone number. Four decisions, about ten minutes.",
       "highlight": false,
       "steps": [
+        "What it is about",
         "Briefing",
         "Your first move",
         "The gap",
         "Write it down",
+        "Hold the line",
         "Debrief"
       ],
-      "start": "brief",
+      "start": "intro",
       "nodes": {
-        "brief": {
+        "intro": {
           "type": "narrative",
           "step": 0,
           "scene": "office",
+          "eyebrow": "Before you start",
+          "title": "What is this scenario about?",
+          "text": "This one trains anchor 7 of Swanubhava™ - challenging assumptions and holding a point of view. In plain words: when everyone in the room agrees, someone still has to ask 'are we all agreeing on the same thing?' Obviously that is easy to say in a classroom. It is much harder two days before a sign-off, when one question feels like slowing everyone down. You will play the product analyst. There are four decisions and one short piece of writing. There are no trick answers here - but some answers are expensive. A small honest note: the company and the numbers are made up. The pattern is not - I have seen it more times than I would like to admit.",
+          "media": [],
+          "to": "brief"
+        },
+        "brief": {
+          "type": "narrative",
+          "step": 1,
+          "scene": "office",
           "eyebrow": "Briefing",
           "title": "Two days to sign-off",
-          "text": "You are the product analyst on a refunds release. The spec line reads: 'When a refund is approved, notify the customer.' Ops has signed it. Tech has estimated it. Everyone is comfortable. You are not, and you cannot yet say why.",
+          "text": "You are the product analyst (PA) on a refunds release for an online retailer. Today, customers find out about an approved refund only when the money shows up in their account - so support gets about 400 'where is my refund?' calls every week. This release is meant to fix that. The line that matters in the spec reads: 'When a refund is approved, notify the customer.' Meera from operations has signed it. Arjun, the tech lead, has estimated it at three days. Priya, the sponsor, has already told the support head that the calls will drop this quarter. Everyone is comfortable. You are not - and you cannot yet say why.",
+          "media": [],
+          "to": "room"
+        },
+        "room": {
+          "type": "narrative",
+          "step": 1,
+          "scene": "team",
+          "eyebrow": "Wednesday stand-up",
+          "title": "Everyone nods",
+          "text": "In the stand-up, Priya says: 'We are in good shape. Let's not reopen anything that is already agreed.' Everyone nods. Arjun is already breaking the work into tasks. You read the line once more - 'notify the customer'. Notify how? By SMS? Email? Both? You are not sure whether this is a real problem or you are just being fussy. (Every PA asks themselves that question at least once a week. I certainly did.)",
           "media": [],
           "to": "n1"
         },
         "n1": {
           "type": "choice",
-          "step": 1,
+          "step": 2,
           "scene": "office",
-          "prompt": "Sign-off is Friday. What do you do with the discomfort?",
+          "prompt": "Sign-off is Friday. What do you do with that discomfort?",
           "choices": [
             {
               "k": "A",
-              "label": "Let it go - it is one line and everyone has signed",
+              "label": "Let it go - it is one line, and everyone has signed",
               "sub": "Protect the date",
               "tag": "Signed as-is",
               "chip": "Signed",
               "consequence": {
                 "scene": "storm",
                 "title": "Week three of production",
-                "text": "Refunds approve fine. Then a customer with no mobile number on file gets nothing, complains to the regulator, and the ticket lands back on your desk with a severity tag on it.",
-                "lesson": "A requirement everyone agrees on is not the same as a requirement everyone read the same way. Consensus hides ambiguity, it does not resolve it."
+                "text": "The release goes out on time. Refunds are approved, messages go out, and the calls start to drop. Then a customer with no mobile number on file gets nothing at all. She calls support twice, then writes to the consumer forum. The ticket lands back on your desk with a severity tag - and a question from Priya: 'Did nobody think of this?'",
+                "lesson": "Everyone signing the same line does not mean everyone read it the same way. Agreement can hide confusion; it does not remove it. Your discomfort was a cue - the kind an experienced person learns to trust - and you let it go because the date felt more important."
               },
               "to": "n2"
             },
             {
               "k": "B",
-              "label": "Ask ops for a concrete case: a refund last week and exactly what the customer received",
+              "label": "Ask Meera for one real refund from last week, and exactly what that customer received",
               "sub": "Probe with a real example",
               "tag": "Probed",
               "chip": "Probed",
@@ -61,22 +83,22 @@
                 "scene": "team",
                 "good": true,
                 "title": "The example does the work",
-                "text": "Ops pulls a real refund. Turns out 'notify' means SMS, and about one in nine customers has no mobile number. Nobody had decided what those customers get. It was never a disagreement - it was a blank.",
-                "lesson": "Concrete cases surface gaps that abstract review never will. Ask what happened last Tuesday, not whether the requirement is clear."
+                "text": "Meera pulls up a refund from last Tuesday. 'Notify' meant an SMS. Then she checks the numbers: about one in nine customers has no mobile number on file. Nobody had decided what those customers get. Meera had assumed SMS, Arjun had assumed email, and Priya had assumed 'something automatic'. It was never a disagreement. It was a blank.",
+                "lesson": "A real example does what a review meeting cannot. Ask 'is this clear?' and everyone says yes. Ask 'what happened last Tuesday?' and the gaps show up on their own. Also notice what you did not do - you did not tell anyone their requirement was bad. You asked for a fact."
               },
               "to": "n2"
             },
             {
               "k": "C",
-              "label": "Send the spec round again asking everyone to re-read carefully",
+              "label": "Send the spec around again and ask everyone to re-read it carefully",
               "sub": "Reconfirm in writing",
               "tag": "Re-circulated",
               "chip": "Re-read",
               "consequence": {
                 "scene": "office",
                 "title": "Three replies, all 'looks fine'",
-                "text": "You get three thumbs-ups within the hour. Nobody read it again. The same line means SMS to ops, email to tech, and 'something automatic' to the sponsor, and the round trip cost you half a day.",
-                "lesson": "Re-reading the same words produces the same interpretation. Change the question, not the number of reviewers."
+                "text": "Within the hour you get three thumbs-up emojis. Nobody read it again - why would they? They had already agreed. The line still means SMS to Meera, email to Arjun and 'something automatic' to Priya. And the round trip cost you half a day.",
+                "lesson": "Re-reading the same words gives the same understanding. If you want a different answer, ask a different question - not the same question to more people."
               },
               "to": "n2"
             }
@@ -84,9 +106,9 @@
         },
         "n2": {
           "type": "multi",
-          "step": 2,
+          "step": 3,
           "scene": "matrix",
-          "prompt": "You have twenty minutes with ops. Which of these must be nailed down before Friday? Pick every one that matters.",
+          "prompt": "Thursday morning. You have twenty minutes with Meera and Arjun. Which of these must be settled before Friday? Pick every one that matters.",
           "options": [
             {
               "label": "Which channel counts as a notification",
@@ -110,18 +132,18 @@
             1,
             3
           ],
-          "successNote": "Channel definition, the failure case, and the decision owner. Wording can be drafted later; it does not change the build.",
-          "missNote": "Before Friday you still need: ",
+          "successNote": "Right. The channel, what happens when that channel fails, and who decides. These three change what Arjun builds. The wording of the message and the font can be sorted later - they do not change the build.",
+          "missNote": "Before Friday you still need to settle: ",
           "to": "n3"
         },
         "n3": {
           "type": "evaluate",
-          "step": 3,
+          "step": 4,
           "scene": "data",
           "placeholder": "When a refund is approved...",
           "criteria": [
             {
-              "label": "Names the specific channel rather than 'notify'",
+              "label": "Names the actual channel instead of 'notify'",
               "keywords": [
                 "sms",
                 "email",
@@ -138,11 +160,11 @@
                 "via email",
                 "notification channel"
               ],
-              "hint": "say which channel actually fires",
-              "coach": "name the channel that actually fires - 'notify' is the word that let two teams build two different things, and replacing it with 'SMS' or 'email' is what closes the gap"
+              "hint": "say which channel actually sends the message",
+              "coach": "name the channel that actually fires - 'notify' is the word that let three people imagine three different things, and replacing it with 'SMS' or 'email' is what closes the gap"
             },
             {
-              "label": "Handles the case where the channel is not available",
+              "label": "Says what happens when that channel is not available",
               "keywords": [
                 "no mobile",
                 "missing",
@@ -162,10 +184,10 @@
                 "otherwise"
               ],
               "hint": "the customer with no number on file",
-              "coach": "say what happens to the customer with no number on file - that is the one in nine who got silence in production, and a requirement that ignores them is where the regulator complaint came from"
+              "coach": "say what happens to the customer with no mobile number on file - that is the one in nine who would get silence in production, and a requirement that ignores them is where the complaint comes from"
             },
             {
-              "label": "States who or what decides the fallback",
+              "label": "Says who or what decides when it fails",
               "keywords": [
                 "ops",
                 "owner",
@@ -185,28 +207,79 @@
                 "flags it to"
               ],
               "hint": "who owns the call when it fails",
-              "coach": "name who or what makes the call when the channel fails - unowned edge cases get decided quietly by whoever is on shift at 6pm, and you will not know it happened"
+              "coach": "name who or what makes the call when the channel fails - if nobody owns an edge case, whoever is on shift at 6pm decides it quietly, and you will never know"
             }
           ],
           "pass": 3,
-          "passNote": "Channel, failure case, and owner. That line cannot be built two ways.",
-          "toPass": "good",
+          "passNote": "Channel, the failure case and the owner. Nobody can build that line two ways.",
+          "toPass": "n4",
           "toFail": "partial",
-          "speaker": "The delivery lead:",
-          "question": "Fine - so write me the line. If two developers read it, I want them building the same thing.",
+          "speaker": "Arjun, the tech lead",
+          "question": "Fine. Write me the line. If two developers read it, I want them to build the same thing.",
           "title": "Write the line",
           "model": "When a refund is approved, the system sends the customer an SMS to the mobile number on file. If no mobile number is on file, it sends the same notification by email instead. If neither is available, the refund is flagged to the ops queue and ops owns the decision on how the customer is told.",
-          "modelExplain": "This covers all three: it <b>names the channel</b> (SMS), <b>handles the customer with no number</b> (email fallback), and <b>names the owner</b> when both fail (ops). Edit it or submit it as it stands to see the grade.",
+          "modelExplain": "This covers all three: it <b>names the channel</b> (SMS), <b>handles the customer with no number</b> (email fallback), and <b>names the owner</b> when both fail (ops). Edit it, or submit it as it is to see the grade.",
           "coachLead": "To make this un-misreadable, "
+        },
+        "n4": {
+          "type": "choice",
+          "step": 5,
+          "scene": "office",
+          "prompt": "Thursday, 5pm. Priya reads your new line and frowns: 'An email fallback and an ops queue? That is scope creep. Sign the original line tomorrow, and we will do the rest in phase 2.' What do you do?",
+          "choices": [
+            {
+              "k": "A",
+              "label": "Agree - it is her call, and phase 2 is only a month away",
+              "sub": "Defer to the sponsor",
+              "tag": "Deferred",
+              "chip": "Deferred",
+              "consequence": {
+                "scene": "storm",
+                "title": "Phase 2, six weeks later",
+                "text": "Phase 2 slips, the way phase 2 usually does. For six weeks, one in nine customers gets no message at all. The 'where is my refund?' calls you were meant to remove keep coming - from exactly the customers who are hardest to reach. Priya asks why the numbers have not moved.",
+                "lesson": "Respecting the sponsor's decision is right. But she decided without knowing the cost, and you did know it. Holding a point of view is not about winning the argument. It is about making sure the person who decides can see what you can see."
+              },
+              "to": "deferred"
+            },
+            {
+              "k": "B",
+              "label": "Put the cost in one line - 'one in nine customers will get nothing' - and ask her to decide with that in front of her",
+              "sub": "Make the cost visible, let her decide",
+              "tag": "Held the line",
+              "chip": "Held",
+              "consequence": {
+                "scene": "team",
+                "good": true,
+                "title": "One number changes the room",
+                "text": "Priya goes quiet for a moment. 'One in nine? Those are the calls I promised to cut.' She asks Arjun how long the email fallback will take. 'Half a day.' She signs the full line on Friday.",
+                "lesson": "You did not argue and you did not escalate. You put one fact in front of the person who owns the decision, and let her make it - this time with the facts. That is what holding a point of view looks like in real life: firm on the facts, open on the decision."
+              },
+              "to": "good"
+            },
+            {
+              "k": "C",
+              "label": "Escalate to her manager - the risk is too big to leave with her",
+              "sub": "Go over her head",
+              "tag": "Escalated",
+              "chip": "Escalated",
+              "consequence": {
+                "scene": "storm",
+                "title": "Right risk, wrong route",
+                "text": "Her manager agrees with you and asks Priya why she did not know. The fallback gets built. The next sprint, Priya stops inviting you to her planning meetings.",
+                "lesson": "You were right about the risk and wrong about the route. Escalation is for when the owner has seen the facts and still chooses something unsafe. Priya had not seen them yet - nobody had shown her."
+              },
+              "to": "bruised"
+            }
+          ]
         }
       },
       "endings": {
         "good": {
-          "step": 4,
+          "step": 6,
           "scene": "launch",
-          "title": "The blank cell had nowhere to hide",
+          "title": "The blank had nowhere to hide",
           "moral": "A good requirement is not one everyone agrees with. It is one nobody can misread.",
-          "verdict": "You shipped on Friday, and the one-in-nine customer got a defined outcome instead of silence. The same line became the test case, which is why QA found nothing in week three.",
+          "verdict": "You shipped on Friday, and the one-in-nine customer got a clear outcome instead of silence. Your line became the test case, which is why QA found nothing in week three. Now the question I would ask you in the debrief: where in your own work is a line that everyone has signed, and nobody has tested with a real example?",
           "revealed": [
             [
               "The probe",
@@ -214,20 +287,70 @@
             ],
             [
               "The gap",
-              "You separated what mattered before Friday from what could wait."
+              "You separated what had to be settled before Friday from what could wait."
             ],
             [
               "The write-up",
               "Channel, failure case and owner - all three in one line."
+            ],
+            [
+              "The line you held",
+              "You showed the sponsor the cost and let her decide with it in front of her."
+            ],
+            [
+              "Take this with you",
+              "When everyone agrees too quickly, ask for one real example."
+            ]
+          ]
+        },
+        "deferred": {
+          "step": 6,
+          "scene": "storm",
+          "title": "Right line, wrong week",
+          "moral": "Knowing the cost and keeping it to yourself is still a decision.",
+          "verdict": "You did the hard part - you found the gap and wrote a line nobody could misread. Then you let it go at the last step. In the debrief, think about this: what would you have needed to feel comfortable putting that one number in front of Priya?",
+          "revealed": [
+            [
+              "What held",
+              "You found the gap and wrote it down properly."
+            ],
+            [
+              "What slipped",
+              "You let the decision be made without the cost on the table."
+            ],
+            [
+              "Take this with you",
+              "Firm on the facts, open on the decision."
+            ]
+          ]
+        },
+        "bruised": {
+          "step": 6,
+          "scene": "launch",
+          "title": "Shipped, with a bruise",
+          "moral": "Being right is half the job. How you are right is the other half.",
+          "verdict": "The customers are covered and the line is solid. But you spent trust you will need next quarter. In the debrief, ask yourself: what would one conversation with Priya, with the number in hand, have changed?",
+          "revealed": [
+            [
+              "What held",
+              "You found the gap and wrote a line nobody could misread."
+            ],
+            [
+              "What slipped",
+              "You escalated before the owner had seen the facts."
+            ],
+            [
+              "Take this with you",
+              "Show the owner first. Escalate only if they still choose something unsafe."
             ]
           ]
         },
         "partial": {
-          "step": 4,
+          "step": 6,
           "scene": "storm",
           "title": "Better, but still readable two ways",
-          "moral": "Ambiguity does not announce itself. It shows up as a support ticket in week three.",
-          "verdict": "Your line is sharper than the original, but a developer reading it still has a decision left to make - and they will make it quietly, at 6pm, without you.",
+          "moral": "Confusion does not announce itself. It shows up as a support ticket in week three.",
+          "verdict": "Your line is sharper than the original, but a developer reading it still has a decision left to make - and they will make it quietly, at 6pm, without you. Try the scenario again and see what changes when the line names the channel, the failure case and the owner.",
           "revealed": [
             [
               "What held",
@@ -235,7 +358,7 @@
             ],
             [
               "What slipped",
-              "The written requirement left at least one thing to interpretation."
+              "The written line still left at least one thing to interpretation."
             ]
           ]
         }

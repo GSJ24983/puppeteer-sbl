@@ -2,7 +2,7 @@
 
 A branching-scenario learning engine that teaches judgment by making people decide, then grades what they write.
 
-**[Play a scenario](https://GSJ24983.github.io/puppeteer-sbl/demo/signoff.html)**  -  six minutes, works on a phone, no signup.
+**[Play a scenario](https://GSJ24983.github.io/puppeteer-sbl/demo/signoff.html)**  -  about ten minutes, works on a phone, no signup.
 **[Open the authoring studio](https://GSJ24983.github.io/puppeteer-sbl/)**  -  edit a scenario and export your own.
 
 ## The problem
@@ -37,7 +37,7 @@ The tag travels in every session summary, so a term of sessions pivots by anchor
 
 Working: the player with four node types (narrative, branching choice, multi-select, written answer); rubric grading with per-criterion coaching, retry, and attempt-aware progression; a shipped model answer with an explanation of why it works; in-character dialogue prompts; cumulative context recall; dark and light themes; procedural scene art; standalone export; and session summaries.
 
-The validator catches dangling branches, unreachable nodes, missing coaching, thin keyword lists - and grades each model answer against its own rubric, so a rubric that cannot recognise a good answer never ships. 100 automated tests cover every branch, every validator rule, and both themes.
+The validator catches dangling branches, unreachable nodes, missing coaching, thin keyword lists - and grades each model answer against its own rubric, so a rubric that cannot recognise a good answer never ships. 110 automated tests cover every branch, every validator rule, and both themes.
 
 Not built: server-side response collection, LLM-based grading, pre and post assessment instrumentation, multi-scenario progress tracking.
 
