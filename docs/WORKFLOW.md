@@ -136,7 +136,7 @@ Anything said in the debrief that landed hard - the war story, the sharper phras
 | Nobody scores above one criterion | Keywords too narrow, or the prompt is unclear | Check the prompt actually asks for the things the rubric grades |
 | Learners ask what the briefing said | They missed the i button | Say it exists at minute 8 |
 | Debrief runs flat | The rubric was revealed too early | Collapse it, project an answer, ask the room first |
-| Text feels cramped | A screen is over ~120 words | Split the node in two |
+| Text feels cramped | A screen is over ~500 words, or one solid paragraph | Break it into pointers; split the node in two if it covers two moments |
 
 ---
 
