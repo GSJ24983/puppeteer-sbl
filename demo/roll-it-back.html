@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Holding a view under pressure - Roll it back by tonight</title>
+<style>
+:root{
+  --indigo:#201A3E; --deep:#15112B; --surface:#2B2456; --surf2:#352C68;
+  --coral:#FF6B4A; --coral2:#FF835F; --onCoral:#25100A; --teal:#16B5A4; --onTeal:#04211E; --blue:#0070C0;
+  --lav:#B9AEE8; --ink:#F3F0FF; --mute:#A79EC9; --line:#463C7F; --gold:#F2C14E;
+  --body:#DCD6F5; --tint:rgba(43,36,86,.55); --shadow:none;
+  --serif:'Fraunces','Iowan Old Style',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans','Segoe UI',system-ui,-apple-system,Calibri,sans-serif;
+}
+
+html[data-theme='light']{
+  --indigo:#EAF0F8; --deep:#FFFFFF; --surface:#F4F8FC; --surf2:#E7EFF8;
+  --coral:#0B5FBF; --coral2:#0A54A8; --onCoral:#FFFFFF; --teal:#0E7C6B; --onTeal:#FFFFFF; --blue:#0B5FBF;
+  --lav:#2C5C92; --ink:#10233B; --mute:#5C7288; --line:#CFDDEC; --gold:#9A6B0F;
+  --body:#22364F; --tint:#F4F8FC; --shadow:0 1px 2px rgba(16,35,59,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--deep);color:var(--ink);font-family:var(--sans);line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 18px 64px}
+a{color:var(--lav)}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+
+/* masthead */
+.mast{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.strings{width:34px;height:34px;flex:none}
+.mast h1{font-family:var(--serif);font-size:19px;font-weight:600;margin:0;letter-spacing:.1px}
+.mast .sub{color:var(--mute);font-size:13px;margin-left:auto}
+.themeBtn{background:var(--surface);border:1px solid var(--line);color:var(--mute);border-radius:7px;
+  width:30px;height:30px;display:grid;place-items:center;cursor:pointer;padding:0}
+.themeBtn:hover{color:var(--ink);border-color:var(--lav)}
+
+/* hub */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:24px}
+.xcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.thumb{aspect-ratio:16/9;background:var(--indigo)}
+.thumb svg{display:block;width:100%;height:100%}
+.xbody{padding:16px 16px 18px;display:flex;flex-direction:column;gap:9px;flex:1}
+.tagrow{display:flex;gap:8px;flex-wrap:wrap}
+.tag{font-size:11.5px;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:2px 9px}
+.tag.hot{background:var(--teal);border-color:var(--teal);color:var(--onTeal);font-weight:600}
+.xcard h2{font-family:var(--serif);font-size:20px;margin:2px 0 0;font-weight:600}
+.xcard p{margin:0;color:var(--mute);font-size:14px;flex:1}
+.play{margin-top:6px;align-self:flex-start;background:var(--coral);color:var(--onCoral);border:0;border-radius:9px;
+  padding:9px 15px;font-weight:650;font-size:14px;cursor:pointer}
+.play:hover{background:var(--coral2)}
+
+/* player shell */
+.player{display:grid;grid-template-columns:236px 1fr;gap:26px;margin-top:24px;align-items:start}
+.rail{position:sticky;top:20px}
+.railTitle{font-family:var(--serif);font-size:17px;margin:0 0 2px}
+.railKicker{color:var(--mute);font-size:12.5px;margin:0 0 16px}
+ol.steps{list-style:none;margin:0;padding:0}
+ol.steps li{position:relative;padding:0 0 16px 24px;color:var(--mute);font-size:13.5px}
+ol.steps li:before{content:'';position:absolute;left:4px;top:5px;width:9px;height:9px;transform:rotate(45deg);
+  border:1.5px solid var(--line);background:var(--deep)}
+ol.steps li:after{content:'';position:absolute;left:8px;top:16px;bottom:-1px;width:1.5px;background:var(--line)}
+ol.steps li:last-child:after{display:none}
+ol.steps li.done{color:var(--lav)}
+ol.steps li.done:before{background:var(--teal);border-color:var(--teal)}
+ol.steps li.now{color:var(--ink);font-weight:600}
+ol.steps li.now:before{background:var(--coral);border-color:var(--coral);box-shadow:0 0 0 4px rgba(255,107,74,.18)}
+.chip{display:inline-block;margin-left:7px;font-size:11px;font-weight:500;color:var(--deep);
+  background:var(--lav);border-radius:99px;padding:1px 7px;vertical-align:1px}
+.backlink{margin-top:20px;background:none;border:0;color:var(--mute);font-size:13px;cursor:pointer;padding:0}
+.backlink:hover{color:var(--ink)}
+
+/* stage */
+.scene{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--indigo);
+  height:clamp(104px,19vh,168px)}
+.scene svg{display:block;width:100%;height:100%}
+.panel{margin-top:20px}
+.eyebrow{color:var(--coral);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.eyebrow .dot{width:6px;height:6px;background:var(--coral);transform:rotate(45deg)}
+.stitle{font-family:var(--serif);font-size:29px;line-height:1.22;margin:0 0 12px;font-weight:600}
+.stext{font-size:17.5px;color:var(--body);margin:0 0 18px;max-width:68ch;line-height:1.6}
+.stext.narr{font-family:var(--serif);font-size:19.5px;line-height:1.62}
+.media{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 16px}
+.media a{display:inline-flex;align-items:center;gap:7px;font-size:13px;text-decoration:none;color:var(--ink);
+  border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px}
+.media a:hover{border-color:var(--lav)}
+.media .mk{font-size:11px;color:var(--deep);background:var(--lav);border-radius:4px;padding:1px 6px;font-weight:650}
+.prompt{font-family:var(--serif);font-size:22px;line-height:1.32;margin:0 0 14px;color:var(--ink)}
+.phead{display:flex;align-items:flex-start;gap:12px}
+.phead .stitle,.phead .prompt{flex:1;margin-bottom:0}
+.aff{display:flex;gap:7px;flex:none;padding-top:2px}
+.aff button{width:31px;height:31px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
+  color:var(--lav);font-family:var(--serif);font-size:15px;font-weight:600;cursor:pointer;display:grid;place-items:center}
+.aff button:hover{border-color:var(--coral);color:var(--ink)}
+.aff button.on{background:var(--coral);border-color:var(--coral);color:var(--onCoral)}
+.aff button .badge{position:absolute;font-size:0}
+.ctx{max-width:760px;border:1px solid var(--line);border-left:3px solid var(--lav);border-radius:0 11px 11px 0;
+  background:var(--tint);padding:14px 17px;margin:0 0 16px}
+.ctx h4{font-family:var(--serif);font-size:14.5px;margin:0 0 8px;color:var(--lav);font-weight:600}
+.ctx .bit{margin:0 0 11px;font-size:15.5px;line-height:1.55;color:var(--body)}
+.ctx .bit:last-child{margin-bottom:0}
+.ctx .bit b{display:block;font-size:12.5px;color:var(--mute);font-weight:600;margin-bottom:2px}
+.rubwrap{max-width:760px;margin-top:16px}
+.rubwrap .rlab{font-size:12.5px;color:var(--mute);margin-bottom:8px}
+.rubric.folded{display:none}
+.linkrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:16px}
+.linkbtn{background:none;border:0;color:var(--mute);font-size:14.5px;cursor:pointer;padding:0;
+  text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--ink)}
+.aibox{max-width:760px;margin-top:18px;border:1px solid var(--line);border-radius:12px;
+  padding:14px 17px;background:var(--tint)}
+.aibox .alab{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--mute);
+  font-weight:600;margin-bottom:10px}
+.scorepill{background:var(--coral);color:var(--onCoral);border-radius:99px;padding:2px 10px;
+  font-size:12.5px;font-weight:700}
+.scorepill.full{background:var(--teal);color:var(--onTeal)}
+.aifb{font-size:15.5px;line-height:1.6;color:var(--body)}
+.aifb b{color:var(--ink)}
+.spin{width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--coral);
+  border-radius:50%;display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.crit{transition:opacity .25s ease}
+.vpq{max-width:760px;border-left:3px solid var(--coral);background:var(--tint);
+  border-radius:0 11px 11px 0;padding:13px 17px;margin:0 0 16px;font-size:17.5px;line-height:1.5;
+  font-family:var(--serif);color:var(--ink)}
+.vpq b{display:block;font-family:var(--sans);font-size:12.5px;color:var(--coral);
+  font-weight:650;margin-bottom:5px;letter-spacing:.2px}
+
+.choices{display:flex;flex-direction:column;gap:10px;max-width:760px}
+.choice{display:flex;gap:13px;align-items:flex-start;text-align:left;background:var(--surface);
+  border:1px solid var(--line);border-radius:11px;padding:13px 15px;color:var(--ink);cursor:pointer;width:100%}
+.choice:hover:not(:disabled){border-color:var(--coral);background:var(--surf2)}
+.choice:disabled{opacity:.42;cursor:not-allowed}
+.choice .k{flex:none;width:25px;height:25px;border-radius:6px;background:var(--surf2);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:12.5px;font-weight:700;color:var(--lav)}
+.choice .lb{font-size:16.5px;font-weight:560;line-height:1.4}
+.choice .sb{font-size:14px;color:var(--mute);margin-top:3px}
+.opt{display:flex;gap:11px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:12px 15px;font-size:16px;cursor:pointer;max-width:760px;margin-bottom:9px}
+.opt input{margin-top:4px;accent-color:var(--coral)}
+.opt.sel{border-color:var(--coral)}
+
+textarea{width:100%;max-width:760px;min-height:126px;background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:11px;padding:13px 15px;font-family:inherit;font-size:16.5px;line-height:1.55;resize:vertical}
+textarea:focus{border-color:var(--lav);outline:none}
+.rubric{max-width:760px;margin:14px 0 0;display:flex;flex-direction:column;gap:8px}
+.crit{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--mute);
+  border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:var(--tint)}
+.crit .mk{flex:none;width:17px;height:17px;border-radius:50%;border:1.5px solid var(--line);margin-top:2px}
+.crit.met{color:var(--ink);border-color:var(--teal)}
+.crit.met .mk{background:var(--teal);border-color:var(--teal)}
+.cont,.primary{margin-top:16px;background:var(--coral);color:var(--onCoral);border:0;border-radius:9px;
+  padding:11px 19px;font-weight:650;font-size:15px;cursor:pointer}
+.cont:hover,.primary:hover{background:var(--coral2)}
+.ghost{margin-top:16px;margin-left:9px;background:none;border:1px solid var(--line);color:var(--ink);
+  border-radius:9px;padding:11px 17px;font-size:15px;cursor:pointer}
+.ghost:hover{border-color:var(--lav)}
+
+.lesson{border-left:3px solid var(--coral);background:rgba(255,107,74,.09);border-radius:0 9px 9px 0;
+  padding:12px 16px;margin:0 0 15px;font-size:15.5px;line-height:1.55;max-width:760px}
+.lesson.good{border-left-color:var(--teal);background:rgba(22,181,164,.10)}
+.lesson b{display:block;margin-bottom:3px;font-size:12.5px;color:var(--lav);font-weight:650}
+
+/* ending */
+.moral{font-family:var(--serif);font-size:23px;font-style:italic;color:var(--gold);margin:0 0 14px;max-width:60ch}
+.revealed{list-style:none;padding:0;margin:0 0 16px;max-width:760px}
+.revealed li{display:flex;gap:14px;padding:11px 0;border-top:1px solid var(--line);font-size:15.5px}
+.revealed li span:first-child{flex:none;width:150px;color:var(--lav);font-weight:600}
+.summary{max-width:760px;margin-top:24px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--surface);box-shadow:var(--shadow)}
+.summary h3{font-family:var(--serif);font-size:17px;margin:0 0 4px;font-weight:600}
+.summary p{margin:0 0 11px;font-size:13.5px;color:var(--mute)}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;background:var(--deep);
+  border:1px solid var(--line);border-radius:8px;padding:11px 13px;word-break:break-all;color:var(--lav)}
+.copy{margin-top:11px;background:var(--teal);color:var(--onTeal);border:0;border-radius:8px;padding:8px 14px;
+  font-weight:650;font-size:13.5px;cursor:pointer}
+.hidden{display:none!important}
+.fade{animation:fade .34s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.fade{animation:none}}
+@media (max-width:760px){
+  .player{grid-template-columns:1fr;gap:18px}
+  .rail{position:static;order:2;border-top:1px solid var(--line);padding-top:16px}
+  .stage{order:1}
+  .stitle{font-size:24px}
+  .prompt{font-size:19.5px}
+  .scene{height:96px}
+  .revealed li{flex-direction:column;gap:3px}
+  .revealed li span:first-child{width:auto}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <svg class="strings" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <path d="M6 8h28" stroke="#FF6B4A" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M12 8v13M20 8v19M28 8v13" stroke="#463C7F" stroke-width="1.3"/>
+      <path d="M12 21l0 0" stroke="#16B5A4"/>
+      <rect x="8.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 12 24.5)" fill="#16B5A4"/>
+      <rect x="16.5" y="27" width="7" height="7" rx="1.4" transform="rotate(45 20 30.5)" fill="#B9AEE8"/>
+      <rect x="24.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 28 24.5)" fill="#F2C14E"/>
+    </svg>
+    <h1 id="deckTitle">The Puppeteer</h1>
+    <span class="sub">Learn by deciding</span>
+    <button class="themeBtn" id="themeBtn" title="Switch theme" aria-label="Switch theme">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9">
+        <circle cx="12" cy="12" r="4.4"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
+      </svg></button>
+  </header>
+
+  <section id="hub">
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="player" class="player hidden">
+    <aside class="rail">
+      <h2 class="railTitle" id="railTitle"></h2>
+      <p class="railKicker" id="railKicker"></p>
+      <ol class="steps" id="steps"></ol>
+      <button class="backlink" id="backBtn">&larr; All scenarios</button>
+    </aside>
+    <main class="stage" id="stage"></main>
+  </section>
+</div>
+
+<script>
+/* =====================================================================
+   THE PUPPETEER - player engine. Frozen. Content lives in DATA below.
+   ===================================================================== */
+var DATA = {
+ "deckTitle": "Holding a view under pressure",
+ "scenarios": [
+  {
+   "id": "new-roll-it-back",
+   "title": "Roll it back by tonight",
+   "kicker": "Product analysis scenario",
+   "anchor": "Challenges assumptions, reframes and holds a point of view",
+   "behaviour": "goes to root cause",
+   "tag": "Product analysis",
+   "meta": "10 min - 2 decisions - 1 written",
+   "thumb": "data",
+   "blurb": "The checkout redesign went live yesterday and payment failures jumped from 0.8% to 6.2%. The sponsor wants a rollback tonight. The dashboard says something else. Two decisions, one mail, about ten minutes.",
+   "highlight": false,
+   "steps": [
+    "What it is about",
+    "Briefing",
+    "Your first move",
+    "The numbers",
+    "Getting it to her",
+    "Write the mail",
+    "Debrief"
+   ],
+   "start": "intro",
+   "nodes": {
+    "intro": {
+     "type": "narrative",
+     "step": 0,
+     "scene": "data",
+     "eyebrow": "Before you start",
+     "title": "What is this scenario about?",
+     "text": "This one trains anchor 7 of Swanubhava™ - challenging assumptions and holding a point of view. In plain words: not accepting the first explanation just because someone senior has already accepted it.\n\nThree pointers before you start.\n\n1. Something changed this week, and something broke this week. That does not mean the first caused the second. Until something shows the link, it is a coincidence.\n\n2. A rollback looks like the cheap, safe fix. Obviously it is sometimes the right one. But it is only cheap if the problem is actually in the thing you are rolling back.\n\n3. The person asking for it outranks you, and she is worried for good reasons. Holding a view here is not about being right in the room. It is about getting your evidence in front of her before the deadline gets there first.\n\nYou will play the associate product manager on a checkout redesign (or the product analyst, if that is your title). There are two decisions and one piece of writing. A small honest note: the company and the numbers are made up. The pattern is not.",
+     "media": [],
+     "to": "brief"
+    },
+    "brief": {
+     "type": "narrative",
+     "step": 1,
+     "scene": "office",
+     "eyebrow": "Briefing",
+     "title": "Yesterday, 9am",
+     "text": "You are the associate PM on the checkout redesign at an online retailer. It went live yesterday at 9am. Meera Kulkarni, the VP of Product, sponsored it, and she has told the leadership team it will lift completion. Dev Rao is the engineering lead who shipped it. Sana Iyer runs payments operations: she looks after the relationship with the payment suppliers and watches the payments dashboard.\n\nToday is Thursday. At 11:40 the dashboard shows payment failures at 6.2%. Last week they were 0.8%. Meera has a board update at 6pm, and the redesign is the first line on her slide.\n\nYou have the dashboard login. You also built part of the redesign's tracking, so you know where to click.",
+     "media": [],
+     "to": "room"
+    },
+    "room": {
+     "type": "narrative",
+     "step": 1,
+     "scene": "team",
+     "eyebrow": "11:40, the meeting room",
+     "title": "Everyone has already decided",
+     "text": "Meera has pulled the leads into a meeting room. The failures chart is on the wall screen and it looks like a cliff edge. Dev has his laptop open. He says the new page does add one extra call to the payment service, 'so it could be that.' Support has logged about 60 complaint tickets since morning, and a few mention the Android layout.\n\nSana is dialled in with her camera off. She says, almost in passing, that the supplier channel has been 'noisy since Monday night, but it is always a bit noisy.' Nobody picks it up. In the corner of the wall screen, the completion tile reads 68.4%.\n\nYou feel a small, warm urge to just agree. Agreeing is quick, and it keeps the sponsor happy. (I have felt that urge in every war room I have sat in. It has not helped me yet.)",
+     "media": [],
+     "to": "n1"
+    },
+    "n1": {
+     "type": "choice",
+     "step": 2,
+     "scene": "office",
+     "prompt": "Meera looks at you. 'We shipped it yesterday and it is broken today. Let's just roll back tonight. Can you raise the ticket?' What do you do?",
+     "choices": [
+      {
+       "k": "A",
+       "label": "Agree. Say 'on it' and raise the rollback ticket now",
+       "sub": "Look decisive, back the sponsor",
+       "tag": "Agreed, no query",
+       "chip": "Agreed",
+       "consequence": {
+        "scene": "office",
+        "title": "The warmest the room has been all day",
+        "text": "You raise the ticket in four minutes. Meera says, 'Thank you. This is why I like having you on this.' Dev books the revert for the 8pm window and starts prepping. By mid-afternoon half his team is on it. You still have not opened a single query, and neither has anyone else in the room.",
+        "lesson": "Agreeing before you query felt like speed. What it bought was a decision made on alarm instead of on evidence, and the revert is now eating engineering time while nobody checks whether it touches the failures. You were asked to raise a ticket. Nobody asked you to stop being the person who looks at the dashboard."
+       },
+       "to": "numbers"
+      },
+      {
+       "k": "B",
+       "label": "Say 'it is not the UI' and leave it there",
+       "sub": "Hold your view, no data yet",
+       "tag": "Asserted, no data",
+       "chip": "Asserted",
+       "consequence": {
+        "scene": "storm",
+        "title": "'Based on what?'",
+        "text": "Meera asks, 'Based on what?' You have a hunch about the supplier and nothing on screen to show for it. Dev points out again that the new page adds a call. Meera says, 'I hear you, but I would rather be safe. Please raise it.' The ticket goes in for the 8pm window, with a line in it that the analyst disagreed without evidence.",
+        "lesson": "You were right about the direction and still lost the room. A view with no number behind it is a second opinion against a VP's, and hers wins. Also notice what was missing: not confidence, but something she could check."
+       },
+       "to": "numbers"
+      },
+      {
+       "k": "C",
+       "label": "Ask for about 90 minutes, and say exactly what you will bring back: what the failures are, when they started, and whether they happen on the new page",
+       "sub": "Turn a disagreement into a deadline",
+       "tag": "Asked for 90 minutes",
+       "chip": "90 minutes",
+       "consequence": {
+        "scene": "team",
+        "good": true,
+        "title": "Ninety minutes",
+        "text": "Meera is not thrilled. 'Ninety minutes. The board update is at six.' You name the three things you will bring. Dev leaves the ticket as a draft instead of submitting it, and Sana says she will stay on the line. You open the dashboard.",
+        "lesson": "You did not argue with the sponsor, and you did not agree. You turned 'let's roll back' into a short deadline with a list, which makes waiting something she can say yes to without losing face. Also notice what you did not do: you did not say it is not the UI. You said what you would check."
+       },
+       "to": "numbers"
+      }
+     ]
+    },
+    "numbers": {
+     "type": "narrative",
+     "step": 3,
+     "scene": "data",
+     "eyebrow": "The dashboard",
+     "title": "What the numbers say",
+     "text": "Whether you open the dashboard after ninety minutes or after the ticket is already in, the numbers say the same thing.\n\n1. Failures are 6.2%, up from 0.8% last week.\n\n2. 91% of those failures carry one code: a timeout from Kestrel Pay, the supplier that handles most of your card traffic.\n\n3. Kestrel's timeout rate started climbing about 36 hours before the new checkout went live. The line does not bend at 9am yesterday.\n\n4. Completion on the new page is 68.4%, against 66.1% on the old page. People who reach the page are getting through it slightly more often than before.\n\nOne more thing, in the payment router settings: a second supplier, Orbis, is configured but receives no traffic.\n\nNow the honest hedge. Nothing on this screen tells you why Kestrel is timing out. That part is theirs to say. What the screen does tell you is that the new page is not where to look.",
+     "media": [],
+     "to": "n2"
+    },
+    "n2": {
+     "type": "choice",
+     "step": 4,
+     "scene": "office",
+     "prompt": "It is 4:10pm. Meera needs something she can take into the six o'clock update, and you have four numbers. How do you get them to her?",
+     "choices": [
+      {
+       "k": "A",
+       "label": "Reply-all on the leadership thread, with the charts",
+       "sub": "Everyone sees it at once",
+       "tag": "Reply-all",
+       "chip": "Reply-all",
+       "consequence": {
+        "scene": "office",
+        "title": "Forty inboxes",
+        "text": "The charts land in forty inboxes at once. Meera finds out the redesign may be innocent at the same moment her peers do. By 4:40 the thread has eleven replies, and one of them asks whether the team is 'blaming a vendor'. Meera writes 'Let's take this offline', and you can tell she is now defending a decision in public. The rollback ticket still has nobody telling it to stop.",
+        "lesson": "The numbers were right and the order was wrong. A sponsor who hears surprising news in a group thread has to react to the room before she can think about the data. Give the person who owns the decision a private minute with the facts first."
+       },
+       "to": "mail"
+      },
+      {
+       "k": "B",
+       "label": "Book a 30-minute slot with Meera tomorrow morning and walk her through it properly",
+       "sub": "Do it carefully, in person",
+       "tag": "Slot tomorrow",
+       "chip": "Tomorrow",
+       "consequence": {
+        "scene": "storm",
+        "title": "Tomorrow, 10:00",
+        "text": "Meera's calendar accepts the slot without a word. Nobody tells the rollback ticket anything. At 4:50 she writes back, one line: the revert is still on for 8pm, and if you want to stop it she needs something she can forward.",
+        "lesson": "When a decision has a clock on it, the evidence has to reach the person before the clock does. A calm walk-through tomorrow is a good idea for 10am tomorrow. At 8pm tonight, your silence will read as consent."
+       },
+       "to": "mail"
+      },
+      {
+       "k": "C",
+       "label": "Send Meera the four numbers directly, in two lines, and then write to the group",
+       "sub": "Sponsor first, group second",
+       "tag": "Sponsor first",
+       "chip": "Sponsor first",
+       "consequence": {
+        "scene": "team",
+        "good": true,
+        "title": "Four numbers",
+        "text": "Meera reads your two lines on her phone, in the corridor outside the meeting room. Her reply comes in two minutes: 'Okay. That changes my slide. Now write it up for the group, in a form I can forward.'",
+        "lesson": "You gave the person who owns the decision a private minute with the facts, and only then widened the circle. She could change her mind without an audience, and the group will hear it from her side of the table. Also notice what you did not do: you did not wait for a meeting, and you did not let her find out in public."
+       },
+       "to": "mail"
+      }
+     ]
+    },
+    "mail": {
+     "type": "evaluate",
+     "step": 5,
+     "scene": "data",
+     "title": "Write the mail",
+     "placeholder": "Meera - short answer: ...",
+     "speaker": "Meera Kulkarni, VP Product",
+     "question": "How do I know your data isn't just you defending your own design? I want to be able to forward it.",
+     "criteria": [
+      {
+       "label": "Rules out the new page with a fact she can check",
+       "keywords": [
+        "before the new checkout",
+        "before the new ui",
+        "before go live",
+        "before it went live",
+        "before we shipped",
+        "before the redesign",
+        "before the release",
+        "before the launch",
+        "36 hours before",
+        "started rising before",
+        "began rising before",
+        "started climbing before",
+        "failures started before",
+        "predates",
+        "timing doesn t",
+        "timing does not",
+        "doesn t line up",
+        "does not line up",
+        "completion is up",
+        "completion on the new page",
+        "completion rose",
+        "68 4",
+        "66 1",
+        "see for yourself",
+        "open the dashboard",
+        "not asking you to trust me"
+       ],
+       "hint": "ui ruled out with a checkable fact",
+       "coach": "a fact she can check that rules out the new page - the supplier's timeouts began about 36 hours before go-live, so she can verify it on the dashboard herself instead of taking the designer's word"
+      },
+      {
+       "label": "States what the data says, with numbers",
+       "keywords": [
+        "91",
+        "6 2",
+        "0 8",
+        "from 0 8",
+        "to 6 2",
+        "36 hours",
+        "68 4",
+        "66 1",
+        "kestrel",
+        "timeout code",
+        "one code",
+        "same timeout",
+        "single supplier",
+        "one supplier",
+        "one payment supplier",
+        "supplier s timeout",
+        "timeouts from",
+        "of the failures carry",
+        "of failures carry"
+       ],
+       "hint": "numbers given",
+       "coach": "the numbers she will repeat at six o'clock - 0.8% to 6.2%, and 91% on one supplier's timeout code - because without them the mail reads as your opinion against hers"
+      },
+      {
+       "label": "Names the fix or mitigation",
+       "keywords": [
+        "second supplier",
+        "second payment",
+        "second provider",
+        "second gateway",
+        "orbis",
+        "fail over",
+        "failover",
+        "route traffic",
+        "reroute",
+        "re route",
+        "rerouting",
+        "switch traffic",
+        "shift traffic",
+        "move traffic",
+        "send traffic",
+        "divert",
+        "configured but",
+        "not in use",
+        "not receiving traffic",
+        "no traffic",
+        "enable the second",
+        "turn on the second",
+        "backup supplier",
+        "secondary supplier",
+        "fallback supplier"
+       ],
+       "hint": "fix named",
+       "coach": "what happens instead of the revert - the second supplier is configured and takes no traffic, so routing to it is the move, and without it the rollback ticket is the only action on the table"
+      },
+      {
+       "label": "Closes the loop with the supplier and promises the next update",
+       "keywords": [
+        "raised with kestrel",
+        "raising it with kestrel",
+        "raising the incident",
+        "raised the incident",
+        "incident with kestrel",
+        "contacted kestrel",
+        "contacting kestrel",
+        "asked kestrel",
+        "chasing kestrel",
+        "chasing the supplier",
+        "written to the supplier",
+        "written to kestrel",
+        "writing to kestrel",
+        "account manager",
+        "supplier incident",
+        "opened a ticket with",
+        "escalat",
+        "next update",
+        "i ll update you",
+        "i will update you",
+        "update you at",
+        "update you by",
+        "i ll report back",
+        "will report back",
+        "follow up at"
+       ],
+       "hint": "supplier chased, next update promised",
+       "coach": "who is raising it with the supplier and when she hears next, because a rollback changes nothing on Kestrel's side and the timeouts carry on with no one telling them"
+      }
+     ],
+     "pass": 4,
+     "passNote": "A fact she can check, the numbers, the fix, and who chases Kestrel. She can forward that without you in the room.",
+     "coachLead": "She cannot forward your confidence, only your evidence. To make this mail forwardable, it needs ",
+     "model": "Meera - short answer: the checkout is not what broke payments, and rolling back will not fix it. Don't take my word for it, open the dashboard. Kestrel Pay's timeout failures started rising about 36 hours before the new checkout went live, and completion on the new page is 68.4% against 66.1% on the old one.\n\nFour numbers you can forward: failures went from 0.8% to 6.2%; 91% of them carry one Kestrel timeout code; the rise started 36 hours before go-live; completion is up.\n\nProposal: Dev routes traffic to Orbis tonight - it is our second supplier, configured but not in use - and we hold the rollback. Sana is raising the incident with Kestrel now. My next update to you is at 9 tonight, with the failure rate after rerouting. I don't know yet why Kestrel is timing out; that part is theirs.",
+     "modelExplain": "This covers all four. It <b>rules out the new page</b> with a timing fact she can open and check, not by asserting. It <b>gives her the numbers</b> as four lines she can forward. It <b>names the mitigation</b> (route to Orbis) and <b>closes the loop</b>: who is chasing Kestrel and when she hears next. The last line admits what is still unknown. Edit it, or submit it as it is to see the grade.",
+     "toPass": "good",
+     "toFail": "partial"
+    }
+   },
+   "endings": {
+    "good": {
+     "step": 6,
+     "scene": "launch",
+     "title": "She forwards it",
+     "moral": "A view you can hold is one the other person can check without you in the room.",
+     "verdict": "Meera forwards your mail to the board thread at 5:20pm, before the six o'clock update. Dev withdraws the rollback ticket and routes traffic to Orbis at 7:50pm. By 9pm the failure rate is back near 1%. Sana's note to Kestrel gets an answer the next morning: a timeout on their gateway. Meera says nothing more about the redesign, which is how you know it is fine. Now the question I would ask you in the debrief: when you are sure of something and the person above you is not, what is the smallest fact you could put in front of them that they could check without you in the room?",
+     "revealed": [
+      [
+       "What was in the room",
+       "Sana said the supplier channel had been 'noisy since Monday night', and the completion tile was already up on the wall screen. Both were there before anyone asked for a rollback."
+      ],
+      [
+       "What you did",
+       "You did not agree and you did not argue. You asked for time, said what you would bring, and checked."
+      ],
+      [
+       "The order",
+       "Meera heard it first, privately, and then the group heard it from her."
+      ],
+      [
+       "Take this with you",
+       "When the answer everyone has reached is also the cheapest one, check it against timing and concentration before you act on it."
+      ]
+     ]
+    },
+    "partial": {
+     "step": 6,
+     "scene": "storm",
+     "title": "The rollback ran. The problem did not.",
+     "moral": "A rollback is only cheap if the problem is in the thing you roll back.",
+     "verdict": "Meera could not forward what you wrote, so the revert shipped at 8pm. At 8 the next morning, failures were still about 6%. Dev's team had lost two days to the revert and the retest. Kestrel's timeouts ran another 18 hours with nobody telling them, and the real problem - one supplier failing while a second sat idle - went unchecked for a week. Now the question I would ask you in the debrief: when you are sure of something and the person above you is not, what is the smallest fact you could put in front of them that they could check without you in the room?",
+     "revealed": [
+      [
+       "What was in the room",
+       "Sana said the supplier channel had been 'noisy since Monday night', and the completion tile was already up on the wall screen. Both were there before anyone asked for a rollback."
+      ],
+      [
+       "What slipped",
+       "Your mail was missing at least one of: a fact she could check that rules out the new page, the numbers, the fix, or who chases the supplier and when she hears next."
+      ],
+      [
+       "Take this with you",
+       "Evidence she can check beats confidence she has to trust."
+      ]
+     ]
+    }
+   }
+  }
+ ]
+};
+
+/* ---------------------------- scene library ---------------------------- */
+var C={indigo:'var(--indigo)',deep:'var(--deep)',surf:'var(--surface)',surf2:'var(--surf2)',
+  coral:'var(--coral)',teal:'var(--teal)',lav:'var(--lav)',line:'var(--line)',gold:'var(--gold)',
+  ink:'var(--ink)',blue:'var(--blue)'};
+
+function svg(inner,bgA,bgB){
+  return '<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'+
+    '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0" stop-color="'+(bgA||C.surf2)+'"/><stop offset="1" stop-color="'+(bgB||C.deep)+'"/>'+
+    '</linearGradient></defs><rect width="480" height="270" fill="url(#g)"/>'+inner+'</svg>';
+}
+function dots(n,seed,col,op){
+  var s='',i,x,y,r;
+  for(i=0;i<n;i++){x=(i*(97+seed)+37)%480;y=(i*(53+seed)+19)%270;r=(.6+((i*31)%8)/10).toFixed(1);
+    s+='<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'" opacity="'+(op||.45)+'"/>';}
+  return s;
+}
+function node(x,y,s,col,glow){
+  return (glow?'<rect x="'+(x-s-4)+'" y="'+(y-s-4)+'" width="'+((s+4)*2)+'" height="'+((s+4)*2)+'" transform="rotate(45 '+x+' '+y+')" fill="'+col+'" opacity=".18"/>':'')+
+    '<rect x="'+(x-s)+'" y="'+(y-s)+'" width="'+(s*2)+'" height="'+(s*2)+'" rx="2" transform="rotate(45 '+x+' '+y+')" fill="'+col+'"/>';
+}
+function path(d,col,w,op){return '<path d="'+d+'" stroke="'+col+'" stroke-width="'+(w||2)+'" fill="none" opacity="'+(op||1)+'" stroke-linecap="round"/>';}
+
+var SCENES={
+  stage:function(){return svg(dots(46,3,C.lav,.3)+
+    path('M60 200C130 200 150 120 240 120S350 200 420 200',C.line,2,.7)+
+    node(240,120,11,C.coral,1)+node(120,175,7,C.lav)+node(360,175,7,C.teal));},
+  river:function(){return svg(dots(30,7,C.lav,.35)+
+    '<path d="M0 175q120 -26 240 0t240 0V270H0Z" fill="'+C.indigo+'" opacity=".85"/>'+
+    path('M20 196q110 -20 220 0t220 0',C.teal,1.6,.5)+path('M20 216q110 -20 220 0t220 0',C.teal,1.4,.32)+
+    '<circle cx="378" cy="62" r="24" fill="'+C.gold+'" opacity=".75"/>'+
+    path('M70 175l16-58 16 58',C.line,2.4)+path('M118 175l14-46 14 46',C.line,2.2),C.surf,C.deep);},
+  office:function(){return svg(
+    '<rect x="40" y="60" width="180" height="120" rx="6" fill="'+C.surf+'" stroke="'+C.line+'"/>'+
+    path('M62 92h136M62 112h100M62 132h124M62 152h78',C.line,3,.75)+
+    '<rect x="256" y="86" width="184" height="94" rx="6" fill="'+C.indigo+'" stroke="'+C.line+'"/>'+
+    path('M276 156l30-28 26 18 34-42 32 22',C.teal,2.6)+
+    '<rect x="40" y="196" width="400" height="8" rx="4" fill="'+C.line+'" opacity=".5"/>');},
+  data:function(){return svg(dots(24,11,C.lav,.25)+
+    '<rect x="46" y="42" width="388" height="176" rx="8" fill="'+C.indigo+'" stroke="'+C.line+'"/>'+
+    path('M70 190h340M70 190V64',C.line,1.6,.7)+
+    path('M78 150l52-22 48 30 56-72 54 40 52-26 44 12',C.coral,2.8)+
+    node(234,86,6,C.coral,1)+
+    path('M78 168l52-8 48 6 56-14 54 8 52-4 44 6',C.teal,2,.7));},
+  conflict:function(){return svg(
+    node(140,135,26,C.coral,1)+node(340,135,26,C.blue,1)+
+    path('M176 135h128',C.line,2.6,.8)+
+    '<g opacity=".9">'+path('M228 112l24 23-24 23',C.lav,2.4)+path('M252 112l-24 23 24 23',C.lav,2.4)+'</g>'+
+    dots(20,5,C.lav,.22));},
+  team:function(){return svg(dots(26,9,C.lav,.2)+
+    node(120,110,14,C.lav)+node(240,96,14,C.teal)+node(360,110,14,C.gold)+
+    path('M134 124L226 110M254 110L346 124M140 130q100 74 200 0',C.line,1.8,.8)+
+    '<rect x="80" y="180" width="320" height="8" rx="4" fill="'+C.line+'" opacity=".45"/>');},
+  ai:function(){return svg(dots(40,13,C.teal,.3)+
+    node(240,130,30,C.teal,1)+
+    path('M240 62v22M240 176v22M150 130h22M308 130h22M176 66l16 16M304 194l-16-16M304 66l-16 16M176 194l16-16',C.teal,2,.75)+
+    '<circle cx="240" cy="130" r="58" stroke="'+C.line+'" stroke-width="1.4" fill="none" opacity=".8"/>');},
+  matrix:function(){
+    var s='',r,c2;
+    for(r=0;r<3;r++)for(c2=0;c2<4;c2++)
+      s+='<rect x="'+(76+c2*84)+'" y="'+(66+r*54)+'" width="76" height="46" rx="5" fill="'+
+        ((r+c2)%3===0?C.surf2:C.indigo)+'" stroke="'+C.line+'"/>';
+    return svg(s+node(160,93,7,C.teal)+node(412,201,7,C.coral,1));},
+  launch:function(){return svg(dots(44,17,C.lav,.35)+
+    path('M60 210q120 -140 300 -158',C.line,2,.6)+
+    node(360,52,13,C.gold,1)+
+    path('M84 200l26-14 26 14',C.teal,2.4)+
+    '<rect x="40" y="216" width="400" height="6" rx="3" fill="'+C.line+'" opacity=".5"/>');},
+  storm:function(){return svg(dots(30,23,C.lav,.2)+
+    '<ellipse cx="200" cy="88" rx="98" ry="38" fill="'+C.indigo+'"/>'+
+    '<ellipse cx="300" cy="102" rx="76" ry="30" fill="'+C.indigo+'" opacity=".9"/>'+
+    path('M196 128l-18 38h24l-16 40',C.gold,3)+
+    path('M120 140l-14 34M270 140l-14 34M330 132l-14 34',C.teal,2,.5),C.surf,C.deep);}
+};
+function sceneHTML(k){var f=SCENES[k]||SCENES.stage;return f();}
+
+/* ---------------------------- state ---------------------------- */
+var hubEl=document.getElementById('hub'),playerEl=document.getElementById('player'),
+    stageEl=document.getElementById('stage'),stepsEl=document.getElementById('steps');
+var REDUCE=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+var GRADE_DELAY=900;  /* set to 0 to grade synchronously */
+var S={sc:null,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{}};
+
+function el(h){var d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild;}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function scenarios(){return DATA.scenarios||[];}
+function byId(id){var a=scenarios(),i;for(i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null;}
+
+/* ---------------------------- hub ---------------------------- */
+function renderHub(){
+  document.getElementById('deckTitle').textContent=DATA.deckTitle||'The Puppeteer';
+  var wrap=document.getElementById('cards');wrap.innerHTML='';
+  scenarios().forEach(function(s){
+    var card=el('<article class="xcard"></article>');
+    card.innerHTML='<div class="thumb">'+sceneHTML(s.thumb)+'</div><div class="xbody">'+
+      '<div class="tagrow"><span class="tag'+(s.highlight?' hot':'')+'">'+esc(s.tag||'Scenario')+'</span>'+
+      (anchorOf(s)?'<span class="tag" title="'+esc(pillarOf(s))+'">'+esc(anchorOf(s))+'</span>':'')+
+      (s.meta?'<span class="tag">'+esc(s.meta)+'</span>':'')+'</div>'+
+      '<h2>'+esc(s.title)+'</h2><p>'+esc(s.blurb||'')+'</p>'+
+      '<button class="play">Start</button></div>';
+    card.querySelector('.play').addEventListener('click',function(){start(s.id);});
+    wrap.appendChild(card);
+  });
+  if(scenarios().length===1){start(scenarios()[0].id);}
+}
+function backToHub(){
+  if(scenarios().length===1){start(scenarios()[0].id);return;}
+  playerEl.classList.add('hidden');hubEl.classList.remove('hidden');window.scrollTo(0,0);
+}
+document.getElementById('backBtn').addEventListener('click',backToHub);
+
+/* Swanubhava tagging: 'anchor' (preferred) or the older 'competency' field; the pillar is derived from the anchor unless given */
+var PILLAR_OF={'acts with integrity under pressure':'Individual posture',"embodies a learner's mindset":'Individual posture',
+ 'strives for clarity and outcomes':'Boundary defining posture','challenges assumptions, reframes and holds a point of view':'Boundary defining posture','converts insight into owned outcomes':'Boundary defining posture',
+ 'builds trust and psychological safety':'Collaboration posture','stays present and grounded under ambiguity':'Collaboration posture','listens beyond the ask to uncover the need':'Collaboration posture'};
+function anchorOf(s){return s.anchor||s.competency||'';}
+function pillarOf(s){return s.pillar||PILLAR_OF[String(anchorOf(s)).trim().toLowerCase()]||'';}
+/* ---------------------------- run ---------------------------- */
+function start(id){
+  var s=byId(id);if(!s)return;
+  S={sc:id,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{}};
+  document.getElementById('railTitle').textContent=s.title;
+  document.getElementById('railKicker').textContent=
+    anchorOf(s)?(anchorOf(s)+(s.kicker?' - '+s.kicker:'')):(s.kicker||'');
+  hubEl.classList.add('hidden');playerEl.classList.remove('hidden');window.scrollTo(0,0);
+  goTo(s.start);
+}
+function curStep(){
+  var s=byId(S.sc),n=S.ending||(s.nodes||{})[S.node];
+  return n&&typeof n.step==='number'?n.step:0;
+}
+function renderSteps(){
+  var s=byId(S.sc),cur=curStep();stepsEl.innerHTML='';
+  (s.steps||[]).forEach(function(label,i){
+    var cls=i<cur?'done':(i===cur?'now':'');
+    var chip=S.chips[i]?'<span class="chip">'+esc(S.chips[i])+'</span>':'';
+    stepsEl.appendChild(el('<li class="'+cls+'">'+esc(label)+chip+'</li>'));
+  });
+}
+function goTo(nodeId){
+  var s=byId(S.sc),n=(s.nodes||{})[nodeId];
+  if(!n){ var e=(s.endings||{})[nodeId]; if(e){return showEnding(nodeId,e);} 
+    stageEl.innerHTML='<p class="stext">Missing node: '+esc(nodeId)+'</p>';return;}
+  S.node=nodeId;S.ending=null;renderSteps();
+  if(n.type==='narrative')return renderNarrative(n);
+  if(n.type==='choice')return renderChoice(n,nodeId);
+  if(n.type==='multi')return renderMulti(n,nodeId);
+  if(n.type==='evaluate')return renderEvaluate(n,nodeId);
+  stageEl.innerHTML='<p class="stext">Unknown node type: '+esc(n.type)+'</p>';
+}
+function mediaHTML(m){
+  if(!m||!m.length)return '';
+  return '<div class="media">'+m.map(function(x){
+    return '<a href="'+esc(x.url)+'" target="_blank" rel="noopener"><span class="mk">'+
+      esc((x.type||'link').toUpperCase())+'</span>'+esc(x.label||x.url)+'</a>';}).join('')+'</div>';
+}
+function affBar(n,rubricCount){
+  var b='';
+  if(contextBits(n).length)b+='<button data-aff="i" title="Background so far">i</button>';
+  if(rubricCount)b+='<button data-aff="e" id="eBtn" title="Evaluation rubric">e</button>';
+  return b?'<div class="aff">'+b+'</div>':'';
+}
+function contextBits(n){
+  var bits=S.story.slice();
+  (n.context||[]).forEach(function(c){bits.push({label:c.label||'Note',text:c.text});});
+  return bits;
+}
+function ctxHTML(n){
+  var bits=contextBits(n);
+  return '<div class="ctx hidden" id="ctxPanel"><h4>Where you are</h4>'+
+    bits.map(function(b){return '<p class="bit"><b>'+esc(b.label)+'</b>'+esc(b.text)+'</p>';}).join('')+'</div>';
+}
+function wireAff(n){
+  var bar=stageEl.querySelector('.aff');if(!bar)return;
+  Array.prototype.forEach.call(bar.querySelectorAll('button'),function(b){
+    b.addEventListener('click',function(){
+      var t=b.getAttribute('data-aff')==='i'?document.getElementById('ctxPanel'):document.getElementById('rub');
+      if(!t)return;
+      var hid=b.getAttribute('data-aff')==='i'?t.classList.toggle('hidden'):t.classList.toggle('folded');
+      b.classList.toggle('on',!hid);
+    });
+  });
+}
+function stageOut(n,body,extraScene,headHTML){
+  var head=(n.title||headHTML)?
+    '<div class="phead">'+(n.title?'<h2 class="stitle">'+esc(n.title)+'</h2>':'<span style="flex:1"></span>')+
+    (headHTML||'')+'</div>':'';
+  stageEl.innerHTML='<div class="scene fade">'+sceneHTML(extraScene||n.scene)+'</div>'+
+    '<div class="panel fade">'+
+    (n.eyebrow?'<div class="eyebrow"><span class="dot"></span>'+esc(n.eyebrow)+'</div>':'')+
+    head+body+'</div>';
+}
+
+/* narrative */
+function remember(label,text){
+  if(!text)return;
+  for(var i=0;i<S.story.length;i++)if(S.story[i].text===text)return;
+  S.story.push({label:label||'Earlier',text:text});
+}
+function renderNarrative(n){
+  remember(n.title||n.eyebrow||'Earlier',n.text);
+  stageOut(n,'<p class="stext narr">'+esc(n.text)+'</p>'+mediaHTML(n.media)+
+    '<button class="cont" id="go">Continue &rarr;</button>');
+  document.getElementById('go').addEventListener('click',function(){goTo(n.to);});
+}
+
+/* choice */
+function renderChoice(n,nodeId){
+  var dis=S.disabled[nodeId]||[];
+  var body='<div class="phead"><p class="prompt">'+esc(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
+    ctxHTML(n)+mediaHTML(n.media)+'<div class="choices">'+
+    n.choices.map(function(c,i){
+      return '<button class="choice" data-i="'+i+'"'+(dis.indexOf(i)>-1?' disabled':'')+'>'+
+        '<span class="k">'+esc(c.k||String.fromCharCode(65+i))+'</span><span><span class="lb">'+
+        esc(c.label)+'</span>'+(c.sub?'<span class="sb">'+esc(c.sub)+'</span>':'')+'</span></button>';
+    }).join('')+'</div>';
+  stageOut(n,body);wireAff(n);
+  Array.prototype.forEach.call(stageEl.querySelectorAll('.choice'),function(b){
+    b.addEventListener('click',function(){choose(n,nodeId,+b.getAttribute('data-i'));});
+  });
+}
+function choose(n,nodeId,i){
+  var c=n.choices[i];
+  S.log.push({node:nodeId,kind:'choice',pick:c.k||String.fromCharCode(65+i),
+    label:c.label,tag:c.tag||c.label,gated:!!(n.gate&&c.correct===false)});
+  if(n.gate&&c.correct===false){
+    S.disabled[nodeId]=(S.disabled[nodeId]||[]).concat([i]);
+    renderChoice(n,nodeId);
+    var p=stageEl.querySelector('.choices');
+    p.parentNode.insertBefore(el('<div class="lesson"><b>Not yet</b>'+esc(c.lesson||c.note||'')+'</div>'),p);
+    return;
+  }
+  if(typeof n.step==='number'&&c.chip)S.chips[n.step]=c.chip;
+  var cq=c.consequence;
+  if(!cq)return goTo(c.to||n.to);
+  remember(cq.title||'What happened',cq.text);
+  stageOut({scene:cq.scene||n.scene,title:cq.title,eyebrow:cq.eyebrow},
+    '<p class="stext">'+esc(cq.text)+'</p>'+
+    (cq.lesson?'<div class="lesson'+(cq.good?' good':'')+'"><b>'+(cq.good?'Why this worked':'What this cost you')+'</b>'+esc(cq.lesson)+'</div>':'')+
+    '<button class="cont" id="go">Continue &rarr;</button>');
+  document.getElementById('go').addEventListener('click',function(){goTo(c.to||n.to);});
+}
+
+/* multi-select, rules-based */
+function renderMulti(n,nodeId){
+  var body='<div class="phead"><p class="prompt">'+esc(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
+    ctxHTML(n)+mediaHTML(n.media)+
+    '<div id="opts">'+n.options.map(function(o,i){
+      return '<label class="opt"><input type="checkbox" value="'+i+'"><span>'+esc(o.label)+
+        (o.sub?'<span class="sb">'+esc(o.sub)+'</span>':'')+'</span></label>';}).join('')+'</div>'+
+    '<button class="primary" id="sub">Submit</button><div id="fb"></div>';
+  stageOut(n,body);wireAff(n);
+  Array.prototype.forEach.call(stageEl.querySelectorAll('.opt input'),function(cb){
+    cb.addEventListener('change',function(){cb.parentNode.classList.toggle('sel',cb.checked);});
+  });
+  document.getElementById('sub').addEventListener('click',function(){
+    var picked=[];Array.prototype.forEach.call(stageEl.querySelectorAll('.opt input'),function(cb){
+      if(cb.checked)picked.push(+cb.value);});
+    var need=n.correct||[],hit=0,extra=0;
+    picked.forEach(function(i){need.indexOf(i)>-1?hit++:extra++;});
+    var ok=hit===need.length&&extra===0;
+    var miss=need.filter(function(i){return picked.indexOf(i)<0;})
+      .map(function(i){return n.options[i].label;});
+    S.log.push({node:nodeId,kind:'multi',pick:picked.join('+'),score:hit+'/'+need.length,
+      missed:miss.slice(),extras:extra});
+    var fb=document.getElementById('fb');
+    fb.innerHTML='<div class="lesson'+(ok?' good':'')+'" style="margin-top:16px"><b>'+
+      (ok?'Complete':'Partial - '+hit+' of '+need.length)+'</b>'+
+      esc(ok?(n.successNote||'Every one that mattered, and nothing that did not.'):
+        (n.missNote||'Still missing: ')+miss.join('; '))+'</div>'+
+      '<button class="cont" id="go">Continue &rarr;</button>';
+    document.getElementById('sub').disabled=true;
+    document.getElementById('go').addEventListener('click',function(){goTo(n.to);});
+  });
+}
+
+/* free text, rubric-graded */
+function evaluateAnswer(text,criteria){
+  var t=(' '+String(text).toLowerCase()+' ').replace(/[^a-z0-9\s]/g,' ');
+  var met=criteria.map(function(c){
+    return (c.keywords||[]).some(function(k){return t.indexOf(' '+k.toLowerCase()+' ')>-1||t.indexOf(k.toLowerCase())>-1;});
+  });
+  return {met:met,score:met.filter(Boolean).length};
+}
+function coachList(n,met){
+  return n.criteria.filter(function(c,i){return !met[i];})
+    .map(function(c){return c.coach||c.hint||c.label;});
+}
+function joinCoach(a){
+  if(a.length===1)return a[0];
+  return a.slice(0,-1).join('; ')+'; and '+a[a.length-1];
+}
+function renderEvaluate(n,nodeId){
+  var expand=n.showRubric===true;
+  var tries=S.tries[nodeId]||0;
+  var ask=n.speaker
+    ? '<div class="vpq"><b>'+esc(n.speaker)+'</b>&ldquo;'+esc(n.question||n.prompt)+'&rdquo;</div>'
+    : '<p class="prompt">'+esc(n.question||n.prompt)+'</p>';
+  var head=n.speaker
+    ? '<div class="phead"><span style="flex:1"></span>'+affBar(n,n.criteria.length)+'</div>'+ask
+    : '<div class="phead">'+ask+affBar(n,n.criteria.length)+'</div>';
+  var body=head+ctxHTML(n)+mediaHTML(n.media)+
+    '<textarea id="ans" placeholder="'+esc(n.placeholder||'Write your answer. Two or three sentences is enough.')+'"></textarea>'+
+    '<div class="rubwrap"><div class="rlab" id="rlab">'+n.criteria.length+' criteria - press e to show the rubric</div>'+
+    '<div class="rubric'+(expand?'':' folded')+'" id="rub">'+n.criteria.map(function(c){
+      return '<div class="crit"><span class="mk"></span><span>'+esc(c.label)+'</span></div>';}).join('')+'</div></div>'+
+    '<div class="linkrow"><button class="primary" id="sub" style="margin-top:0">Submit for grading</button>'+
+    (n.model?'<button class="linkbtn" id="modelBtn">Show me a model answer</button>':'')+'</div>'+
+    '<div id="fb"></div>';
+  stageOut({scene:n.scene,eyebrow:n.eyebrow,title:n.title},body);
+  wireAff(n);
+  if(expand){var eb=document.getElementById('eBtn');if(eb)eb.classList.add('on');}
+  if(tries)document.getElementById('rlab').textContent=
+    'Attempt '+(tries+1)+' - '+n.criteria.length+' criteria, press e to show the rubric';
+
+  var mb=document.getElementById('modelBtn');
+  if(mb)mb.addEventListener('click',function(){
+    document.getElementById('ans').value=n.model;
+    document.getElementById('fb').innerHTML='<div class="aibox fade"><div class="alab">Model answer loaded</div>'+
+      '<div class="aifb">'+(n.modelExplain||'This covers every rubric criterion. Edit it or submit it as it stands to see the grade.')+'</div></div>';
+    document.getElementById('ans').focus();
+  });
+
+  document.getElementById('sub').addEventListener('click',function(){
+    var txt=document.getElementById('ans').value.trim();
+    if(txt.length<12){document.getElementById('fb').innerHTML=
+      '<div class="aibox fade"><div class="alab" style="color:var(--coral)">Write a reply first</div>'+
+      '<div class="aifb">Give it a real answer, even one sentence, and it will be graded against the rubric.</div></div>';return;}
+    S.tries[nodeId]=(S.tries[nodeId]||0)+1;
+    document.getElementById('sub').disabled=true;
+    document.getElementById('fb').innerHTML=
+      '<div class="aibox fade"><div class="alab"><span class="spin"></span>Evaluating your answer</div></div>';
+    var d=REDUCE?0:GRADE_DELAY;
+    if(d)setTimeout(function(){revealGrade(n,nodeId,txt);},d);
+    else revealGrade(n,nodeId,txt);
+  });
+}
+function revealGrade(n,nodeId,txt){
+  var res=evaluateAnswer(txt,n.criteria),total=n.criteria.length;
+  var crits=stageEl.querySelectorAll('.crit');
+  var anim=!REDUCE&&GRADE_DELAY>0;
+  res.met.forEach(function(m,i){
+    if(!m)return;
+    if(!anim){crits[i].classList.add('met');return;}
+    crits[i].style.opacity='.35';
+    setTimeout(function(){crits[i].classList.add('met');crits[i].style.opacity='';},130*i+120);
+  });
+  var pass=res.score>=(n.pass||total);
+  var tries=S.tries[nodeId];
+  var canGo=pass||res.score>=total-1||tries>=2;
+  if(typeof n.step==='number')S.chips[n.step]=res.score+'/'+total;
+  document.getElementById('rlab').textContent=
+    res.score+' of '+total+' criteria met - press e to see which';
+
+  var fb;
+  if(pass){fb=n.passNote||'Every criterion covered.';}
+  else{
+    var lead=res.score===total-1?'<b>Almost there.</b> ':'<b>Not yet.</b> ';
+    fb=lead+(n.coachLead||'To make this land, ')+joinCoach(coachList(n,res.met))+'.';
+  }
+  var box=document.getElementById('fb').querySelector('.aibox');
+  box.innerHTML='<div class="alab"><span class="scorepill'+(pass?' full':'')+'">'+res.score+' / '+total+'</span>'+
+    'Rubric evaluation</div><div class="aifb">'+fb+'</div>'+
+    '<div class="linkrow">'+
+    (canGo?'<button class="primary" id="go" style="margin-top:0">'+(pass?'See how it lands':'Continue anyway')+'</button>':'')+
+    (pass?'':'<button class="linkbtn" id="retry">Try again</button>')+'</div>';
+
+  if(!S.log.some(function(l){return l.node===nodeId&&l.kind==='written';}))
+    S.log.push({node:nodeId,kind:'written',pick:'written',score:res.score+'/'+total,
+      missed:coachShort(n,res.met),answer:txt});
+  else S.log.forEach(function(l){if(l.node===nodeId&&l.kind==='written'){
+      l.score=res.score+'/'+total;l.missed=coachShort(n,res.met);l.answer=txt;l.tries=tries;}});
+
+  var g=document.getElementById('go');
+  if(g)g.addEventListener('click',function(){goTo(pass?(n.toPass||n.to):(n.toFail||n.to));});
+  var r=document.getElementById('retry');
+  if(r)r.addEventListener('click',function(){renderEvaluate(n,nodeId);});
+}
+function coachShort(n,met){
+  return n.criteria.filter(function(c,i){return !met[i];}).map(function(c){return c.hint||c.label;});
+}
+
+/* ending */
+function showEnding(key,e){
+  S.ending=e;S.node=null;renderSteps();
+  var rev=(e.revealed||[]).map(function(p){
+    return '<li><span>'+esc(p[0])+'</span><span>'+esc(p[1])+'</span></li>';}).join('');
+  stageOut(e,
+    ctxHTML(e)+
+    (e.moral?'<p class="moral">'+esc(e.moral)+'</p>':'')+
+    '<p class="stext">'+esc(e.verdict||'')+'</p>'+
+    (rev?'<ul class="revealed">'+rev+'</ul>':'')+
+    mediaHTML(e.media)+
+    '<div class="summary"><h3>Your session summary</h3>'+
+    '<p>Copy this and drop it in the class channel. Your facilitator reads the decisions, not just the ending.</p>'+
+    '<div class="code" id="code" style="white-space:pre-wrap">'+esc(sessionSummary(key,e))+'</div>'+
+    '<button class="copy" id="cp">Copy summary</button></div>'+
+    '<button class="ghost" id="again" style="margin-left:0">Run it again</button>',null,affBar(e,0));
+  wireAff(e);
+  document.getElementById('cp').addEventListener('click',function(){
+    var t=document.getElementById('code').textContent;
+    if(navigator.clipboard)navigator.clipboard.writeText(t);
+    else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+      document.execCommand('copy');document.body.removeChild(ta);}
+    this.textContent='Copied';
+  });
+  document.getElementById('again').addEventListener('click',function(){start(S.sc);});
+}
+function list(a){
+  if(!a||!a.length)return '';
+  return a.length===1?a[0]:a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+}
+function sessionSummary(endKey,e){
+  var s=byId(S.sc),L=[];
+  L.push(s.title+(s.kicker?' - '+s.kicker:''));
+  if(anchorOf(s))L.push('Anchor: '+anchorOf(s)+(s.behaviour?' - '+s.behaviour:''));
+  if(pillarOf(s))L.push('Pillar: '+pillarOf(s));
+  var retries=S.log.filter(function(l){return l.gated;}).length;
+  S.log.filter(function(l){return !l.gated;}).forEach(function(l){
+    if(l.kind==='choice')L.push('Chose: '+l.label);
+    if(l.kind==='multi')L.push('Gap check: '+l.score+' of the must-haves'+
+      (l.missed&&l.missed.length?', missed '+list(l.missed):'')+
+      (l.extras?' (and '+l.extras+' that did not matter)':''));
+    if(l.kind==='written')L.push('Written answer: '+l.score+' rubric criteria'+
+      (l.missed&&l.missed.length?', short on '+list(l.missed):' - full marks'));
+  });
+  if(retries)L.push('Corrected course after '+retries+' wrong turn'+(retries>1?'s':''));
+  L.push('Ending: '+((e&&e.title)||endKey));
+  var picks=S.log.map(function(l){return l.pick+(l.score?'('+l.score+')':'');}).join('>');
+  L.push('PUP|'+s.id+'|'+(anchorOf(s)||'-')+'|'+picks+'|'+endKey);
+  return L.join('\n');
+}
+
+/* ---------------------------- theme ---------------------------- */
+(function(){
+  var root=document.documentElement,saved=null;
+  try{saved=localStorage.getItem('pup-theme');}catch(e){}
+  if(saved==='light')root.setAttribute('data-theme','light');
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    var light=root.getAttribute('data-theme')==='light';
+    if(light)root.removeAttribute('data-theme');else root.setAttribute('data-theme','light');
+    try{localStorage.setItem('pup-theme',light?'dark':'light');}catch(e){}
+  });
+})();
+
+renderHub();
+</script>
+</body>
+</html>
