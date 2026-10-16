@@ -178,6 +178,16 @@ function validate(json){
             e.push(q+'model answer scores '+mres+'/'+(n.criteria||[]).length+
               ' against its own rubric - the keywords are too narrow or the model answer is wrong');
         }
+        if(n.redFlags){
+          var rf=Array.isArray(n.redFlags)?{phrases:n.redFlags}:n.redFlags;
+          if(!rf.phrases||!rf.phrases.length)e.push(q+'redFlags has no phrases');
+          else if(n.model){
+            var norm=function(x){return String(x).toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();};
+            var mt=' '+norm(n.model)+' ';
+            var hit=rf.phrases.filter(function(ph){return mt.indexOf(' '+norm(ph)+' ')>-1;});
+            if(hit.length)e.push(q+'model answer contains red-flag phrase(s): '+hit.join(', '));
+          }
+        }
         if(!n.speaker&&!n.prompt&&!n.question)e.push(q+'has no prompt or question');
         chk(n.toPass,'toPass');chk(n.toFail,'toFail');chk(n.to,'to');
         if(!n.toPass&&!n.to)e.push(q+'has no destination');

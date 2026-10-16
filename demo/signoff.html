@@ -166,6 +166,12 @@ textarea:focus{border-color:var(--lav);outline:none}
 
 /* ending */
 .moral{font-family:var(--serif);font-size:23px;font-style:italic;color:var(--gold);margin:0 0 14px;max-width:60ch}
+/* authored line breaks (\n in the JSON) show as line breaks; long lines still wrap */
+.stext,.lesson,.prompt,.vpq,.moral,.aifb,.ctx .bit,.revealed li span:last-child{white-space:pre-line}
+/* red line: facilitator talking point inside the folded rubric, never graded */
+.redline{border:1px dashed var(--coral);border-radius:9px;padding:10px 12px;background:rgba(255,107,74,.07);font-size:14.5px;line-height:1.5;color:var(--body)}
+.redline b{display:block;color:var(--coral);font-size:12.5px;font-weight:650;margin-bottom:4px}
+.redline .rlp{display:inline-block;margin:7px 6px 0 0;padding:2px 9px;border:1px solid var(--line);border-radius:99px;font-size:12.5px;color:var(--mute)}
 .revealed{list-style:none;padding:0;margin:0 0 16px;max-width:760px}
 .revealed li{display:flex;gap:14px;padding:11px 0;border-top:1px solid var(--line);font-size:15.5px}
 .revealed li span:first-child{flex:none;width:150px;color:var(--lav);font-weight:600}
@@ -891,6 +897,17 @@ function joinCoach(a){
   if(a.length===1)return a[0];
   return a.slice(0,-1).join('; ')+'; and '+a[a.length-1];
 }
+/* redFlags: a talking point for the facilitator. Shown inside the folded rubric (press e), never graded. */
+function redFlagsOf(n){
+  var r=n.redFlags;if(!r)return null;
+  if(Array.isArray(r))r={phrases:r};
+  return {rule:r.rule||'',phrases:r.phrases||[]};
+}
+function redLineHTML(n){
+  var r=redFlagsOf(n);if(!r||(!r.rule&&!r.phrases.length))return '';
+  return '<div class="redline"><b>Red line - for discussion, not graded</b>'+esc(r.rule)+
+    (r.phrases.length?'<div>'+r.phrases.map(function(p){return '<span class="rlp">'+esc(p)+'</span>';}).join('')+'</div>':'')+'</div>';
+}
 function renderEvaluate(n,nodeId){
   var expand=n.showRubric===true;
   var tries=S.tries[nodeId]||0;
@@ -904,7 +921,7 @@ function renderEvaluate(n,nodeId){
     '<textarea id="ans" placeholder="'+esc(n.placeholder||'Write your answer. Two or three sentences is enough.')+'"></textarea>'+
     '<div class="rubwrap"><div class="rlab" id="rlab">'+n.criteria.length+' criteria - press e to show the rubric</div>'+
     '<div class="rubric'+(expand?'':' folded')+'" id="rub">'+n.criteria.map(function(c){
-      return '<div class="crit"><span class="mk"></span><span>'+esc(c.label)+'</span></div>';}).join('')+'</div></div>'+
+      return '<div class="crit"><span class="mk"></span><span>'+esc(c.label)+'</span></div>';}).join('')+redLineHTML(n)+'</div></div>'+
     '<div class="linkrow"><button class="primary" id="sub" style="margin-top:0">Submit for grading</button>'+
     (n.model?'<button class="linkbtn" id="modelBtn">Show me a model answer</button>':'')+'</div>'+
     '<div id="fb"></div>';

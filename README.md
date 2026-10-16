@@ -37,7 +37,7 @@ The tag travels in every session summary, so a term of sessions pivots by anchor
 
 Working: the player with four node types (narrative, branching choice, multi-select, written answer); rubric grading with per-criterion coaching, retry, and attempt-aware progression; a shipped model answer with an explanation of why it works; in-character dialogue prompts; cumulative context recall; dark and light themes; procedural scene art; standalone export; and session summaries.
 
-The validator catches dangling branches, unreachable nodes, missing coaching, thin keyword lists - and grades each model answer against its own rubric, so a rubric that cannot recognise a good answer never ships. 110 automated tests cover every branch, every validator rule, and both themes.
+The validator catches dangling branches, unreachable nodes, missing coaching, thin keyword lists - and grades each model answer against its own rubric, so a rubric that cannot recognise a good answer never ships. 121 automated tests cover every branch, every validator rule, and both themes.
 
 Not built: server-side response collection, LLM-based grading, pre and post assessment instrumentation, multi-scenario progress tracking.
 
@@ -63,7 +63,7 @@ The trade-offs are the interesting part. A few, with what each one rules out, ar
 | `index.html` | the built Studio |
 | `demo/` | exported standalone scenarios |
 | `src/` | engine template, studio shell, schema docs, sample scenario, build script (`python3 src/build.py` rebuilds `index.html` and `demo/`) |
-| `tests/` | 97 jsdom checks (`npm i jsdom`, then `node tests/test.js`) |
+| `tests/` | 121 jsdom checks (`npm i jsdom`, then `node tests/test.js`) |
 | `docs/` | delivery workflow, authoring interface, decision log |
 
 ## Status

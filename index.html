@@ -273,6 +273,12 @@ textarea:focus{border-color:var(--lav);outline:none}
 
 /* ending */
 .moral{font-family:var(--serif);font-size:23px;font-style:italic;color:var(--gold);margin:0 0 14px;max-width:60ch}
+/* authored line breaks (\n in the JSON) show as line breaks; long lines still wrap */
+.stext,.lesson,.prompt,.vpq,.moral,.aifb,.ctx .bit,.revealed li span:last-child{white-space:pre-line}
+/* red line: facilitator talking point inside the folded rubric, never graded */
+.redline{border:1px dashed var(--coral);border-radius:9px;padding:10px 12px;background:rgba(255,107,74,.07);font-size:14.5px;line-height:1.5;color:var(--body)}
+.redline b{display:block;color:var(--coral);font-size:12.5px;font-weight:650;margin-bottom:4px}
+.redline .rlp{display:inline-block;margin:7px 6px 0 0;padding:2px 9px;border:1px solid var(--line);border-radius:99px;font-size:12.5px;color:var(--mute)}
 .revealed{list-style:none;padding:0;margin:0 0 16px;max-width:760px}
 .revealed li{display:flex;gap:14px;padding:11px 0;border-top:1px solid var(--line);font-size:15.5px}
 .revealed li span:first-child{flex:none;width:150px;color:var(--lav);font-weight:600}
@@ -631,6 +637,17 @@ function joinCoach(a){
   if(a.length===1)return a[0];
   return a.slice(0,-1).join('; ')+'; and '+a[a.length-1];
 }
+/* redFlags: a talking point for the facilitator. Shown inside the folded rubric (press e), never graded. */
+function redFlagsOf(n){
+  var r=n.redFlags;if(!r)return null;
+  if(Array.isArray(r))r={phrases:r};
+  return {rule:r.rule||'',phrases:r.phrases||[]};
+}
+function redLineHTML(n){
+  var r=redFlagsOf(n);if(!r||(!r.rule&&!r.phrases.length))return '';
+  return '<div class="redline"><b>Red line - for discussion, not graded</b>'+esc(r.rule)+
+    (r.phrases.length?'<div>'+r.phrases.map(function(p){return '<span class="rlp">'+esc(p)+'</span>';}).join('')+'</div>':'')+'</div>';
+}
 function renderEvaluate(n,nodeId){
   var expand=n.showRubric===true;
   var tries=S.tries[nodeId]||0;
@@ -644,7 +661,7 @@ function renderEvaluate(n,nodeId){
     '<textarea id="ans" placeholder="'+esc(n.placeholder||'Write your answer. Two or three sentences is enough.')+'"></textarea>'+
     '<div class="rubwrap"><div class="rlab" id="rlab">'+n.criteria.length+' criteria - press e to show the rubric</div>'+
     '<div class="rubric'+(expand?'':' folded')+'" id="rub">'+n.criteria.map(function(c){
-      return '<div class="crit"><span class="mk"></span><span>'+esc(c.label)+'</span></div>';}).join('')+'</div></div>'+
+      return '<div class="crit"><span class="mk"></span><span>'+esc(c.label)+'</span></div>';}).join('')+redLineHTML(n)+'</div></div>'+
     '<div class="linkrow"><button class="primary" id="sub" style="margin-top:0">Submit for grading</button>'+
     (n.model?'<button class="linkbtn" id="modelBtn">Show me a model answer</button>':'')+'</div>'+
     '<div id="fb"></div>';
@@ -1218,7 +1235,11 @@ renderHub();
  "passNote":"...",
  "model":"When a refund is approved, the system sends...",
  "modelExplain":"This covers all three: it &lt;b&gt;names the channel&lt;/b&gt;...",
+ "redFlags":{"rule":"Any note that blames the customer fails, however good the rest is.",
+             "phrases":["should have read","her responsibility"]},   <span class="k">// optional, NOT graded</span>
  "toPass":"good","toFail":"partial"}</pre>
+
+<p><b>redFlags (optional).</b> A red line for the facilitator to talk about. It sits inside the folded rubric, under the criteria, so it appears only when you press e - the same reveal as the rubric. The engine never grades it: an answer containing these phrases scores exactly as it would without them. The validator only checks that the model answer does not contain one. The phrases are prompts for the debrief, not a filter - some of them also turn up in good answers that argue against the red line, so read the sentence, not the word.</p>
 
 <p><b>Keywords: aim for 15-25 per criterion, mostly phrases.</b> Single words either fire on everything or miss how people actually write. Include contractions, partial words (<code>escalat</code> catches the whole family), and the sideways phrasings. The validator complains below 8.</p>
 
@@ -1237,6 +1258,9 @@ renderHub();
 <pre>"context":[{"label":"Policy note","text":"Refunds over 5000 need a second approver."}]</pre>
 
 <p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
+
+<h2>Line breaks</h2>
+<p>A <code>\n</code> inside any text field - narrative, consequence, lesson, prompt, verdict, the i panel - shows as a line break, and <code>\n\n</code> as a blank line between paragraphs. Long lines still wrap. Use it for pointers and short paragraphs on long screens.</p>
 
 <h2>Endings</h2>
 <pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",
@@ -1346,6 +1370,16 @@ function validate(json){
           if(mres<(n.pass||(n.criteria||[]).length))
             e.push(q+'model answer scores '+mres+'/'+(n.criteria||[]).length+
               ' against its own rubric - the keywords are too narrow or the model answer is wrong');
+        }
+        if(n.redFlags){
+          var rf=Array.isArray(n.redFlags)?{phrases:n.redFlags}:n.redFlags;
+          if(!rf.phrases||!rf.phrases.length)e.push(q+'redFlags has no phrases');
+          else if(n.model){
+            var norm=function(x){return String(x).toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();};
+            var mt=' '+norm(n.model)+' ';
+            var hit=rf.phrases.filter(function(ph){return mt.indexOf(' '+norm(ph)+' ')>-1;});
+            if(hit.length)e.push(q+'model answer contains red-flag phrase(s): '+hit.join(', '));
+          }
         }
         if(!n.speaker&&!n.prompt&&!n.question)e.push(q+'has no prompt or question');
         chk(n.toPass,'toPass');chk(n.toFail,'toFail');chk(n.to,'to');

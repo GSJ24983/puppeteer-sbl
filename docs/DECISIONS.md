@@ -32,6 +32,12 @@ Each entry names what the decision rules out. A trade-off with no cost is not a 
 
 **Why anyway:** decorative visuals should not compete with the text doing the work. The first build gave art a 16:9 block and pushed the actual scenario below the fold on a laptop, which is exactly backwards for a reading task.
 
+## Red flags are shown to the facilitator, not graded
+
+**Rules out:** automatic enforcement. A note that hits every criterion and then blames the customer still passes on screen.
+
+**Why anyway:** keyword matching cannot tell a sentence that crosses the line from a sentence that argues against it. 'She should have read the policy page' and 'saying she should have read the policy page is the argument the airline lost' contain the same words. Failing the second one in front of a room teaches the opposite of the lesson. So `redFlags` sits inside the folded rubric, revealed with it, as something to talk about, and the facilitator makes the call. The validator still refuses a model answer that crosses its own red line.
+
 ## The rubric is collapsed by default
 
 **Rules out:** learners self-assessing against criteria while they write.

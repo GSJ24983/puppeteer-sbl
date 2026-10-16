@@ -59,7 +59,11 @@
  "passNote":"...",
  "model":"When a refund is approved, the system sends...",
  "modelExplain":"This covers all three: it &lt;b&gt;names the channel&lt;/b&gt;...",
+ "redFlags":{"rule":"Any note that blames the customer fails, however good the rest is.",
+             "phrases":["should have read","her responsibility"]},   <span class="k">// optional, NOT graded</span>
  "toPass":"good","toFail":"partial"}</pre>
+
+<p><b>redFlags (optional).</b> A red line for the facilitator to talk about. It sits inside the folded rubric, under the criteria, so it appears only when you press e - the same reveal as the rubric. The engine never grades it: an answer containing these phrases scores exactly as it would without them. The validator only checks that the model answer does not contain one. The phrases are prompts for the debrief, not a filter - some of them also turn up in good answers that argue against the red line, so read the sentence, not the word.</p>
 
 <p><b>Keywords: aim for 15-25 per criterion, mostly phrases.</b> Single words either fire on everything or miss how people actually write. Include contractions, partial words (<code>escalat</code> catches the whole family), and the sideways phrasings. The validator complains below 8.</p>
 
@@ -78,6 +82,9 @@
 <pre>"context":[{"label":"Policy note","text":"Refunds over 5000 need a second approver."}]</pre>
 
 <p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
+
+<h2>Line breaks</h2>
+<p>A <code>\n</code> inside any text field - narrative, consequence, lesson, prompt, verdict, the i panel - shows as a line break, and <code>\n\n</code> as a blank line between paragraphs. Long lines still wrap. Use it for pointers and short paragraphs on long screens.</p>
 
 <h2>Endings</h2>
 <pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",

@@ -233,5 +233,34 @@ fs.writeFileSync(legacy,fs.readFileSync(DEMO,'utf8').replace('"anchor": "Challen
 const ld=load(legacy).window.document;
 ok(ld.getElementById('railKicker').textContent.startsWith('Challenges assumptions, reframes and holds a point of view'),'older files tagged with competency still show the anchor');
 
+/* ---- authored line breaks ---- */
+ok(/\.stext,[^{]*\.lesson[^{]*\{white-space:pre-line\}/.test(css),'text blocks keep authored line breaks (pre-line)');
+const lb=load(DEMO).window;
+const lbp=lb.document.querySelector('.stext');
+ok(lb.getComputedStyle(lbp).whiteSpace==='pre-line','narrative paragraph computes to pre-line');
+
+/* ---- redFlags: shown in the folded rubric, never graded ---- */
+const rw=load(DEMO).window,rd=rw.document;
+const n3=rw.DATA.scenarios[0].nodes.n3;
+n3.redFlags={rule:'Never blame the customer.',phrases:['her fault','should have known']};
+rw.start('signoff');rw.goTo('n3');
+const rl=rd.querySelector('#rub .redline');
+ok(!!rl,'red line renders inside the rubric');
+ok(rd.getElementById('rub').classList.contains('folded'),'red line stays hidden until the rubric is opened');
+ok(rl&&rl.textContent.includes('not graded')&&rl.textContent.includes('Never blame the customer.'),'red line shows its label and rule');
+ok(rd.querySelectorAll('#rub .rlp').length===2,'red line shows each phrase');
+ok(rd.querySelectorAll('#rub .crit').length===n3.criteria.length,'red line is not counted as a criterion');
+rd.getElementById('ans').value=n3.model+' Honestly it was her fault.';
+rd.getElementById('sub').click();
+ok(rd.querySelector('.scorepill').textContent.replace(/\s/g,'')===n3.criteria.length+'/'+n3.criteria.length,'an answer with a red-flag phrase still scores on the criteria alone');
+const rfv=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
+const rfn=rfv.scenarios[0].nodes.n3;
+rfn.redFlags={rule:'x',phrases:['ops owns']};
+ok(sv.validate(rfv).some(x=>x.includes('red-flag phrase(s): ops owns')),'validator flags a model answer that crosses its own red line');
+rfn.redFlags={rule:'x',phrases:[]};
+ok(sv.validate(rfv).some(x=>x.includes('redFlags has no phrases')),'validator flags empty redFlags');
+rfn.redFlags=['her fault'];
+ok(sv.validate(rfv).length===0,'redFlags as a plain array is accepted');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
