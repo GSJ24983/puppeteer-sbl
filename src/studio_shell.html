@@ -127,6 +127,19 @@ function build(json){
 var VALID_NODE={narrative:1,choice:1,multi:1,evaluate:1};
 function validate(json){
   var e=[];
+  function chkBlocks(bl,where){
+    if(bl==null)return;
+    if(!Array.isArray(bl)){e.push(where+' blocks must be a list');return;}
+    bl.forEach(function(b,bi){var w=where+' block '+bi+' ';
+      if(!b||['post','people','image'].indexOf(b.type)<0){e.push(w+'has unknown type "'+(b&&b.type)+'" - use post, people or image');return;}
+      if(b.at&&b.at!=='top'&&b.at!=='bottom')e.push(w+'"at" must be top or bottom');
+      if(b.type==='post'&&!b.text&&!(b.reply&&b.reply.text))e.push(w+'(post) has no text');
+      if(b.type==='people'){if(!(b.people||[]).length)e.push(w+'(people) has nobody in it');
+        (b.people||[]).forEach(function(p,pi){if(!p||!p.name)e.push(w+'person '+pi+' has no name');});}
+      if(b.type==='image'){if(!b.alt)e.push(w+'(image) has no alt - say what the picture shows');
+        if(b.src&&!/^(https:\/\/|data:image\/)/.test(b.src))e.push(w+'(image) src must be an https link or a data:image URI');}
+    });
+  }
   if(!json.scenarios||!json.scenarios.length){e.push('no scenarios array');return e;}
   json.scenarios.forEach(function(s,si){
     var p='scenario['+si+'] '+(s.id||'(no id)')+': ';
@@ -140,7 +153,7 @@ function validate(json){
       var n=nodes[k],q=p+'node "'+k+'" ';
       if(!VALID_NODE[n.type]){e.push(q+'has unknown type "'+n.type+'"');return;}
       function chk(t,where){if(t&&!targets(t))e.push(q+where+' points at "'+t+'" which does not exist');}
-      if(n.type==='narrative'){if(!n.to)e.push(q+'has no "to"');chk(n.to,'to');}
+      if(n.type==='narrative'){if(!n.to)e.push(q+'has no "to"');chk(n.to,'to');chkBlocks(n.blocks,q);}
       if(n.type==='choice'){
         if(!n.choices||!n.choices.length)e.push(q+'has no choices');
         (n.choices||[]).forEach(function(c,ci){
@@ -149,6 +162,7 @@ function validate(json){
           chk(t,'choice '+ci);
           if(n.gate&&c.correct===false&&!(c.lesson||c.note))e.push(q+'gated wrong choice '+ci+' has no coaching lesson');
           if(c.consequence&&!c.consequence.text)e.push(q+'choice '+ci+' consequence has no text');
+          if(c.consequence)chkBlocks(c.consequence.blocks,q+'choice '+ci+' consequence');
         });
       }
       if(n.type==='multi'){
@@ -203,7 +217,7 @@ function validate(json){
     Object.keys(nodes).concat(Object.keys(ends)).forEach(function(k){
       if(!reach[k])e.push(p+'"'+k+'" is unreachable from start');});
     Object.keys(ends).forEach(function(k){
-      if(!ends[k].verdict)e.push(p+'ending "'+k+'" has no verdict');});
+      if(!ends[k].verdict)e.push(p+'ending "'+k+'" has no verdict');chkBlocks(ends[k].blocks,p+'ending "'+k+'"');});
   });
   return e;
 }

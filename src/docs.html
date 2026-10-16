@@ -83,6 +83,19 @@
 
 <p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
 
+<h2>Visual blocks</h2>
+<p>Narrative screens, consequences and endings take an optional <code>blocks</code> list. Each block sits above the text (<code>"at":"top"</code>, the default) or below it (<code>"at":"bottom"</code>). They are drawn from the theme, so they need no files and work in both themes and offline.</p>
+<pre>"blocks":[
+ {"type":"post","author":"Meera","handle":"@meera","meta":"Monday, 8:52 am",
+  "text":"My father died twelve days ago...",
+  "reply":{"from":"SkyBridge assistant","text":"You can book now...","link":"Compassion fare policy"},
+  "after":"Your bot told me to do exactly this.","stats":"1,800 reposts"},
+ {"type":"people","title":"Three people matter this week",
+  "people":[{"name":"Arjun","role":"Head of Customer Experience","lines":"..."}]},
+ {"type":"image","alt":"what the picture shows","src":"","caption":"..."}
+]</pre>
+<p><b>post</b> is a social post, chat message or email, with an optional quoted reply styled like a screenshot. <b>people</b> is a cast card: initials, name, role, a line or two each. <b>image</b> shows the picture when <code>src</code> is an https link or a <code>data:image</code> URI, and a dashed 'Image to come' placeholder with the <code>alt</code> text when it is blank - so a planned visual is visible in a session before it exists. What a post or people block says is added to the i panel, so learners can reread it while they write.</p>
+
 <h2>Line breaks</h2>
 <p>A <code>\n</code> inside any text field - narrative, consequence, lesson, prompt, verdict, the i panel - shows as a line break, and <code>\n\n</code> as a blank line between paragraphs. Long lines still wrap. Use it for pointers and short paragraphs on long screens.</p>
 

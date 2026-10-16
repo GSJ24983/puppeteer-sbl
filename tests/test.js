@@ -262,5 +262,35 @@ ok(sv.validate(rfv).some(x=>x.includes('redFlags has no phrases')),'validator fl
 rfn.redFlags=['her fault'];
 ok(sv.validate(rfv).length===0,'redFlags as a plain array is accepted');
 
+/* ---- visual blocks: post, people, image ---- */
+const bw=load(DEMO).window,bd=bw.document;
+const bsc=bw.DATA.scenarios[0];
+bsc.nodes.brief.blocks=[
+  {type:'people',title:'Three people',people:[{name:'Meera Rao',role:'Operations',lines:'Signed the spec.'},{name:'Arjun',role:'Tech lead'}]},
+  {type:'image',alt:'The refunds queue on a Monday',at:'bottom'}];
+bsc.nodes.room.blocks=[{type:'post',author:'Priya',meta:'Wednesday',text:'We are in good shape.',reply:{from:'Assistant',text:'Notify the customer.',link:'Spec'},stats:'3 reactions'}];
+bw.start('signoff');bd.getElementById('go').click();
+const top=bd.querySelector('.panel figure.blk.people'),img=bd.querySelector('.panel figure.blk.img');
+ok(!!top,'people block renders');
+ok(top&&top.textContent.includes('Meera Rao')&&top.textContent.includes('MR'),'people block shows names and initials');
+ok(top&&top.compareDocumentPosition(bd.querySelector('.stext'))&4,'top block sits above the text');
+ok(img&&bd.querySelector('.stext').compareDocumentPosition(img)&4,'bottom block sits below the text');
+ok(img&&img.querySelector('.b-ph')&&img.textContent.includes('Image to come'),'image with no src shows a placeholder');
+bd.getElementById('go').click();
+const post=bd.querySelector('.panel figure.blk.post');
+ok(post&&post.querySelector('.b-shot')&&post.textContent.includes('Notify the customer.'),'post block renders with its quoted reply');
+bd.getElementById('go').click();
+const ctx=bd.getElementById('ctxPanel');
+ok(ctx&&ctx.textContent.includes('Meera Rao, Operations')&&ctx.textContent.includes('Assistant: Notify the customer.'),'the i panel keeps what blocks said');
+const badb=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
+badb.scenarios[0].nodes.brief.blocks=[{type:'video'},{type:'image',src:'http://x.png'},{type:'people',people:[]}];
+const be=sv.validate(badb);
+ok(be.some(x=>x.includes('unknown type "video"')),'validator rejects an unknown block type');
+ok(be.some(x=>x.includes('has no alt'))&&be.some(x=>x.includes('https link or a data:image')),'validator checks image alt and src');
+ok(be.some(x=>x.includes('has nobody in it')),'validator rejects an empty people block');
+const good=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
+good.scenarios[0].nodes.brief.blocks=[{type:'image',alt:'A queue',src:'data:image/png;base64,AAAA'}];
+ok(sv.validate(good).length===0,'a valid image block passes');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
