@@ -62,6 +62,7 @@ The trade-offs are the interesting part. A few, with what each one rules out, ar
 |---|---|
 | `index.html` | the built Studio |
 | `demo/` | exported standalone scenarios |
+| `releases/` | a named copy of the Studio per version (`puppeteer_studio_v0.2.html`); `index.html` is always the latest. Bump `VERSION` and note the change in `CHANGELOG.md` before a release |
 | `src/` | engine template, studio shell, schema docs, sample scenario, build script (`python3 src/build.py` rebuilds `index.html` and `demo/`) |
 | `tests/` | 121 jsdom checks (`npm i jsdom`, then `node tests/test.js`) |
 | `docs/` | delivery workflow, authoring interface, decision log |

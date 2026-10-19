@@ -2,10 +2,11 @@ import json,io,os
 # run from anywhere: python3 src/build.py  -> writes index.html and demo/signoff.html at the repo root
 HERE=os.path.dirname(os.path.abspath(__file__)); ROOT=os.path.dirname(HERE)
 os.chdir(HERE)
-eng=open('player_template.html').read()
+VERSION=open(os.path.join(ROOT,'VERSION')).read().strip()
+eng=open('player_template.html').read().replace('__VERSION__',VERSION)
 sample=open('sample_scenario.json').read()
 docs=open('docs.html').read()
-shell=open('studio_shell.html').read()
+shell=open('studio_shell.html').read().replace('__VERSION__',VERSION)
 
 # escape closing script tags so the embedded template survives inside <script type=text/plain>
 eng_esc=eng.replace('</script>','<\\/script>')
@@ -14,6 +15,10 @@ sample_esc=sample.replace('</script>','<\\/script>')
 
 out=shell.replace('__ENGINE_SRC__',eng_esc).replace('__SAMPLE_JSON__',sample_esc).replace('__DOCS__',docs_esc)
 open(os.path.join(ROOT,'index.html'),'w').write(out)
+# a named copy per version, so an old download can be told apart from the current Studio
+os.makedirs(os.path.join(ROOT,'releases'),exist_ok=True)
+open(os.path.join(ROOT,'releases','puppeteer_studio_v'+VERSION+'.html'),'w').write(out)
+print('version',VERSION)
 print('studio bytes',len(out))
 # also emit a ready standalone of the sample by doing the same substitution the browser does
 j=json.loads(sample)

@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Puppeteer Studio</title>
+<style>
+:root{
+  --indigo:#201A3E;--deep:#15112B;--surface:#2B2456;--surf2:#352C68;--coral:#FF6B4A;
+  --teal:#16B5A4;--lav:#B9AEE8;--ink:#F3F0FF;--mute:#A79EC9;--line:#463C7F;--gold:#F2C14E;
+  --serif:'Fraunces','Iowan Old Style',Georgia,serif;
+  --sans:'Instrument Sans','Segoe UI',system-ui,-apple-system,Calibri,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--deep);color:var(--ink);font-family:var(--sans);display:flex;flex-direction:column}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.bar{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);background:var(--indigo);flex:none}
+.bar svg{width:26px;height:26px;flex:none}
+.bar h1{font-family:var(--serif);font-size:16px;margin:0;font-weight:600}
+.bar .sp{flex:1}
+.bar .st{font-size:12.5px;color:var(--mute);font-family:var(--mono)}
+.bar .st.ok{color:var(--teal)}
+.bar .st.bad{color:var(--coral)}
+.btn{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+  padding:7px 13px;font-size:13.5px;cursor:pointer}
+.btn:hover{border-color:var(--lav)}
+.btn.go{background:var(--coral);border-color:var(--coral);color:#25100A;font-weight:650}
+.btn.go:hover{background:#FF835F}
+.btn.tl{background:var(--teal);border-color:var(--teal);color:#04211E;font-weight:650}
+
+main{flex:1;display:grid;grid-template-columns:minmax(340px,44%) 1fr;min-height:0}
+.left{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
+.tabs{display:flex;gap:2px;padding:8px 10px 0;flex:none}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--mute);
+  padding:7px 12px;font-size:13.5px;cursor:pointer}
+.tab.on{color:var(--ink);border-bottom-color:var(--coral)}
+.pane{flex:1;min-height:0;display:none}
+.pane.on{display:flex;flex-direction:column}
+textarea{flex:1;width:100%;background:var(--deep);color:#DCD6F5;border:0;border-top:1px solid var(--line);
+  padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.6;resize:none}
+textarea:focus{outline:none}
+.doc{overflow:auto;padding:16px 20px 40px;border-top:1px solid var(--line);font-size:14px;line-height:1.6}
+.doc h2{font-family:var(--serif);font-size:17px;margin:20px 0 6px;font-weight:600}
+.doc h2:first-child{margin-top:0}
+.doc p{color:#DCD6F5;margin:0 0 10px;max-width:62ch}
+.doc code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:4px;color:var(--lav)}
+.doc pre{background:var(--indigo);border:1px solid var(--line);border-radius:9px;padding:12px 14px;
+  overflow:auto;font-family:var(--mono);font-size:11.5px;line-height:1.55;color:#CFC7F0}
+.doc ul{margin:0 0 12px;padding-left:19px;color:#DCD6F5}
+.doc li{margin-bottom:5px}
+.doc .k{color:var(--gold)}
+.right{min-height:0;display:flex;flex-direction:column;background:var(--indigo)}
+.phead{padding:9px 14px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mute);
+  display:flex;align-items:center;gap:10px;flex:none}
+.phead .seg{margin-left:auto;display:flex;gap:2px;background:var(--deep);border-radius:7px;padding:2px}
+.phead .seg button{background:none;border:0;color:var(--mute);font-size:12px;padding:4px 10px;border-radius:5px;cursor:pointer}
+.phead .seg button.on{background:var(--surface);color:var(--ink)}
+.frameWrap{flex:1;min-height:0;display:grid;place-items:center;overflow:auto;padding:14px}
+iframe{border:1px solid var(--line);border-radius:12px;background:var(--deep);width:100%;height:100%}
+iframe.mob{width:390px;max-width:100%;height:100%;max-height:780px}
+.err{margin:0;padding:11px 16px;background:rgba(255,107,74,.12);border-top:1px solid var(--coral);
+  color:#FFC5B5;font-family:var(--mono);font-size:12px;white-space:pre-wrap;flex:none}
+.err.hidden{display:none}
+@media (max-width:900px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.left{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <path d="M6 8h28" stroke="#FF6B4A" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M12 8v13M20 8v19M28 8v13" stroke="#463C7F" stroke-width="1.3"/>
+    <rect x="8.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 12 24.5)" fill="#16B5A4"/>
+    <rect x="16.5" y="27" width="7" height="7" rx="1.4" transform="rotate(45 20 30.5)" fill="#B9AEE8"/>
+    <rect x="24.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 28 24.5)" fill="#F2C14E"/>
+  </svg>
+  <h1>Puppeteer Studio</h1>
+  <span class="st" title="Studio and engine version">v0.2</span>
+  <span class="st" id="status">ready</span>
+  <span class="sp"></span>
+  <button class="btn" id="btnSkel">New skeleton</button>
+  <button class="btn" id="btnSample">Load sample</button>
+  <button class="btn go" id="btnRun">Preview</button>
+  <button class="btn tl" id="btnExport">Export standalone HTML</button>
+</header>
+
+<main>
+  <section class="left">
+    <div class="tabs">
+      <button class="tab on" data-p="edit">Scenario JSON</button>
+      <button class="tab" data-p="docs">Schema</button>
+    </div>
+    <div class="pane on" id="p-edit"><textarea id="src" spellcheck="false"></textarea></div>
+    <div class="pane" id="p-docs"><div class="doc" id="docs"></div></div>
+    <pre class="err hidden" id="err"></pre>
+  </section>
+  <section class="right">
+    <div class="phead">
+      <span>Live preview - this is exactly what exports</span>
+      <span class="seg"><button class="on" data-w="desk">Laptop</button><button data-w="mob">Mobile</button></span>
+    </div>
+    <div class="frameWrap"><iframe id="frame" title="Preview"></iframe></div>
+  </section>
+</main>
+
+<script type="text/plain" id="engine"><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="Puppeteer engine v0.2">
+<title>__DECK_TITLE__</title>
+<style>
+:root{
+  --indigo:#201A3E; --deep:#15112B; --surface:#2B2456; --surf2:#352C68;
+  --coral:#FF6B4A; --coral2:#FF835F; --onCoral:#25100A; --teal:#16B5A4; --onTeal:#04211E; --blue:#0070C0;
+  --lav:#B9AEE8; --ink:#F3F0FF; --mute:#A79EC9; --line:#463C7F; --gold:#F2C14E;
+  --body:#DCD6F5; --tint:rgba(43,36,86,.55); --shadow:none;
+  --serif:'Fraunces','Iowan Old Style',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans','Segoe UI',system-ui,-apple-system,Calibri,sans-serif;
+}
+
+html[data-theme='light']{
+  --indigo:#EAF0F8; --deep:#FFFFFF; --surface:#F4F8FC; --surf2:#E7EFF8;
+  --coral:#0B5FBF; --coral2:#0A54A8; --onCoral:#FFFFFF; --teal:#0E7C6B; --onTeal:#FFFFFF; --blue:#0B5FBF;
+  --lav:#2C5C92; --ink:#10233B; --mute:#5C7288; --line:#CFDDEC; --gold:#9A6B0F;
+  --body:#22364F; --tint:#F4F8FC; --shadow:0 1px 2px rgba(16,35,59,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--deep);color:var(--ink);font-family:var(--sans);line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 18px 64px}
+a{color:var(--lav)}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+
+/* masthead */
+.mast{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.strings{width:34px;height:34px;flex:none}
+.mast h1{font-family:var(--serif);font-size:19px;font-weight:600;margin:0;letter-spacing:.1px}
+.mast .sub{color:var(--mute);font-size:13px;margin-left:auto}
+.themeBtn{background:var(--surface);border:1px solid var(--line);color:var(--mute);border-radius:7px;
+  width:30px;height:30px;display:grid;place-items:center;cursor:pointer;padding:0}
+.themeBtn:hover{color:var(--ink);border-color:var(--lav)}
+
+/* hub */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:24px}
+.xcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.thumb{aspect-ratio:16/9;background:var(--indigo)}
+.thumb svg{display:block;width:100%;height:100%}
+.xbody{padding:16px 16px 18px;display:flex;flex-direction:column;gap:9px;flex:1}
+.tagrow{display:flex;gap:8px;flex-wrap:wrap}
+.tag{font-size:11.5px;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:2px 9px}
+.tag.hot{background:var(--teal);border-color:var(--teal);color:var(--onTeal);font-weight:600}
+.xcard h2{font-family:var(--serif);font-size:20px;margin:2px 0 0;font-weight:600}
+.xcard p{margin:0;color:var(--mute);font-size:14px;flex:1}
+.play{margin-top:6px;align-self:flex-start;background:var(--coral);color:var(--onCoral);border:0;border-radius:9px;
+  padding:9px 15px;font-weight:650;font-size:14px;cursor:pointer}
+.play:hover{background:var(--coral2)}
+
+/* player shell */
+.player{display:grid;grid-template-columns:236px 1fr;gap:26px;margin-top:24px;align-items:start}
+.rail{position:sticky;top:20px}
+.railTitle{font-family:var(--serif);font-size:17px;margin:0 0 2px}
+.railKicker{color:var(--mute);font-size:12.5px;margin:0 0 16px}
+ol.steps{list-style:none;margin:0;padding:0}
+ol.steps li{position:relative;padding:0 0 16px 24px;color:var(--mute);font-size:13.5px}
+ol.steps li:before{content:'';position:absolute;left:4px;top:5px;width:9px;height:9px;transform:rotate(45deg);
+  border:1.5px solid var(--line);background:var(--deep)}
+ol.steps li:after{content:'';position:absolute;left:8px;top:16px;bottom:-1px;width:1.5px;background:var(--line)}
+ol.steps li:last-child:after{display:none}
+ol.steps li.done{color:var(--lav)}
+ol.steps li.done:before{background:var(--teal);border-color:var(--teal)}
+ol.steps li.now{color:var(--ink);font-weight:600}
+ol.steps li.now:before{background:var(--coral);border-color:var(--coral);box-shadow:0 0 0 4px rgba(255,107,74,.18)}
+.chip{display:inline-block;margin-left:7px;font-size:11px;font-weight:500;color:var(--deep);
+  background:var(--lav);border-radius:99px;padding:1px 7px;vertical-align:1px}
+.backlink{margin-top:20px;background:none;border:0;color:var(--mute);font-size:13px;cursor:pointer;padding:0}
+.backlink:hover{color:var(--ink)}
+
+/* stage */
+.scene{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--indigo);
+  height:clamp(104px,19vh,168px)}
+.scene svg{display:block;width:100%;height:100%}
+.panel{margin-top:20px}
+.eyebrow{color:var(--coral);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.eyebrow .dot{width:6px;height:6px;background:var(--coral);transform:rotate(45deg)}
+.stitle{font-family:var(--serif);font-size:29px;line-height:1.22;margin:0 0 12px;font-weight:600}
+.stext{font-size:17.5px;color:var(--body);margin:0 0 18px;max-width:68ch;line-height:1.6}
+.stext.narr{font-family:var(--serif);font-size:19.5px;line-height:1.62}
+.media{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 16px}
+.media a{display:inline-flex;align-items:center;gap:7px;font-size:13px;text-decoration:none;color:var(--ink);
+  border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px}
+.media a:hover{border-color:var(--lav)}
+.media .mk{font-size:11px;color:var(--deep);background:var(--lav);border-radius:4px;padding:1px 6px;font-weight:650}
+.prompt{font-family:var(--serif);font-size:22px;line-height:1.32;margin:0 0 14px;color:var(--ink)}
+.phead{display:flex;align-items:flex-start;gap:12px}
+.phead .stitle,.phead .prompt{flex:1;margin-bottom:0}
+.aff{display:flex;gap:7px;flex:none;padding-top:2px}
+.aff button{width:31px;height:31px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
+  color:var(--lav);font-family:var(--serif);font-size:15px;font-weight:600;cursor:pointer;display:grid;place-items:center}
+.aff button:hover{border-color:var(--coral);color:var(--ink)}
+.aff button.on{background:var(--coral);border-color:var(--coral);color:var(--onCoral)}
+.aff button .badge{position:absolute;font-size:0}
+.ctx{max-width:760px;border:1px solid var(--line);border-left:3px solid var(--lav);border-radius:0 11px 11px 0;
+  background:var(--tint);padding:14px 17px;margin:0 0 16px}
+.ctx h4{font-family:var(--serif);font-size:14.5px;margin:0 0 8px;color:var(--lav);font-weight:600}
+.ctx .bit{margin:0 0 11px;font-size:15.5px;line-height:1.55;color:var(--body)}
+.ctx .bit:last-child{margin-bottom:0}
+.ctx .bit b{display:block;font-size:12.5px;color:var(--mute);font-weight:600;margin-bottom:2px}
+.rubwrap{max-width:760px;margin-top:16px}
+.rubwrap .rlab{font-size:12.5px;color:var(--mute);margin-bottom:8px}
+.rubric.folded{display:none}
+.linkrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:16px}
+.linkbtn{background:none;border:0;color:var(--mute);font-size:14.5px;cursor:pointer;padding:0;
+  text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--ink)}
+.aibox{max-width:760px;margin-top:18px;border:1px solid var(--line);border-radius:12px;
+  padding:14px 17px;background:var(--tint)}
+.aibox .alab{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--mute);
+  font-weight:600;margin-bottom:10px}
+.scorepill{background:var(--coral);color:var(--onCoral);border-radius:99px;padding:2px 10px;
+  font-size:12.5px;font-weight:700}
+.scorepill.full{background:var(--teal);color:var(--onTeal)}
+.aifb{font-size:15.5px;line-height:1.6;color:var(--body)}
+.aifb b{color:var(--ink)}
+.spin{width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--coral);
+  border-radius:50%;display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.crit{transition:opacity .25s ease}
+.vpq{max-width:760px;border-left:3px solid var(--coral);background:var(--tint);
+  border-radius:0 11px 11px 0;padding:13px 17px;margin:0 0 16px;font-size:17.5px;line-height:1.5;
+  font-family:var(--serif);color:var(--ink)}
+.vpq b{display:block;font-family:var(--sans);font-size:12.5px;color:var(--coral);
+  font-weight:650;margin-bottom:5px;letter-spacing:.2px}
+
+.choices{display:flex;flex-direction:column;gap:10px;max-width:760px}
+.choice{display:flex;gap:13px;align-items:flex-start;text-align:left;background:var(--surface);
+  border:1px solid var(--line);border-radius:11px;padding:13px 15px;color:var(--ink);cursor:pointer;width:100%}
+.choice:hover:not(:disabled){border-color:var(--coral);background:var(--surf2)}
+.choice:disabled{opacity:.42;cursor:not-allowed}
+.choice .k{flex:none;width:25px;height:25px;border-radius:6px;background:var(--surf2);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:12.5px;font-weight:700;color:var(--lav)}
+.choice .lb{font-size:16.5px;font-weight:560;line-height:1.4}
+.choice .sb{font-size:14px;color:var(--mute);margin-top:3px}
+.opt{display:flex;gap:11px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:12px 15px;font-size:16px;cursor:pointer;max-width:760px;margin-bottom:9px}
+.opt input{margin-top:4px;accent-color:var(--coral)}
+.opt.sel{border-color:var(--coral)}
+
+textarea{width:100%;max-width:760px;min-height:126px;background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:11px;padding:13px 15px;font-family:inherit;font-size:16.5px;line-height:1.55;resize:vertical}
+textarea:focus{border-color:var(--lav);outline:none}
+.rubric{max-width:760px;margin:14px 0 0;display:flex;flex-direction:column;gap:8px}
+.crit{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--mute);
+  border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:var(--tint)}
+.crit .mk{flex:none;width:17px;height:17px;border-radius:50%;border:1.5px solid var(--line);margin-top:2px}
+.crit.met{color:var(--ink);border-color:var(--teal)}
+.crit.met .mk{background:var(--teal);border-color:var(--teal)}
+.cont,.primary{margin-top:16px;background:var(--coral);color:var(--onCoral);border:0;border-radius:9px;
+  padding:11px 19px;font-weight:650;font-size:15px;cursor:pointer}
+.cont:hover,.primary:hover{background:var(--coral2)}
+.ghost{margin-top:16px;margin-left:9px;background:none;border:1px solid var(--line);color:var(--ink);
+  border-radius:9px;padding:11px 17px;font-size:15px;cursor:pointer}
+.ghost:hover{border-color:var(--lav)}
+
+.lesson{border-left:3px solid var(--coral);background:rgba(255,107,74,.09);border-radius:0 9px 9px 0;
+  padding:12px 16px;margin:0 0 15px;font-size:15.5px;line-height:1.55;max-width:760px}
+.lesson.good{border-left-color:var(--teal);background:rgba(22,181,164,.10)}
+.lesson b{display:block;margin-bottom:3px;font-size:12.5px;color:var(--lav);font-weight:650}
+
+/* ending */
+.moral{font-family:var(--serif);font-size:23px;font-style:italic;color:var(--gold);margin:0 0 14px;max-width:60ch}
+/* authored line breaks (\n in the JSON) show as line breaks; long lines still wrap */
+.stext,.lesson,.prompt,.vpq,.moral,.aifb,.ctx .bit,.revealed li span:last-child{white-space:pre-line}
+/* visual blocks: post, people, image - drawn from the theme tokens, no files needed */
+figure.blk{max-width:680px;margin:0 0 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px 16px}
+.b-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--deep);flex:none}
+.b-h{display:flex;gap:10px;align-items:center;margin-bottom:9px;font-size:15px}
+.b-hd{color:var(--mute);font-size:13px;margin-left:6px}
+.b-t{margin:0 0 10px;font-size:16px;line-height:1.55;color:var(--ink);white-space:pre-line}
+.b-shot{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--tint);margin:0 0 10px}
+.b-sl{font-size:11.5px;font-weight:650;color:var(--lav);margin-bottom:4px;letter-spacing:.03em;text-transform:uppercase}
+.b-shot p{margin:0;font-size:15px;line-height:1.5;color:var(--body);white-space:pre-line}
+.b-lk{display:inline-block;margin-top:6px;font-size:13px;color:var(--lav);text-decoration:underline;text-underline-offset:3px}
+.b-st{font-size:13px;color:var(--mute);border-top:1px solid var(--line);padding-top:8px}
+.b-cap{font-size:12.5px;font-weight:650;color:var(--mute);margin:0 0 10px}
+.b-pg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.b-pc{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.b-pc b{display:block;font-family:var(--serif);font-size:17px;font-weight:600}
+.b-rl{display:block;font-size:13px;color:var(--lav);margin-bottom:4px}
+.b-pc p{margin:0;font-size:14px;line-height:1.5;color:var(--body)}
+figure.blk.img{padding:8px}
+figure.blk.img img{display:block;max-width:100%;border-radius:8px}
+figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
+.b-ph{border:1.5px dashed var(--line);border-radius:8px;padding:28px 16px;text-align:center;color:var(--mute);font-size:14px;line-height:1.5}
+/* multi-select breakdown: every option, what the learner did with it, and its why */
+.mb{list-style:none;margin:12px 0 0;padding:0;max-width:760px;display:flex;flex-direction:column;gap:8px}
+.mb li{border:1px solid var(--line);border-left-width:3px;border-radius:0 10px 10px 0;padding:10px 14px;background:var(--surface)}
+.mb .mbh{display:flex;flex-direction:column;align-items:flex-start;gap:5px;font-size:15.5px;color:var(--ink)}
+.mb .mbt{flex:none;font-size:11.5px;font-weight:700;letter-spacing:.02em;border-radius:99px;padding:1px 9px;border:1px solid var(--line);color:var(--mute)}
+.mb .why{margin:5px 0 0;font-size:14.5px;line-height:1.5;color:var(--body)}
+.mb li.hit{border-left-color:var(--teal)}.mb li.hit .mbt{background:var(--teal);border-color:var(--teal);color:var(--onTeal)}
+.mb li.miss{border-left-color:var(--gold)}.mb li.miss .mbt{color:var(--gold);border-color:var(--gold)}
+.mb li.wrong{border-left-color:var(--coral)}.mb li.wrong .mbt{color:var(--coral);border-color:var(--coral)}
+.mb li.skip{opacity:.8}
+.b-ph b{display:block;color:var(--lav);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+/* red line: facilitator talking point inside the folded rubric, never graded */
+.redline{border:1px dashed var(--coral);border-radius:9px;padding:10px 12px;background:rgba(255,107,74,.07);font-size:14.5px;line-height:1.5;color:var(--body)}
+.redline b{display:block;color:var(--coral);font-size:12.5px;font-weight:650;margin-bottom:4px}
+.redline .rlp{display:inline-block;margin:7px 6px 0 0;padding:2px 9px;border:1px solid var(--line);border-radius:99px;font-size:12.5px;color:var(--mute)}
+.revealed{list-style:none;padding:0;margin:0 0 16px;max-width:760px}
+.revealed li{display:flex;gap:14px;padding:11px 0;border-top:1px solid var(--line);font-size:15.5px}
+.revealed li span:first-child{flex:none;width:150px;color:var(--lav);font-weight:600}
+.summary{max-width:760px;margin-top:24px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--surface);box-shadow:var(--shadow)}
+.summary h3{font-family:var(--serif);font-size:17px;margin:0 0 4px;font-weight:600}
+.summary p{margin:0 0 11px;font-size:13.5px;color:var(--mute)}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;background:var(--deep);
+  border:1px solid var(--line);border-radius:8px;padding:11px 13px;word-break:break-all;color:var(--lav)}
+.copy{margin-top:11px;background:var(--teal);color:var(--onTeal);border:0;border-radius:8px;padding:8px 14px;
+  font-weight:650;font-size:13.5px;cursor:pointer}
+.hidden{display:none!important}
+.fade{animation:fade .34s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.fade{animation:none}}
+@media (max-width:760px){
+  .player{grid-template-columns:1fr;gap:18px}
+  .rail{position:static;order:2;border-top:1px solid var(--line);padding-top:16px}
+  .stage{order:1}
+  .stitle{font-size:24px}
+  .prompt{font-size:19.5px}
+  .scene{height:96px}
+  .revealed li{flex-direction:column;gap:3px}
+  .revealed li span:first-child{width:auto}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <svg class="strings" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <path d="M6 8h28" stroke="#FF6B4A" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M12 8v13M20 8v19M28 8v13" stroke="#463C7F" stroke-width="1.3"/>
+      <path d="M12 21l0 0" stroke="#16B5A4"/>
+      <rect x="8.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 12 24.5)" fill="#16B5A4"/>
+      <rect x="16.5" y="27" width="7" height="7" rx="1.4" transform="rotate(45 20 30.5)" fill="#B9AEE8"/>
+      <rect x="24.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 28 24.5)" fill="#F2C14E"/>
+    </svg>
+    <h1 id="deckTitle">The Puppeteer</h1>
+    <span class="sub" title="Puppeteer engine v0.2">Learn by deciding</span>
+    <button class="themeBtn" id="themeBtn" title="Switch theme" aria-label="Switch theme">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9">
+        <circle cx="12" cy="12" r="4.4"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
+      </svg></button>
+  </header>
+
+  <section id="hub">
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="player" class="player hidden">
+    <aside class="rail">
+      <h2 class="railTitle" id="railTitle"></h2>
+      <p class="railKicker" id="railKicker"></p>
+      <ol class="steps" id="steps"></ol>
+      <button class="backlink" id="backBtn">&larr; All scenarios</button>
+    </aside>
+    <main class="stage" id="stage"></main>
+  </section>
+</div>
+
+<script>
+/* =====================================================================
+   THE PUPPETEER - player engine. Frozen. Content lives in DATA below.
+   ===================================================================== */
+var DATA = /*__SCENARIO_JSON__*/ {"deckTitle":"The Puppeteer","scenarios":[]} /*__END__*/;
+
+/* ---------------------------- scene library ---------------------------- */
+var C={indigo:'var(--indigo)',deep:'var(--deep)',surf:'var(--surface)',surf2:'var(--surf2)',
+  coral:'var(--coral)',teal:'var(--teal)',lav:'var(--lav)',line:'var(--line)',gold:'var(--gold)',
+  ink:'var(--ink)',blue:'var(--blue)'};
+
+function svg(inner,bgA,bgB){
+  return '<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'+
+    '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0" stop-color="'+(bgA||C.surf2)+'"/><stop offset="1" stop-color="'+(bgB||C.deep)+'"/>'+
+    '</linearGradient></defs><rect width="480" height="270" fill="url(#g)"/>'+inner+'</svg>';
+}
+function dots(n,seed,col,op){
+  var s='',i,x,y,r;
+  for(i=0;i<n;i++){x=(i*(97+seed)+37)%480;y=(i*(53+seed)+19)%270;r=(.6+((i*31)%8)/10).toFixed(1);
+    s+='<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'" opacity="'+(op||.45)+'"/>';}
+  return s;
+}
+function node(x,y,s,col,glow){
+  return (glow?'<rect x="'+(x-s-4)+'" y="'+(y-s-4)+'" width="'+((s+4)*2)+'" height="'+((s+4)*2)+'" transform="rotate(45 '+x+' '+y+')" fill="'+col+'" opacity=".18"/>':'')+
+    '<rect x="'+(x-s)+'" y="'+(y-s)+'" width="'+(s*2)+'" height="'+(s*2)+'" rx="2" transform="rotate(45 '+x+' '+y+')" fill="'+col+'"/>';
+}
+function path(d,col,w,op){return '<path d="'+d+'" stroke="'+col+'" stroke-width="'+(w||2)+'" fill="none" opacity="'+(op||1)+'" stroke-linecap="round"/>';}
+
+var SCENES={
+  stage:function(){return svg(dots(46,3,C.lav,.3)+
+    path('M60 200C130 200 150 120 240 120S350 200 420 200',C.line,2,.7)+
+    node(240,120,11,C.coral,1)+node(120,175,7,C.lav)+node(360,175,7,C.teal));},
+  river:function(){return svg(dots(30,7,C.lav,.35)+
+    '<path d="M0 175q120 -26 240 0t240 0V270H0Z" fill="'+C.indigo+'" opacity=".85"/>'+
+    path('M20 196q110 -20 220 0t220 0',C.teal,1.6,.5)+path('M20 216q110 -20 220 0t220 0',C.teal,1.4,.32)+
+    '<circle cx="378" cy="62" r="24" fill="'+C.gold+'" opacity=".75"/>'+
+    path('M70 175l16-58 16 58',C.line,2.4)+path('M118 175l14-46 14 46',C.line,2.2),C.surf,C.deep);},
+  office:function(){return svg(
+    '<rect x="40" y="60" width="180" height="120" rx="6" fill="'+C.surf+'" stroke="'+C.line+'"/>'+
+    path('M62 92h136M62 112h100M62 132h124M62 152h78',C.line,3,.75)+
+    '<rect x="256" y="86" width="184" height="94" rx="6" fill="'+C.indigo+'" stroke="'+C.line+'"/>'+
+    path('M276 156l30-28 26 18 34-42 32 22',C.teal,2.6)+
+    '<rect x="40" y="196" width="400" height="8" rx="4" fill="'+C.line+'" opacity=".5"/>');},
+  data:function(){return svg(dots(24,11,C.lav,.25)+
+    '<rect x="46" y="42" width="388" height="176" rx="8" fill="'+C.indigo+'" stroke="'+C.line+'"/>'+
+    path('M70 190h340M70 190V64',C.line,1.6,.7)+
+    path('M78 150l52-22 48 30 56-72 54 40 52-26 44 12',C.coral,2.8)+
+    node(234,86,6,C.coral,1)+
+    path('M78 168l52-8 48 6 56-14 54 8 52-4 44 6',C.teal,2,.7));},
+  conflict:function(){return svg(
+    node(140,135,26,C.coral,1)+node(340,135,26,C.blue,1)+
+    path('M176 135h128',C.line,2.6,.8)+
+    '<g opacity=".9">'+path('M228 112l24 23-24 23',C.lav,2.4)+path('M252 112l-24 23 24 23',C.lav,2.4)+'</g>'+
+    dots(20,5,C.lav,.22));},
+  team:function(){return svg(dots(26,9,C.lav,.2)+
+    node(120,110,14,C.lav)+node(240,96,14,C.teal)+node(360,110,14,C.gold)+
+    path('M134 124L226 110M254 110L346 124M140 130q100 74 200 0',C.line,1.8,.8)+
+    '<rect x="80" y="180" width="320" height="8" rx="4" fill="'+C.line+'" opacity=".45"/>');},
+  ai:function(){return svg(dots(40,13,C.teal,.3)+
+    node(240,130,30,C.teal,1)+
+    path('M240 62v22M240 176v22M150 130h22M308 130h22M176 66l16 16M304 194l-16-16M304 66l-16 16M176 194l16-16',C.teal,2,.75)+
+    '<circle cx="240" cy="130" r="58" stroke="'+C.line+'" stroke-width="1.4" fill="none" opacity=".8"/>');},
+  matrix:function(){
+    var s='',r,c2;
+    for(r=0;r<3;r++)for(c2=0;c2<4;c2++)
+      s+='<rect x="'+(76+c2*84)+'" y="'+(66+r*54)+'" width="76" height="46" rx="5" fill="'+
+        ((r+c2)%3===0?C.surf2:C.indigo)+'" stroke="'+C.line+'"/>';
+    return svg(s+node(160,93,7,C.teal)+node(412,201,7,C.coral,1));},
+  launch:function(){return svg(dots(44,17,C.lav,.35)+
+    path('M60 210q120 -140 300 -158',C.line,2,.6)+
+    node(360,52,13,C.gold,1)+
+    path('M84 200l26-14 26 14',C.teal,2.4)+
+    '<rect x="40" y="216" width="400" height="6" rx="3" fill="'+C.line+'" opacity=".5"/>');},
+  storm:function(){return svg(dots(30,23,C.lav,.2)+
+    '<ellipse cx="200" cy="88" rx="98" ry="38" fill="'+C.indigo+'"/>'+
+    '<ellipse cx="300" cy="102" rx="76" ry="30" fill="'+C.indigo+'" opacity=".9"/>'+
+    path('M196 128l-18 38h24l-16 40',C.gold,3)+
+    path('M120 140l-14 34M270 140l-14 34M330 132l-14 34',C.teal,2,.5),C.surf,C.deep);}
+};
+function sceneHTML(k){var f=SCENES[k]||SCENES.stage;return f();}
+
+/* ---------------------------- state ---------------------------- */
+var hubEl=document.getElementById('hub'),playerEl=document.getElementById('player'),
+    stageEl=document.getElementById('stage'),stepsEl=document.getElementById('steps');
+var REDUCE=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+var GRADE_DELAY=900;  /* set to 0 to grade synchronously */
+var S={sc:null,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{}};
+
+function el(h){var d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild;}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function scenarios(){return DATA.scenarios||[];}
+function byId(id){var a=scenarios(),i;for(i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null;}
+
+/* ---------------------------- hub ---------------------------- */
+function renderHub(){
+  document.getElementById('deckTitle').textContent=DATA.deckTitle||'The Puppeteer';
+  var wrap=document.getElementById('cards');wrap.innerHTML='';
+  scenarios().forEach(function(s){
+    var card=el('<article class="xcard"></article>');
+    card.innerHTML='<div class="thumb">'+sceneHTML(s.thumb)+'</div><div class="xbody">'+
+      '<div class="tagrow"><span class="tag'+(s.highlight?' hot':'')+'">'+esc(s.tag||'Scenario')+'</span>'+
+      (anchorOf(s)?'<span class="tag" title="'+esc(pillarOf(s))+'">'+esc(anchorOf(s))+'</span>':'')+
+      (s.meta?'<span class="tag">'+esc(s.meta)+'</span>':'')+'</div>'+
+      '<h2>'+esc(s.title)+'</h2><p>'+esc(s.blurb||'')+'</p>'+
+      '<button class="play">Start</button></div>';
+    card.querySelector('.play').addEventListener('click',function(){start(s.id);});
+    wrap.appendChild(card);
+  });
+  if(scenarios().length===1){start(scenarios()[0].id);}
+}
+function backToHub(){
+  if(scenarios().length===1){start(scenarios()[0].id);return;}
+  playerEl.classList.add('hidden');hubEl.classList.remove('hidden');window.scrollTo(0,0);
+}
+document.getElementById('backBtn').addEventListener('click',backToHub);
+
+/* Swanubhava tagging: 'anchor' (preferred) or the older 'competency' field; the pillar is derived from the anchor unless given */
+var PILLAR_OF={'acts with integrity under pressure':'Individual posture',"embodies a learner's mindset":'Individual posture',
+ 'strives for clarity and outcomes':'Boundary defining posture','challenges assumptions, reframes and holds a point of view':'Boundary defining posture','converts insight into owned outcomes':'Boundary defining posture',
+ 'builds trust and psychological safety':'Collaboration posture','stays present and grounded under ambiguity':'Collaboration posture','listens beyond the ask to uncover the need':'Collaboration posture'};
+function anchorOf(s){return s.anchor||s.competency||'';}
+function pillarOf(s){return s.pillar||PILLAR_OF[String(anchorOf(s)).trim().toLowerCase()]||'';}
+/* ---------------------------- run ---------------------------- */
+function start(id){
+  var s=byId(id);if(!s)return;
+  S={sc:id,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{}};
+  document.getElementById('railTitle').textContent=s.title;
+  document.getElementById('railKicker').textContent=
+    anchorOf(s)?(anchorOf(s)+(s.kicker?' - '+s.kicker:'')):(s.kicker||'');
+  hubEl.classList.add('hidden');playerEl.classList.remove('hidden');window.scrollTo(0,0);
+  goTo(s.start);
+}
+function curStep(){
+  var s=byId(S.sc),n=S.ending||(s.nodes||{})[S.node];
+  return n&&typeof n.step==='number'?n.step:0;
+}
+function renderSteps(){
+  var s=byId(S.sc),cur=curStep();stepsEl.innerHTML='';
+  (s.steps||[]).forEach(function(label,i){
+    var cls=i<cur?'done':(i===cur?'now':'');
+    var chip=S.chips[i]?'<span class="chip">'+esc(S.chips[i])+'</span>':'';
+    stepsEl.appendChild(el('<li class="'+cls+'">'+esc(label)+chip+'</li>'));
+  });
+}
+function goTo(nodeId){
+  var s=byId(S.sc),n=(s.nodes||{})[nodeId];
+  if(!n){ var e=(s.endings||{})[nodeId]; if(e){return showEnding(nodeId,e);} 
+    stageEl.innerHTML='<p class="stext">Missing node: '+esc(nodeId)+'</p>';return;}
+  S.node=nodeId;S.ending=null;renderSteps();
+  if(n.type==='narrative')return renderNarrative(n);
+  if(n.type==='choice')return renderChoice(n,nodeId);
+  if(n.type==='multi')return renderMulti(n,nodeId);
+  if(n.type==='evaluate')return renderEvaluate(n,nodeId);
+  stageEl.innerHTML='<p class="stext">Unknown node type: '+esc(n.type)+'</p>';
+}
+function mediaHTML(m){
+  if(!m||!m.length)return '';
+  return '<div class="media">'+m.map(function(x){
+    return '<a href="'+esc(x.url)+'" target="_blank" rel="noopener"><span class="mk">'+
+      esc((x.type||'link').toUpperCase())+'</span>'+esc(x.label||x.url)+'</a>';}).join('')+'</div>';
+}
+function affBar(n,rubricCount){
+  var b='';
+  if(contextBits(n).length)b+='<button data-aff="i" title="Background so far">i</button>';
+  if(rubricCount)b+='<button data-aff="e" id="eBtn" title="Evaluation rubric">e</button>';
+  return b?'<div class="aff">'+b+'</div>':'';
+}
+function contextBits(n){
+  var bits=S.story.slice();
+  (n.context||[]).forEach(function(c){bits.push({label:c.label||'Note',text:c.text});});
+  return bits;
+}
+function ctxHTML(n){
+  var bits=contextBits(n);
+  return '<div class="ctx hidden" id="ctxPanel"><h4>Where you are</h4>'+
+    bits.map(function(b){return '<p class="bit"><b>'+esc(b.label)+'</b>'+esc(b.text)+'</p>';}).join('')+'</div>';
+}
+function wireAff(n){
+  var bar=stageEl.querySelector('.aff');if(!bar)return;
+  Array.prototype.forEach.call(bar.querySelectorAll('button'),function(b){
+    b.addEventListener('click',function(){
+      var t=b.getAttribute('data-aff')==='i'?document.getElementById('ctxPanel'):document.getElementById('rub');
+      if(!t)return;
+      var hid=b.getAttribute('data-aff')==='i'?t.classList.toggle('hidden'):t.classList.toggle('folded');
+      b.classList.toggle('on',!hid);
+    });
+  });
+}
+function stageOut(n,body,extraScene,headHTML){
+  var head=(n.title||headHTML)?
+    '<div class="phead">'+(n.title?'<h2 class="stitle">'+esc(n.title)+'</h2>':'<span style="flex:1"></span>')+
+    (headHTML||'')+'</div>':'';
+  stageEl.innerHTML='<div class="scene fade">'+sceneHTML(extraScene||n.scene)+'</div>'+
+    '<div class="panel fade">'+
+    (n.eyebrow?'<div class="eyebrow"><span class="dot"></span>'+esc(n.eyebrow)+'</div>':'')+
+    head+body+'</div>';
+}
+
+/* visual blocks */
+var AVC=['var(--teal)','var(--coral)','var(--gold)','var(--lav)'];
+function blocksOf(n,at){return ((n&&n.blocks)||[]).filter(function(b){return (b.at||'top')===at;});}
+function initials(s){return String(s||'?').split(/\s+/).filter(Boolean).slice(0,2).map(function(w){return w.charAt(0).toUpperCase();}).join('');}
+function blockHTML(b){
+  if(b.type==='post'){var r=b.reply||{};
+    return '<figure class="blk post"><div class="b-h"><span class="b-av" style="background:'+AVC[0]+'">'+esc(initials(b.author))+'</span><span><b>'+esc(b.author||'')+'</b>'+
+      (b.handle?'<span class="b-hd">'+esc(b.handle)+'</span>':'')+(b.meta?'<span class="b-hd">'+esc(b.meta)+'</span>':'')+'</span></div>'+
+      (b.text?'<p class="b-t">'+esc(b.text)+'</p>':'')+
+      (r.text?'<div class="b-shot"><div class="b-sl">'+esc(r.from||'Reply')+'</div><p>'+esc(r.text)+'</p>'+(r.link?'<span class="b-lk">'+esc(r.link)+'</span>':'')+'</div>':'')+
+      (b.after?'<p class="b-t">'+esc(b.after)+'</p>':'')+(b.stats?'<div class="b-st">'+esc(b.stats)+'</div>':'')+'</figure>';}
+  if(b.type==='people')
+    return '<figure class="blk people">'+(b.title?'<p class="b-cap">'+esc(b.title)+'</p>':'')+'<div class="b-pg">'+(b.people||[]).map(function(p,i){
+      return '<div class="b-pc"><span class="b-av" style="background:'+AVC[i%AVC.length]+'">'+esc(initials(p.name))+'</span><div><b>'+esc(p.name||'')+'</b>'+
+        (p.role?'<span class="b-rl">'+esc(p.role)+'</span>':'')+(p.lines?'<p>'+esc(p.lines)+'</p>':'')+'</div></div>';}).join('')+'</div></figure>';
+  if(b.type==='image'){var src=String(b.src||''),ok=/^(https:\/\/|data:image\/)/.test(src);
+    return '<figure class="blk img">'+(ok?'<img src="'+esc(src)+'" alt="'+esc(b.alt||'')+'">':'<div class="b-ph"><b>Image to come</b>'+esc(b.alt||'')+'</div>')+
+      (b.caption?'<p class="b-cap">'+esc(b.caption)+'</p>':'')+'</figure>';}
+  return '';
+}
+function blocksHTML(n,at){return blocksOf(n,at).map(blockHTML).join('');}
+function blockText(b){
+  if(b.type==='post')return [b.author?b.author+(b.meta?' ('+b.meta+')':'')+':':'',b.text,b.reply&&b.reply.text?(b.reply.from||'Reply')+': '+b.reply.text:'',b.after,b.stats].filter(Boolean).join('\n');
+  if(b.type==='people')return (b.people||[]).map(function(p){return p.name+(p.role?', '+p.role:'')+(p.lines?'. '+p.lines:'');}).join('\n');
+  if(b.type==='image')return b.caption||'';
+  return '';
+}
+/* the i panel keeps what blocks said, so a learner can reread a post while writing */
+function withBlocks(n,text){
+  return blocksOf(n,'top').map(blockText).concat([text||''],blocksOf(n,'bottom').map(blockText)).filter(Boolean).join('\n\n');
+}
+
+/* narrative */
+function remember(label,text){
+  if(!text)return;
+  for(var i=0;i<S.story.length;i++)if(S.story[i].text===text)return;
+  S.story.push({label:label||'Earlier',text:text});
+}
+function renderNarrative(n){
+  remember(n.title||n.eyebrow||'Earlier',withBlocks(n,n.text));
+  stageOut(n,blocksHTML(n,'top')+(n.text?'<p class="stext narr">'+esc(n.text)+'</p>':'')+blocksHTML(n,'bottom')+mediaHTML(n.media)+
+    '<button class="cont" id="go">Continue &rarr;</button>');
+  document.getElementById('go').addEventListener('click',function(){goTo(n.to);});
+}
+
+/* choice */
+function renderChoice(n,nodeId){
+  var dis=S.disabled[nodeId]||[];
+  var body='<div class="phead"><p class="prompt">'+esc(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
+    ctxHTML(n)+mediaHTML(n.media)+'<div class="choices">'+
+    n.choices.map(function(c,i){
+      return '<button class="choice" data-i="'+i+'"'+(dis.indexOf(i)>-1?' disabled':'')+'>'+
+        '<span class="k">'+esc(c.k||String.fromCharCode(65+i))+'</span><span><span class="lb">'+
+        esc(c.label)+'</span>'+(c.sub?'<span class="sb">'+esc(c.sub)+'</span>':'')+'</span></button>';
+    }).join('')+'</div>';
+  stageOut(n,body);wireAff(n);
+  Array.prototype.forEach.call(stageEl.querySelectorAll('.choice'),function(b){
+    b.addEventListener('click',function(){choose(n,nodeId,+b.getAttribute('data-i'));});
+  });
+}
+function choose(n,nodeId,i){
+  var c=n.choices[i];
+  S.log.push({node:nodeId,kind:'choice',pick:c.k||String.fromCharCode(65+i),
+    label:c.label,tag:c.tag||c.label,gated:!!(n.gate&&c.correct===false)});
+  if(n.gate&&c.correct===false){
+    S.disabled[nodeId]=(S.disabled[nodeId]||[]).concat([i]);
+    renderChoice(n,nodeId);
+    var p=stageEl.querySelector('.choices');
+    p.parentNode.insertBefore(el('<div class="lesson"><b>Not yet</b>'+esc(c.lesson||c.note||'')+'</div>'),p);
+    return;
+  }
+  if(typeof n.step==='number'&&c.chip)S.chips[n.step]=c.chip;
+  var cq=c.consequence;
+  if(!cq)return goTo(c.to||n.to);
+  remember(cq.title||'What happened',withBlocks(cq,cq.text));
+  stageOut({scene:cq.scene||n.scene,title:cq.title,eyebrow:cq.eyebrow},
+    blocksHTML(cq,'top')+'<p class="stext">'+esc(cq.text)+'</p>'+blocksHTML(cq,'bottom')+
+    (cq.lesson?'<div class="lesson'+(cq.good?' good':'')+'"><b>'+(cq.good?'Why this worked':'What this cost you')+'</b>'+esc(cq.lesson)+'</div>':'')+
+    '<button class="cont" id="go">Continue &rarr;</button>');
+  document.getElementById('go').addEventListener('click',function(){goTo(c.to||n.to);});
+}
+
+/* multi-select, rules-based */
+function renderMulti(n,nodeId){
+  var body='<div class="phead"><p class="prompt">'+esc(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
+    ctxHTML(n)+mediaHTML(n.media)+
+    '<div id="opts">'+n.options.map(function(o,i){
+      return '<label class="opt"><input type="checkbox" value="'+i+'"><span>'+esc(o.label)+
+        (o.sub?'<span class="sb">'+esc(o.sub)+'</span>':'')+'</span></label>';}).join('')+'</div>'+
+    '<button class="primary" id="sub">Submit</button><div id="fb"></div>';
+  stageOut(n,body);wireAff(n);
+  Array.prototype.forEach.call(stageEl.querySelectorAll('.opt input'),function(cb){
+    cb.addEventListener('change',function(){cb.parentNode.classList.toggle('sel',cb.checked);});
+  });
+  document.getElementById('sub').addEventListener('click',function(){
+    var picked=[];Array.prototype.forEach.call(stageEl.querySelectorAll('.opt input'),function(cb){
+      if(cb.checked)picked.push(+cb.value);});
+    var need=n.correct||[],hit=0,extra=0;
+    picked.forEach(function(i){need.indexOf(i)>-1?hit++:extra++;});
+    var ok=hit===need.length&&extra===0;
+    var miss=need.filter(function(i){return picked.indexOf(i)<0;})
+      .map(function(i){return n.options[i].label;});
+    S.log.push({node:nodeId,kind:'multi',pick:picked.join('+'),score:hit+'/'+need.length,
+      missed:miss.slice(),extras:extra});
+    var fb=document.getElementById('fb');
+    /* name what was missed and what was picked that does not belong; an option's optional 'why' explains it */
+    var withWhy=function(i){var o=n.options[i];return o.label+(o.why?' - '+o.why:'');};
+    var missW=need.filter(function(i){return picked.indexOf(i)<0;}).map(withWhy);
+    var extraW=picked.filter(function(i){return need.indexOf(i)<0;}).map(withWhy);
+    var head=ok?'Complete':missW.length?'Partial - '+hit+' of '+need.length:
+      'All '+need.length+' that matter - plus '+extra+' that do'+(extra===1?'es':'')+' not';
+    var body=ok?(n.successNote||'Every one that mattered, and nothing that did not.'):
+      [missW.length?(n.missNote||'Still missing: ')+missW.join('; '):'',
+       extraW.length?(n.extraNote||(extraW.length===1?'This one does not belong: ':'These do not belong: '))+extraW.join('; '):''
+      ].filter(Boolean).join('\n\n');
+    /* when the author wrote a 'why' on any option, show every option with what the learner did and why */
+    var hasWhy=n.options.some(function(o){return !!o.why;});
+    var MB={hit:'You picked it - it matters',miss:'You missed this one - it matters',wrong:'You picked it - it does not belong',skip:'Rightly left out'};
+    var breakdown=hasWhy?'<ul class="mb">'+n.options.map(function(o,i){
+        var isNeed=need.indexOf(i)>-1,isPick=picked.indexOf(i)>-1,st=isNeed?(isPick?'hit':'miss'):(isPick?'wrong':'skip');
+        return '<li class="'+st+'"><div class="mbh"><span class="mbt">'+MB[st]+'</span><span>'+esc(o.label)+'</span></div>'+
+          (o.why?'<p class="why">'+esc(o.why)+'</p>':'')+'</li>';}).join('')+'</ul>':'';
+    if(hasWhy&&!ok)body=missW.length&&extraW.length?'You missed some that matter and picked some that do not. Each one is below, with why.':
+      missW.length?'You missed '+(missW.length===1?'one that matters':missW.length+' that matter')+'. Each one is below, with why.':
+      'You picked '+(extraW.length===1?'one that does not belong':extraW.length+' that do not belong')+'. Each one is below, with why.';
+    fb.innerHTML='<div class="lesson'+(ok?' good':'')+'" style="margin-top:16px"><b>'+esc(head)+'</b>'+esc(body)+'</div>'+breakdown+
+      '<button class="cont" id="go">Continue &rarr;</button>';
+    document.getElementById('sub').disabled=true;
+    Array.prototype.forEach.call(stageEl.querySelectorAll('.opt input'),function(cb){cb.disabled=true;});
+    document.getElementById('go').addEventListener('click',function(){goTo(n.to);});
+  });
+}
+
+/* free text, rubric-graded */
+function evaluateAnswer(text,criteria){
+  var t=(' '+String(text).toLowerCase()+' ').replace(/[^a-z0-9\s]/g,' ');
+  var met=criteria.map(function(c){
+    return (c.keywords||[]).some(function(k){return t.indexOf(' '+k.toLowerCase()+' ')>-1||t.indexOf(k.toLowerCase())>-1;});
+  });
+  return {met:met,score:met.filter(Boolean).length};
+}
+function coachList(n,met){
+  return n.criteria.filter(function(c,i){return !met[i];})
+    .map(function(c){return c.coach||c.hint||c.label;});
+}
+function joinCoach(a){
+  if(a.length===1)return a[0];
+  return a.slice(0,-1).join('; ')+'; and '+a[a.length-1];
+}
+/* redFlags: a talking point for the facilitator. Shown inside the folded rubric (press e), never graded. */
+function redFlagsOf(n){
+  var r=n.redFlags;if(!r)return null;
+  if(Array.isArray(r))r={phrases:r};
+  return {rule:r.rule||'',phrases:r.phrases||[]};
+}
+function redLineHTML(n){
+  var r=redFlagsOf(n);if(!r||(!r.rule&&!r.phrases.length))return '';
+  return '<div class="redline"><b>Red line - for discussion, not graded</b>'+esc(r.rule)+
+    (r.phrases.length?'<div>'+r.phrases.map(function(p){return '<span class="rlp">'+esc(p)+'</span>';}).join('')+'</div>':'')+'</div>';
+}
+function renderEvaluate(n,nodeId){
+  var expand=n.showRubric===true;
+  var tries=S.tries[nodeId]||0;
+  var ask=n.speaker
+    ? '<div class="vpq"><b>'+esc(n.speaker)+'</b>&ldquo;'+esc(n.question||n.prompt)+'&rdquo;</div>'
+    : '<p class="prompt">'+esc(n.question||n.prompt)+'</p>';
+  var head=n.speaker
+    ? '<div class="phead"><span style="flex:1"></span>'+affBar(n,n.criteria.length)+'</div>'+ask
+    : '<div class="phead">'+ask+affBar(n,n.criteria.length)+'</div>';
+  var body=head+ctxHTML(n)+mediaHTML(n.media)+
+    '<textarea id="ans" placeholder="'+esc(n.placeholder||'Write your answer. Two or three sentences is enough.')+'"></textarea>'+
+    '<div class="rubwrap"><div class="rlab" id="rlab">'+n.criteria.length+' criteria - press e to show the rubric</div>'+
+    '<div class="rubric'+(expand?'':' folded')+'" id="rub">'+n.criteria.map(function(c){
+      return '<div class="crit"><span class="mk"></span><span>'+esc(c.label)+'</span></div>';}).join('')+redLineHTML(n)+'</div></div>'+
+    '<div class="linkrow"><button class="primary" id="sub" style="margin-top:0">Submit for grading</button>'+
+    (n.model?'<button class="linkbtn" id="modelBtn">Show me a model answer</button>':'')+'</div>'+
+    '<div id="fb"></div>';
+  stageOut({scene:n.scene,eyebrow:n.eyebrow,title:n.title},body);
+  wireAff(n);
+  if(expand){var eb=document.getElementById('eBtn');if(eb)eb.classList.add('on');}
+  if(tries)document.getElementById('rlab').textContent=
+    'Attempt '+(tries+1)+' - '+n.criteria.length+' criteria, press e to show the rubric';
+
+  var mb=document.getElementById('modelBtn');
+  if(mb)mb.addEventListener('click',function(){
+    document.getElementById('ans').value=n.model;
+    document.getElementById('fb').innerHTML='<div class="aibox fade"><div class="alab">Model answer loaded</div>'+
+      '<div class="aifb">'+(n.modelExplain||'This covers every rubric criterion. Edit it or submit it as it stands to see the grade.')+'</div></div>';
+    document.getElementById('ans').focus();
+  });
+
+  document.getElementById('sub').addEventListener('click',function(){
+    var txt=document.getElementById('ans').value.trim();
+    if(txt.length<12){document.getElementById('fb').innerHTML=
+      '<div class="aibox fade"><div class="alab" style="color:var(--coral)">Write a reply first</div>'+
+      '<div class="aifb">Give it a real answer, even one sentence, and it will be graded against the rubric.</div></div>';return;}
+    S.tries[nodeId]=(S.tries[nodeId]||0)+1;
+    document.getElementById('sub').disabled=true;
+    document.getElementById('fb').innerHTML=
+      '<div class="aibox fade"><div class="alab"><span class="spin"></span>Evaluating your answer</div></div>';
+    var d=REDUCE?0:GRADE_DELAY;
+    if(d)setTimeout(function(){revealGrade(n,nodeId,txt);},d);
+    else revealGrade(n,nodeId,txt);
+  });
+}
+function revealGrade(n,nodeId,txt){
+  var res=evaluateAnswer(txt,n.criteria),total=n.criteria.length;
+  var crits=stageEl.querySelectorAll('.crit');
+  var anim=!REDUCE&&GRADE_DELAY>0;
+  res.met.forEach(function(m,i){
+    if(!m)return;
+    if(!anim){crits[i].classList.add('met');return;}
+    crits[i].style.opacity='.35';
+    setTimeout(function(){crits[i].classList.add('met');crits[i].style.opacity='';},130*i+120);
+  });
+  var pass=res.score>=(n.pass||total);
+  var tries=S.tries[nodeId];
+  var canGo=pass||res.score>=total-1||tries>=2;
+  if(typeof n.step==='number')S.chips[n.step]=res.score+'/'+total;
+  document.getElementById('rlab').textContent=
+    res.score+' of '+total+' criteria met - press e to see which';
+
+  var fb;
+  if(pass){fb=n.passNote||'Every criterion covered.';}
+  else{
+    var lead=res.score===total-1?'<b>Almost there.</b> ':'<b>Not yet.</b> ';
+    fb=lead+(n.coachLead||'To make this land, ')+joinCoach(coachList(n,res.met))+'.';
+  }
+  var box=document.getElementById('fb').querySelector('.aibox');
+  box.innerHTML='<div class="alab"><span class="scorepill'+(pass?' full':'')+'">'+res.score+' / '+total+'</span>'+
+    'Rubric evaluation</div><div class="aifb">'+fb+'</div>'+
+    '<div class="linkrow">'+
+    (canGo?'<button class="primary" id="go" style="margin-top:0">'+(pass?'See how it lands':'Continue anyway')+'</button>':'')+
+    (pass?'':'<button class="linkbtn" id="retry">Try again</button>')+'</div>';
+
+  if(!S.log.some(function(l){return l.node===nodeId&&l.kind==='written';}))
+    S.log.push({node:nodeId,kind:'written',pick:'written',score:res.score+'/'+total,
+      missed:coachShort(n,res.met),answer:txt});
+  else S.log.forEach(function(l){if(l.node===nodeId&&l.kind==='written'){
+      l.score=res.score+'/'+total;l.missed=coachShort(n,res.met);l.answer=txt;l.tries=tries;}});
+
+  var g=document.getElementById('go');
+  if(g)g.addEventListener('click',function(){goTo(pass?(n.toPass||n.to):(n.toFail||n.to));});
+  var r=document.getElementById('retry');
+  if(r)r.addEventListener('click',function(){renderEvaluate(n,nodeId);});
+}
+function coachShort(n,met){
+  return n.criteria.filter(function(c,i){return !met[i];}).map(function(c){return c.hint||c.label;});
+}
+
+/* ending */
+function showEnding(key,e){
+  S.ending=e;S.node=null;renderSteps();
+  var rev=(e.revealed||[]).map(function(p){
+    return '<li><span>'+esc(p[0])+'</span><span>'+esc(p[1])+'</span></li>';}).join('');
+  stageOut(e,
+    ctxHTML(e)+
+    (e.moral?'<p class="moral">'+esc(e.moral)+'</p>':'')+
+    blocksHTML(e,'top')+'<p class="stext">'+esc(e.verdict||'')+'</p>'+blocksHTML(e,'bottom')+
+    (rev?'<ul class="revealed">'+rev+'</ul>':'')+
+    mediaHTML(e.media)+
+    '<div class="summary"><h3>Your session summary</h3>'+
+    '<p>Copy this and drop it in the class channel. Your facilitator reads the decisions, not just the ending.</p>'+
+    '<div class="code" id="code" style="white-space:pre-wrap">'+esc(sessionSummary(key,e))+'</div>'+
+    '<button class="copy" id="cp">Copy summary</button></div>'+
+    '<button class="ghost" id="again" style="margin-left:0">Run it again</button>',null,affBar(e,0));
+  wireAff(e);
+  document.getElementById('cp').addEventListener('click',function(){
+    var t=document.getElementById('code').textContent;
+    if(navigator.clipboard)navigator.clipboard.writeText(t);
+    else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+      document.execCommand('copy');document.body.removeChild(ta);}
+    this.textContent='Copied';
+  });
+  document.getElementById('again').addEventListener('click',function(){start(S.sc);});
+}
+function list(a){
+  if(!a||!a.length)return '';
+  return a.length===1?a[0]:a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+}
+function sessionSummary(endKey,e){
+  var s=byId(S.sc),L=[];
+  L.push(s.title+(s.kicker?' - '+s.kicker:''));
+  if(anchorOf(s))L.push('Anchor: '+anchorOf(s)+(s.behaviour?' - '+s.behaviour:''));
+  if(pillarOf(s))L.push('Pillar: '+pillarOf(s));
+  var retries=S.log.filter(function(l){return l.gated;}).length;
+  S.log.filter(function(l){return !l.gated;}).forEach(function(l){
+    if(l.kind==='choice')L.push('Chose: '+l.label);
+    if(l.kind==='multi')L.push('Gap check: '+l.score+' of the must-haves'+
+      (l.missed&&l.missed.length?', missed '+list(l.missed):'')+
+      (l.extras?' (and '+l.extras+' that did not matter)':''));
+    if(l.kind==='written')L.push('Written answer: '+l.score+' rubric criteria'+
+      (l.missed&&l.missed.length?', short on '+list(l.missed):' - full marks'));
+  });
+  if(retries)L.push('Corrected course after '+retries+' wrong turn'+(retries>1?'s':''));
+  L.push('Ending: '+((e&&e.title)||endKey));
+  var picks=S.log.map(function(l){return l.pick+(l.score?'('+l.score+')':'');}).join('>');
+  L.push('PUP|'+s.id+'|'+(anchorOf(s)||'-')+'|'+picks+'|'+endKey);
+  return L.join('\n');
+}
+
+/* ---------------------------- theme ---------------------------- */
+(function(){
+  var root=document.documentElement,saved=null;
+  try{saved=localStorage.getItem('pup-theme');}catch(e){}
+  if(saved==='light')root.setAttribute('data-theme','light');
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    var light=root.getAttribute('data-theme')==='light';
+    if(light)root.removeAttribute('data-theme');else root.setAttribute('data-theme','light');
+    try{localStorage.setItem('pup-theme',light?'dark':'light');}catch(e){}
+  });
+})();
+
+renderHub();
+<\/script>
+</body>
+</html>
+</script>
+<script type="text/plain" id="sample">{
+  "deckTitle": "The Puppeteer",
+  "scenarios": [
+    {
+      "id": "signoff",
+      "title": "The Requirement That Wasn't",
+      "kicker": "Product analysis scenario",
+      "anchor": "Challenges assumptions, reframes and holds a point of view",
+      "behaviour": "pushes past the happy path",
+      "tag": "Product analysis",
+      "meta": "10 min - 4 decisions - 1 written",
+      "thumb": "office",
+      "blurb": "Sign-off is on Friday. The spec says 'notify the customer', everyone has signed, and nobody has asked what happens when the customer has no phone number. Four decisions, about ten minutes.",
+      "highlight": false,
+      "steps": [
+        "What it is about",
+        "Briefing",
+        "Your first move",
+        "The gap",
+        "Write it down",
+        "Hold the line",
+        "Debrief"
+      ],
+      "start": "intro",
+      "nodes": {
+        "intro": {
+          "type": "narrative",
+          "step": 0,
+          "scene": "office",
+          "eyebrow": "Before you start",
+          "title": "What is this scenario about?",
+          "text": "This one trains anchor 7 of Swanubhava™ - challenging assumptions and holding a point of view. In plain words: when everyone in the room agrees, someone still has to ask 'are we all agreeing on the same thing?' Obviously that is easy to say in a classroom. It is much harder two days before a sign-off, when one question feels like slowing everyone down. You will play the product analyst. There are four decisions and one short piece of writing. There are no trick answers here - but some answers are expensive. A small honest note: the company and the numbers are made up. The pattern is not - I have seen it more times than I would like to admit.",
+          "media": [],
+          "to": "brief"
+        },
+        "brief": {
+          "type": "narrative",
+          "step": 1,
+          "scene": "office",
+          "eyebrow": "Briefing",
+          "title": "Two days to sign-off",
+          "text": "You are the product analyst (PA) on a refunds release for an online retailer. Today, customers find out about an approved refund only when the money shows up in their account - so support gets about 400 'where is my refund?' calls every week. This release is meant to fix that. The line that matters in the spec reads: 'When a refund is approved, notify the customer.' Meera from operations has signed it. Arjun, the tech lead, has estimated it at three days. Priya, the sponsor, has already told the support head that the calls will drop this quarter. Everyone is comfortable. You are not - and you cannot yet say why.",
+          "media": [],
+          "to": "room"
+        },
+        "room": {
+          "type": "narrative",
+          "step": 1,
+          "scene": "team",
+          "eyebrow": "Wednesday stand-up",
+          "title": "Everyone nods",
+          "text": "In the stand-up, Priya says: 'We are in good shape. Let's not reopen anything that is already agreed.' Everyone nods. Arjun is already breaking the work into tasks. You read the line once more - 'notify the customer'. Notify how? By SMS? Email? Both? You are not sure whether this is a real problem or you are just being fussy. (Every PA asks themselves that question at least once a week. I certainly did.)",
+          "media": [],
+          "to": "n1"
+        },
+        "n1": {
+          "type": "choice",
+          "step": 2,
+          "scene": "office",
+          "prompt": "Sign-off is Friday. What do you do with that discomfort?",
+          "choices": [
+            {
+              "k": "A",
+              "label": "Let it go - it is one line, and everyone has signed",
+              "sub": "Protect the date",
+              "tag": "Signed as-is",
+              "chip": "Signed",
+              "consequence": {
+                "scene": "storm",
+                "title": "Week three of production",
+                "text": "The release goes out on time. Refunds are approved, messages go out, and the calls start to drop. Then a customer with no mobile number on file gets nothing at all. She calls support twice, then writes to the consumer forum. The ticket lands back on your desk with a severity tag - and a question from Priya: 'Did nobody think of this?'",
+                "lesson": "Everyone signing the same line does not mean everyone read it the same way. Agreement can hide confusion; it does not remove it. Your discomfort was a cue - the kind an experienced person learns to trust - and you let it go because the date felt more important."
+              },
+              "to": "n2"
+            },
+            {
+              "k": "B",
+              "label": "Ask Meera for one real refund from last week, and exactly what that customer received",
+              "sub": "Probe with a real example",
+              "tag": "Probed",
+              "chip": "Probed",
+              "consequence": {
+                "scene": "team",
+                "good": true,
+                "title": "The example does the work",
+                "text": "Meera pulls up a refund from last Tuesday. 'Notify' meant an SMS. Then she checks the numbers: about one in nine customers has no mobile number on file. Nobody had decided what those customers get. Meera had assumed SMS, Arjun had assumed email, and Priya had assumed 'something automatic'. It was never a disagreement. It was a blank.",
+                "lesson": "A real example does what a review meeting cannot. Ask 'is this clear?' and everyone says yes. Ask 'what happened last Tuesday?' and the gaps show up on their own. Also notice what you did not do - you did not tell anyone their requirement was bad. You asked for a fact."
+              },
+              "to": "n2"
+            },
+            {
+              "k": "C",
+              "label": "Send the spec around again and ask everyone to re-read it carefully",
+              "sub": "Reconfirm in writing",
+              "tag": "Re-circulated",
+              "chip": "Re-read",
+              "consequence": {
+                "scene": "office",
+                "title": "Three replies, all 'looks fine'",
+                "text": "Within the hour you get three thumbs-up emojis. Nobody read it again - why would they? They had already agreed. The line still means SMS to Meera, email to Arjun and 'something automatic' to Priya. And the round trip cost you half a day.",
+                "lesson": "Re-reading the same words gives the same understanding. If you want a different answer, ask a different question - not the same question to more people."
+              },
+              "to": "n2"
+            }
+          ]
+        },
+        "n2": {
+          "type": "multi",
+          "step": 3,
+          "scene": "matrix",
+          "prompt": "Thursday morning. You have twenty minutes with Meera and Arjun. Which of these must be settled before Friday? Pick every one that matters.",
+          "options": [
+            {
+              "label": "Which channel counts as a notification",
+              "sub": "SMS, email, in-app, or any of them"
+            },
+            {
+              "label": "What happens when the chosen channel is unavailable for that customer"
+            },
+            {
+              "label": "The wording of the notification message"
+            },
+            {
+              "label": "Who owns the decision when the channel fails"
+            },
+            {
+              "label": "Which font the message template uses"
+            }
+          ],
+          "correct": [
+            0,
+            1,
+            3
+          ],
+          "successNote": "Right. The channel, what happens when that channel fails, and who decides. These three change what Arjun builds. The wording of the message and the font can be sorted later - they do not change the build.",
+          "missNote": "Before Friday you still need to settle: ",
+          "to": "n3"
+        },
+        "n3": {
+          "type": "evaluate",
+          "step": 4,
+          "scene": "data",
+          "placeholder": "When a refund is approved...",
+          "criteria": [
+            {
+              "label": "Names the actual channel instead of 'notify'",
+              "keywords": [
+                "sms",
+                "email",
+                "text message",
+                "in-app",
+                "in app",
+                "push",
+                "whatsapp",
+                "e-mail",
+                "messages the customer by",
+                "sends an sms",
+                "send an sms",
+                "by email",
+                "via email",
+                "notification channel"
+              ],
+              "hint": "say which channel actually sends the message",
+              "coach": "name the channel that actually fires - 'notify' is the word that let three people imagine three different things, and replacing it with 'SMS' or 'email' is what closes the gap"
+            },
+            {
+              "label": "Says what happens when that channel is not available",
+              "keywords": [
+                "no mobile",
+                "missing",
+                "unavailable",
+                "fallback",
+                "fall back",
+                "falls back",
+                "if the customer has no",
+                "absent",
+                "not on file",
+                "no number",
+                "without a mobile",
+                "no phone",
+                "cannot be reached",
+                "blank",
+                "empty",
+                "otherwise"
+              ],
+              "hint": "the customer with no number on file",
+              "coach": "say what happens to the customer with no mobile number on file - that is the one in nine who would get silence in production, and a requirement that ignores them is where the complaint comes from"
+            },
+            {
+              "label": "Says who or what decides when it fails",
+              "keywords": [
+                "ops",
+                "owner",
+                "owns",
+                "decides",
+                "decision",
+                "system",
+                "default",
+                "escalat",
+                "responsible",
+                "accountable",
+                "refunds team",
+                "support",
+                "assigned to",
+                "routed to",
+                "raises a task",
+                "flags it to"
+              ],
+              "hint": "who owns the call when it fails",
+              "coach": "name who or what makes the call when the channel fails - if nobody owns an edge case, whoever is on shift at 6pm decides it quietly, and you will never know"
+            }
+          ],
+          "pass": 3,
+          "passNote": "Channel, the failure case and the owner. Nobody can build that line two ways.",
+          "toPass": "n4",
+          "toFail": "partial",
+          "speaker": "Arjun, the tech lead",
+          "question": "Fine. Write me the line. If two developers read it, I want them to build the same thing.",
+          "title": "Write the line",
+          "model": "When a refund is approved, the system sends the customer an SMS to the mobile number on file. If no mobile number is on file, it sends the same notification by email instead. If neither is available, the refund is flagged to the ops queue and ops owns the decision on how the customer is told.",
+          "modelExplain": "This covers all three: it <b>names the channel</b> (SMS), <b>handles the customer with no number</b> (email fallback), and <b>names the owner</b> when both fail (ops). Edit it, or submit it as it is to see the grade.",
+          "coachLead": "To make this un-misreadable, "
+        },
+        "n4": {
+          "type": "choice",
+          "step": 5,
+          "scene": "office",
+          "prompt": "Thursday, 5pm. Priya reads your new line and frowns: 'An email fallback and an ops queue? That is scope creep. Sign the original line tomorrow, and we will do the rest in phase 2.' What do you do?",
+          "choices": [
+            {
+              "k": "A",
+              "label": "Agree - it is her call, and phase 2 is only a month away",
+              "sub": "Defer to the sponsor",
+              "tag": "Deferred",
+              "chip": "Deferred",
+              "consequence": {
+                "scene": "storm",
+                "title": "Phase 2, six weeks later",
+                "text": "Phase 2 slips, the way phase 2 usually does. For six weeks, one in nine customers gets no message at all. The 'where is my refund?' calls you were meant to remove keep coming - from exactly the customers who are hardest to reach. Priya asks why the numbers have not moved.",
+                "lesson": "Respecting the sponsor's decision is right. But she decided without knowing the cost, and you did know it. Holding a point of view is not about winning the argument. It is about making sure the person who decides can see what you can see."
+              },
+              "to": "deferred"
+            },
+            {
+              "k": "B",
+              "label": "Put the cost in one line - 'one in nine customers will get nothing' - and ask her to decide with that in front of her",
+              "sub": "Make the cost visible, let her decide",
+              "tag": "Held the line",
+              "chip": "Held",
+              "consequence": {
+                "scene": "team",
+                "good": true,
+                "title": "One number changes the room",
+                "text": "Priya goes quiet for a moment. 'One in nine? Those are the calls I promised to cut.' She asks Arjun how long the email fallback will take. 'Half a day.' She signs the full line on Friday.",
+                "lesson": "You did not argue and you did not escalate. You put one fact in front of the person who owns the decision, and let her make it - this time with the facts. That is what holding a point of view looks like in real life: firm on the facts, open on the decision."
+              },
+              "to": "good"
+            },
+            {
+              "k": "C",
+              "label": "Escalate to her manager - the risk is too big to leave with her",
+              "sub": "Go over her head",
+              "tag": "Escalated",
+              "chip": "Escalated",
+              "consequence": {
+                "scene": "storm",
+                "title": "Right risk, wrong route",
+                "text": "Her manager agrees with you and asks Priya why she did not know. The fallback gets built. The next sprint, Priya stops inviting you to her planning meetings.",
+                "lesson": "You were right about the risk and wrong about the route. Escalation is for when the owner has seen the facts and still chooses something unsafe. Priya had not seen them yet - nobody had shown her."
+              },
+              "to": "bruised"
+            }
+          ]
+        }
+      },
+      "endings": {
+        "good": {
+          "step": 6,
+          "scene": "launch",
+          "title": "The blank had nowhere to hide",
+          "moral": "A good requirement is not one everyone agrees with. It is one nobody can misread.",
+          "verdict": "You shipped on Friday, and the one-in-nine customer got a clear outcome instead of silence. Your line became the test case, which is why QA found nothing in week three. Now the question I would ask you in the debrief: where in your own work is a line that everyone has signed, and nobody has tested with a real example?",
+          "revealed": [
+            [
+              "The probe",
+              "You asked for a real refund instead of asking whether the spec was clear."
+            ],
+            [
+              "The gap",
+              "You separated what had to be settled before Friday from what could wait."
+            ],
+            [
+              "The write-up",
+              "Channel, failure case and owner - all three in one line."
+            ],
+            [
+              "The line you held",
+              "You showed the sponsor the cost and let her decide with it in front of her."
+            ],
+            [
+              "Take this with you",
+              "When everyone agrees too quickly, ask for one real example."
+            ]
+          ]
+        },
+        "deferred": {
+          "step": 6,
+          "scene": "storm",
+          "title": "Right line, wrong week",
+          "moral": "Knowing the cost and keeping it to yourself is still a decision.",
+          "verdict": "You did the hard part - you found the gap and wrote a line nobody could misread. Then you let it go at the last step. In the debrief, think about this: what would you have needed to feel comfortable putting that one number in front of Priya?",
+          "revealed": [
+            [
+              "What held",
+              "You found the gap and wrote it down properly."
+            ],
+            [
+              "What slipped",
+              "You let the decision be made without the cost on the table."
+            ],
+            [
+              "Take this with you",
+              "Firm on the facts, open on the decision."
+            ]
+          ]
+        },
+        "bruised": {
+          "step": 6,
+          "scene": "launch",
+          "title": "Shipped, with a bruise",
+          "moral": "Being right is half the job. How you are right is the other half.",
+          "verdict": "The customers are covered and the line is solid. But you spent trust you will need next quarter. In the debrief, ask yourself: what would one conversation with Priya, with the number in hand, have changed?",
+          "revealed": [
+            [
+              "What held",
+              "You found the gap and wrote a line nobody could misread."
+            ],
+            [
+              "What slipped",
+              "You escalated before the owner had seen the facts."
+            ],
+            [
+              "Take this with you",
+              "Show the owner first. Escalate only if they still choose something unsafe."
+            ]
+          ]
+        },
+        "partial": {
+          "step": 6,
+          "scene": "storm",
+          "title": "Better, but still readable two ways",
+          "moral": "Confusion does not announce itself. It shows up as a support ticket in week three.",
+          "verdict": "Your line is sharper than the original, but a developer reading it still has a decision left to make - and they will make it quietly, at 6pm, without you. Try the scenario again and see what changes when the line names the channel, the failure case and the owner.",
+          "revealed": [
+            [
+              "What held",
+              "You found the gap before sign-off, which is most of the job."
+            ],
+            [
+              "What slipped",
+              "The written line still left at least one thing to interpretation."
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}</script>
+<script type="text/plain" id="docsrc"><h2>How this works</h2>
+<p>Left pane is content. The engine is frozen and lives inside this file. Preview runs the real engine in an iframe, so <b>what you see is byte-for-byte what exports</b>. Export gives you one self-contained HTML - offline, no dependencies, mail it to anyone.</p>
+<p><code>Cmd/Ctrl + Enter</code> re-runs the preview.</p>
+
+<h2>Scenario shape</h2>
+<pre>{
+  "deckTitle": "The Puppeteer",
+  "scenarios": [{
+    "id": "signoff",              <span class="k">// slug, appears in the session code</span>
+    "title": "...", "kicker": "...", "tag": "Product analysis",
+    "anchor": "Challenges assumptions, reframes and holds a point of view",   <span class="k">// Swanubhava anchor this scenario trains, verbatim ('competency' still accepted)</span>
+    "pillar": "Boundary defining posture",   <span class="k">// optional - derived from the anchor when left out</span>
+    "behaviour": "pushes past the happy path",
+    "meta": "6 min - 3 decisions", "thumb": "office",
+    "blurb": "One sentence of tension.",
+    "highlight": false,           <span class="k">// true = teal pill on the hub card</span>
+    "steps": ["Briefing","Decision","Write it down","Debrief"],
+    "start": "brief",
+    "nodes": { ... },
+    "endings": { ... }
+  }]
+}</pre>
+<p>One scenario in the array and the hub is skipped - it opens straight into the run. Several, and you get a hub of cards.</p>
+
+<h2>Node types</h2>
+<p><b>narrative</b> - sets the scene, one Continue button.</p>
+<pre>{"type":"narrative","step":0,"scene":"office","eyebrow":"Briefing",
+ "title":"...","text":"...","media":[],"to":"n1"}</pre>
+
+<p><b>choice</b> - the core mechanic. Each choice may carry a consequence screen before it routes on.</p>
+<pre>{"type":"choice","step":1,"scene":"office","prompt":"...",
+ "gate": false,                  <span class="k">// true = wrong answers disable and retry, no advance</span>
+ "choices":[
+   {"k":"A","label":"...","sub":"...","tag":"Signed as-is","chip":"Signed",
+    "correct": false,            <span class="k">// only meaningful when gate:true</span>
+    "lesson":"coaching note shown on a gated wrong answer",
+    "consequence":{"scene":"storm","title":"...","text":"...",
+                   "lesson":"what this cost you","good":false},
+    "to":"n2"}]}</pre>
+
+<p><b>multi</b> - multi-select, rules-graded against <code>correct</code> indexes. No partial credit routing; it always continues to <code>to</code>, but the feedback names what was missed.</p>
+<pre>{"type":"multi","step":2,"scene":"matrix","prompt":"...",
+ "options":[{"label":"...","sub":"..."}],
+ "correct":[0,1,3],
+ "successNote":"...","missNote":"Before Friday you still need: ","to":"n3"}</pre>
+<p>Feedback names both kinds of slip: the ones they missed (after <code>missNote</code>) and the ones they picked that do not belong (after <code>extraNote</code>, default 'This one does not belong: '). Give any option an optional <code>why</code> - one short clause - and once any option has one, the feedback after Submit lists every option with what the learner did - picked it and it matters, missed it, picked it and it does not belong, rightly left out - and its <code>why</code> underneath. Without any <code>why</code> the feedback stays a single message: <code>{"label":"The prompt needs better wording","why":"the prompt is a symptom; the assistant reads an old source"}</code>.</p>
+
+<p><b>evaluate</b> - free text against a rubric. Criteria light up as they are met, and the grade arrives with coaching, not just a score. Routes to <code>toPass</code> or <code>toFail</code>.</p>
+<pre>{"type":"evaluate","step":3,"scene":"data",
+ "speaker":"The delivery lead:",       <span class="k">// renders as in-character dialogue</span>
+ "question":"Write me the line...",    <span class="k">// use "prompt" instead for a plain instruction</span>
+ "criteria":[{
+   "label":"Names the specific channel",
+   "keywords":["sms","email","in-app","sends an sms", ...],
+   "hint":"say which channel fires",   <span class="k">// short - used in the session summary</span>
+   "coach":"name the channel that actually fires - 'notify' is the word that let two teams build two different things"
+ }],
+ "pass":3,
+ "coachLead":"To make this un-misreadable, ",
+ "passNote":"...",
+ "model":"When a refund is approved, the system sends...",
+ "modelExplain":"This covers all three: it &lt;b&gt;names the channel&lt;/b&gt;...",
+ "redFlags":{"rule":"Any note that blames the customer fails, however good the rest is.",
+             "phrases":["should have read","her responsibility"]},   <span class="k">// optional, NOT graded</span>
+ "toPass":"good","toFail":"partial"}</pre>
+
+<p><b>redFlags (optional).</b> A red line for the facilitator to talk about. It sits inside the folded rubric, under the criteria, so it appears only when you press e - the same reveal as the rubric. The engine never grades it: an answer containing these phrases scores exactly as it would without them. The validator only checks that the model answer does not contain one. The phrases are prompts for the debrief, not a filter - some of them also turn up in good answers that argue against the red line, so read the sentence, not the word.</p>
+
+<p><b>Keywords: aim for 15-25 per criterion, mostly phrases.</b> Single words either fire on everything or miss how people actually write. Include contractions, partial words (<code>escalat</code> catches the whole family), and the sideways phrasings. The validator complains below 8.</p>
+
+<p><b>coach vs hint.</b> <code>hint</code> is a fragment for the session summary. <code>coach</code> is a full sentence naming the mechanism - what breaks, when, and who pays. Missed criteria are joined into one paragraph after <code>coachLead</code>. This is where the teaching happens, so it is required.</p>
+
+<p><b>model and modelExplain.</b> A 'Show me a model answer' button loads the model into the box with its explanation, and the learner can edit it or submit as it stands. Without this, a scenario run alone scores but does not teach. The validator grades the model against its own rubric and fails the scenario if it does not reach <code>pass</code> - so a rubric that cannot recognise a good answer never ships.</p>
+
+<p><b>Attempts.</b> A weak first answer cannot skip ahead. Continue unlocks when the score reaches pass, or is one short, or on the second attempt - so nobody is ever trapped. Grading shows a spinner, then a score pill and criteria revealing in sequence; set <code>GRADE_DELAY = 0</code> in the exported file to make it instant.</p>
+
+<h2>Anchor and pillar tagging</h2>
+<p>Scenarios are tagged to an anchor - one of the eight Swanubhava&trade; behavioural anchors, grouped in three pillars (Individual posture, Boundary defining posture, Collaboration posture) - and to the specific behaviour it trains. Put the anchor name in <code>anchor</code>, verbatim, sentence case: the tag groups sessions, so a changed capital letter becomes a new anchor in the spreadsheet. Older files that use <code>competency</code> still work. The pillar is filled in from the anchor; set <code>pillar</code> only to override it. The behaviour is where rubric criteria come from - it is already written as an observable behaviour, which is what a criterion has to be.</p>
+<p>The tag shows on the hub card and the rail, and travels in every session summary and compact code, so a term of sessions pivots by anchor (and pillar) in a spreadsheet: which anchors a cohort is weak on, not just which scenarios they found hard.</p>
+
+<h2>The i button - context on demand</h2>
+<p>Every choice, multi, evaluate and ending node carries an <b>i</b> button. It opens what the learner has seen so far - briefing text and the consequences of their own decisions - so nobody has to scroll back while writing. The engine assembles it automatically; you only add <code>context</code> when you want to inject something extra.</p>
+<pre>"context":[{"label":"Policy note","text":"Refunds over 5000 need a second approver."}]</pre>
+
+<p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
+
+<h2>Visual blocks</h2>
+<p>Narrative screens, consequences and endings take an optional <code>blocks</code> list. Each block sits above the text (<code>"at":"top"</code>, the default) or below it (<code>"at":"bottom"</code>). They are drawn from the theme, so they need no files and work in both themes and offline.</p>
+<pre>"blocks":[
+ {"type":"post","author":"Meera","handle":"@meera","meta":"Monday, 8:52 am",
+  "text":"My father died twelve days ago...",
+  "reply":{"from":"SkyBridge assistant","text":"You can book now...","link":"Compassion fare policy"},
+  "after":"Your bot told me to do exactly this.","stats":"1,800 reposts"},
+ {"type":"people","title":"Three people matter this week",
+  "people":[{"name":"Arjun","role":"Head of Customer Experience","lines":"..."}]},
+ {"type":"image","alt":"what the picture shows","src":"","caption":"..."}
+]</pre>
+<p><b>post</b> is a social post, chat message or email, with an optional quoted reply styled like a screenshot. <b>people</b> is a cast card: initials, name, role, a line or two each. <b>image</b> shows the picture when <code>src</code> is an https link or a <code>data:image</code> URI, and a dashed 'Image to come' placeholder with the <code>alt</code> text when it is blank - so a planned visual is visible in a session before it exists. What a post or people block says is added to the i panel, so learners can reread it while they write.</p>
+
+<h2>Line breaks</h2>
+<p>A <code>\n</code> inside any text field - narrative, consequence, lesson, prompt, verdict, the i panel - shows as a line break, and <code>\n\n</code> as a blank line between paragraphs. Long lines still wrap. Use it for pointers and short paragraphs on long screens.</p>
+
+<h2>Endings</h2>
+<pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",
+ "verdict":"what actually happened",
+ "revealed":[["The probe","what the learner did and why it mattered"]],
+ "media":[]}</pre>
+
+<h2>Media links</h2>
+<p>Any node takes a <code>media</code> array. Links, never embeds - the file stays small and portable.</p>
+<pre>"media":[{"type":"ppt","label":"Case pack","url":"https://..."},
+         {"type":"video","label":"2-min setup","url":"https://..."}]</pre>
+
+<h2>Scenes</h2>
+<p>Procedural backdrops, no art needed: <code>stage</code> <code>river</code> <code>office</code> <code>data</code> <code>conflict</code> <code>team</code> <code>ai</code> <code>matrix</code> <code>launch</code> <code>storm</code>. Unknown names fall back to <code>stage</code>.</p>
+
+<h2>What the validator checks</h2>
+<ul>
+<li>Every <code>to</code>, <code>toPass</code>, <code>toFail</code> resolves to a real node or ending</li>
+<li>No unreachable nodes or orphan endings</li>
+<li>Every rubric criterion has keywords - one without them can never be met</li>
+<li>Every gated wrong answer carries a coaching note</li>
+<li>Every ending has a verdict</li>
+</ul>
+
+<h2>Theme</h2>
+<p>Every exported file carries a dark and a light theme, toggled from the sun icon in the header and remembered per device. Light is a white and blue scheme for projectors and printed handouts. Scene art follows the theme automatically - it is drawn from the same tokens as the text.</p>
+
+<h2>Layout</h2>
+<p>The scene is a banner, capped at roughly a fifth of the viewport, so the words get the page. If you are writing long narrative text, that is the ratio to design for - do not expect the picture to carry meaning it cannot carry.</p>
+
+<h2>Classroom</h2>
+<p>Each run ends with a copyable summary in plain sentences, with a compact code as the last line:</p>
+<pre>The Requirement That Wasn't - Product analysis scenario
+Chose: Ask ops for a concrete case
+Gap check: 3/3 of the must-haves
+Written answer: 2/3 rubric criteria, short on who owns the call when it fails
+Ending: Better, but still readable two ways
+PUP|signoff|B>0+1+3(3/3)>written(2/3)|partial</pre>
+<p>Students drop it in the class channel. You read decisions, not just endings, and the debrief runs off what actually happened in the room.</p>
+</script>
+
+<script>
+var srcEl=document.getElementById('src'),errEl=document.getElementById('err'),
+    frame=document.getElementById('frame'),stEl=document.getElementById('status');
+
+function engineSrc(){
+  return document.getElementById('engine').textContent.split(/<\\\/script>/g).join('<'+'/script>');
+}
+function build(json){
+  var s=engineSrc();
+  var title=(json.deckTitle||'The Puppeteer')+(json.scenarios&&json.scenarios.length===1?' - '+json.scenarios[0].title:'');
+  s=s.replace('__DECK_TITLE__',title.replace(/[<>]/g,''));
+  var a=s.indexOf('/*__SCENARIO_JSON__*/'), b=s.indexOf('/*__END__*/');
+  return s.slice(0,a)+JSON.stringify(json,null,1)+s.slice(b+'/*__END__*/'.length);
+}
+
+var VALID_NODE={narrative:1,choice:1,multi:1,evaluate:1};
+function validate(json){
+  var e=[];
+  function chkBlocks(bl,where){
+    if(bl==null)return;
+    if(!Array.isArray(bl)){e.push(where+' blocks must be a list');return;}
+    bl.forEach(function(b,bi){var w=where+' block '+bi+' ';
+      if(!b||['post','people','image'].indexOf(b.type)<0){e.push(w+'has unknown type "'+(b&&b.type)+'" - use post, people or image');return;}
+      if(b.at&&b.at!=='top'&&b.at!=='bottom')e.push(w+'"at" must be top or bottom');
+      if(b.type==='post'&&!b.text&&!(b.reply&&b.reply.text))e.push(w+'(post) has no text');
+      if(b.type==='people'){if(!(b.people||[]).length)e.push(w+'(people) has nobody in it');
+        (b.people||[]).forEach(function(p,pi){if(!p||!p.name)e.push(w+'person '+pi+' has no name');});}
+      if(b.type==='image'){if(!b.alt)e.push(w+'(image) has no alt - say what the picture shows');
+        if(b.src&&!/^(https:\/\/|data:image\/)/.test(b.src))e.push(w+'(image) src must be an https link or a data:image URI');}
+    });
+  }
+  if(!json.scenarios||!json.scenarios.length){e.push('no scenarios array');return e;}
+  json.scenarios.forEach(function(s,si){
+    var p='scenario['+si+'] '+(s.id||'(no id)')+': ';
+    if(!s.id)e.push(p+'missing id');
+    if(!s.title)e.push(p+'missing title');
+    if(!s.start)e.push(p+'missing start');
+    var nodes=s.nodes||{},ends=s.endings||{};
+    var targets=function(id){return nodes[id]||ends[id];};
+    if(s.start&&!targets(s.start))e.push(p+'start "'+s.start+'" does not exist');
+    Object.keys(nodes).forEach(function(k){
+      var n=nodes[k],q=p+'node "'+k+'" ';
+      if(!VALID_NODE[n.type]){e.push(q+'has unknown type "'+n.type+'"');return;}
+      function chk(t,where){if(t&&!targets(t))e.push(q+where+' points at "'+t+'" which does not exist');}
+      if(n.type==='narrative'){if(!n.to)e.push(q+'has no "to"');chk(n.to,'to');chkBlocks(n.blocks,q);}
+      if(n.type==='choice'){
+        if(!n.choices||!n.choices.length)e.push(q+'has no choices');
+        (n.choices||[]).forEach(function(c,ci){
+          var t=c.to||n.to;
+          if(!t&&c.correct!==false)e.push(q+'choice '+ci+' has no "to"');
+          chk(t,'choice '+ci);
+          if(n.gate&&c.correct===false&&!(c.lesson||c.note))e.push(q+'gated wrong choice '+ci+' has no coaching lesson');
+          if(c.consequence&&!c.consequence.text)e.push(q+'choice '+ci+' consequence has no text');
+          if(c.consequence)chkBlocks(c.consequence.blocks,q+'choice '+ci+' consequence');
+        });
+      }
+      if(n.type==='multi'){
+        if(!n.options||!n.options.length)e.push(q+'has no options');
+        if(!n.correct||!n.correct.length)e.push(q+'has no correct[] indexes');
+        (n.correct||[]).forEach(function(i){if(!(n.options||[])[i])e.push(q+'correct index '+i+' out of range');});
+        chk(n.to,'to');
+      }
+      if(n.type==='evaluate'){
+        if(!n.criteria||!n.criteria.length)e.push(q+'has no rubric criteria');
+        (n.criteria||[]).forEach(function(c,ci){
+          if(!c.label)e.push(q+'criterion '+ci+' has no label');
+          if(!c.keywords||!c.keywords.length)e.push(q+'criterion '+ci+' has no keywords - it can never be met');
+          else if(c.keywords.length<8)e.push(q+'criterion '+ci+' has only '+c.keywords.length+
+            ' keywords - aim for 15-25, mostly phrases, or real answers will fail it');
+          if(!c.coach)e.push(q+'criterion '+ci+' has no coach sentence - feedback would only name the gap, not teach it');
+        });
+        if(!n.model)e.push(q+'has no model answer - learners working alone have nothing to compare against');
+        if(n.model&&!n.modelExplain)e.push(q+'has a model answer but no modelExplain');
+        if(n.model){
+          var mres=(function(){
+            var t=(' '+String(n.model).toLowerCase()+' ').replace(/[^a-z0-9\s]/g,' ');
+            return (n.criteria||[]).filter(function(c){
+              return (c.keywords||[]).some(function(k){return t.indexOf(k.toLowerCase())>-1;});}).length;
+          })();
+          if(mres<(n.pass||(n.criteria||[]).length))
+            e.push(q+'model answer scores '+mres+'/'+(n.criteria||[]).length+
+              ' against its own rubric - the keywords are too narrow or the model answer is wrong');
+        }
+        if(n.redFlags){
+          var rf=Array.isArray(n.redFlags)?{phrases:n.redFlags}:n.redFlags;
+          if(!rf.phrases||!rf.phrases.length)e.push(q+'redFlags has no phrases');
+          else if(n.model){
+            var norm=function(x){return String(x).toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();};
+            var mt=' '+norm(n.model)+' ';
+            var hit=rf.phrases.filter(function(ph){return mt.indexOf(' '+norm(ph)+' ')>-1;});
+            if(hit.length)e.push(q+'model answer contains red-flag phrase(s): '+hit.join(', '));
+          }
+        }
+        if(!n.speaker&&!n.prompt&&!n.question)e.push(q+'has no prompt or question');
+        chk(n.toPass,'toPass');chk(n.toFail,'toFail');chk(n.to,'to');
+        if(!n.toPass&&!n.to)e.push(q+'has no destination');
+      }
+    });
+    var reach={},walk=function(id){
+      if(!id||reach[id])return;reach[id]=1;
+      var n=nodes[id];if(!n)return;
+      if(n.to)walk(n.to);if(n.toPass)walk(n.toPass);if(n.toFail)walk(n.toFail);
+      (n.choices||[]).forEach(function(c){walk(c.to||n.to);});
+    };
+    walk(s.start);
+    Object.keys(nodes).concat(Object.keys(ends)).forEach(function(k){
+      if(!reach[k])e.push(p+'"'+k+'" is unreachable from start');});
+    Object.keys(ends).forEach(function(k){
+      if(!ends[k].verdict)e.push(p+'ending "'+k+'" has no verdict');chkBlocks(ends[k].blocks,p+'ending "'+k+'"');});
+  });
+  return e;
+}
+
+function run(){
+  var json;
+  try{json=JSON.parse(srcEl.value);}
+  catch(ex){fail('JSON syntax: '+ex.message);return null;}
+  var errs=validate(json);
+  if(errs.length){fail(errs.length+' problem'+(errs.length>1?'s':'')+':\n- '+errs.join('\n- '));}
+  else{errEl.classList.add('hidden');stEl.textContent='valid';stEl.className='st ok';}
+  frame.srcdoc=build(json);
+  return json;
+}
+function fail(msg){
+  errEl.textContent=msg;errEl.classList.remove('hidden');
+  stEl.textContent='check errors';stEl.className='st bad';
+}
+function download(){
+  var json;try{json=JSON.parse(srcEl.value);}catch(ex){fail('JSON syntax: '+ex.message);return;}
+  var name=(json.scenarios&&json.scenarios.length===1?json.scenarios[0].id:'puppeteer_deck')+'.html';
+  var blob=new Blob([build(json)],{type:'text/html'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
+}
+
+var SKELETON={deckTitle:'The Puppeteer',scenarios:[{
+  id:'new_scenario',title:'Untitled scenario',kicker:'',tag:'Training',meta:'5 min - 2 decisions',
+  thumb:'stage',blurb:'One sentence of tension. Something is at stake and the learner has to decide.',
+  steps:['Briefing','The decision','Write it down','Debrief'],start:'brief',
+  nodes:{
+    brief:{type:'narrative',step:0,scene:'office',eyebrow:'Briefing',title:'',text:'',to:'n1'},
+    n1:{type:'choice',step:1,scene:'office',prompt:'',choices:[
+      {k:'A',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:''},to:'n2'},
+      {k:'B',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:'',good:true},to:'n2'}
+    ]},
+    n2:{type:'evaluate',step:2,scene:'data',speaker:'',question:'',criteria:[
+      {label:'',keywords:[],hint:'',coach:''},{label:'',keywords:[],hint:'',coach:''}
+    ],pass:2,showRubric:false,model:'',modelExplain:'',coachLead:'To make this land, ',
+    toPass:'good',toFail:'partial'}
+  },
+  endings:{
+    good:{step:3,scene:'launch',title:'',moral:'',verdict:'',revealed:[['','']]},
+    partial:{step:3,scene:'storm',title:'',moral:'',verdict:'',revealed:[['','']]}
+  }
+}]};
+
+document.getElementById('btnRun').addEventListener('click',run);
+document.getElementById('btnExport').addEventListener('click',download);
+document.getElementById('btnSample').addEventListener('click',function(){
+  srcEl.value=document.getElementById('sample').textContent.trim();run();});
+document.getElementById('btnSkel').addEventListener('click',function(){
+  srcEl.value=JSON.stringify(SKELETON,null,2);run();});
+
+Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.pane').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');document.getElementById('p-'+t.getAttribute('data-p')).classList.add('on');
+  });
+});
+Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.seg button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    frame.className=b.getAttribute('data-w')==='mob'?'mob':'';
+  });
+});
+srcEl.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&(e.key==='Enter'||e.key==='s')){e.preventDefault();run();}
+  if(e.key==='Tab'){e.preventDefault();var s=srcEl.selectionStart;
+    srcEl.value=srcEl.value.slice(0,s)+'  '+srcEl.value.slice(srcEl.selectionEnd);
+    srcEl.selectionStart=srcEl.selectionEnd=s+2;}
+});
+
+document.getElementById('docs').innerHTML=document.getElementById('docsrc').textContent;
+srcEl.value=document.getElementById('sample').textContent.trim();
+run();
+</script>
+</body>
+</html>
