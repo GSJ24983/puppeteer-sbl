@@ -558,10 +558,17 @@ function renderMulti(n,nodeId){
     S.log.push({node:nodeId,kind:'multi',pick:picked.join('+'),score:hit+'/'+need.length,
       missed:miss.slice(),extras:extra});
     var fb=document.getElementById('fb');
-    fb.innerHTML='<div class="lesson'+(ok?' good':'')+'" style="margin-top:16px"><b>'+
-      (ok?'Complete':'Partial - '+hit+' of '+need.length)+'</b>'+
-      esc(ok?(n.successNote||'Every one that mattered, and nothing that did not.'):
-        (n.missNote||'Still missing: ')+miss.join('; '))+'</div>'+
+    /* name what was missed and what was picked that does not belong; an option's optional 'why' explains it */
+    var withWhy=function(i){var o=n.options[i];return o.label+(o.why?' - '+o.why:'');};
+    var missW=need.filter(function(i){return picked.indexOf(i)<0;}).map(withWhy);
+    var extraW=picked.filter(function(i){return need.indexOf(i)<0;}).map(withWhy);
+    var head=ok?'Complete':missW.length?'Partial - '+hit+' of '+need.length:
+      'All '+need.length+' that matter - plus '+extra+' that do'+(extra===1?'es':'')+' not';
+    var body=ok?(n.successNote||'Every one that mattered, and nothing that did not.'):
+      [missW.length?(n.missNote||'Still missing: ')+missW.join('; '):'',
+       extraW.length?(n.extraNote||(extraW.length===1?'This one does not belong: ':'These do not belong: '))+extraW.join('; '):''
+      ].filter(Boolean).join('\n\n');
+    fb.innerHTML='<div class="lesson'+(ok?' good':'')+'" style="margin-top:16px"><b>'+esc(head)+'</b>'+esc(body)+'</div>'+
       '<button class="cont" id="go">Continue &rarr;</button>';
     document.getElementById('sub').disabled=true;
     document.getElementById('go').addEventListener('click',function(){goTo(n.to);});

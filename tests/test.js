@@ -292,5 +292,19 @@ const good=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
 good.scenarios[0].nodes.brief.blocks=[{type:'image',alt:'A queue',src:'data:image/png;base64,AAAA'}];
 ok(sv.validate(good).length===0,'a valid image block passes');
 
+/* ---- multi feedback names extras, not an empty 'missing' list ---- */
+const mw=load(DEMO).window,md=mw.document,mn=mw.DATA.scenarios[0].nodes.n2;
+const pickMulti=idx=>{mw.start('signoff');mw.goTo('n2');
+  md.querySelectorAll('.opt input').forEach(cb=>{cb.checked=idx.includes(+cb.value);});md.getElementById('sub').click();
+  return md.querySelector('#fb .lesson').textContent;};
+mn.options[4].why='the font does not change what gets built';
+let fbt=pickMulti([0,1,3,4]);
+ok(fbt.startsWith('All 3 that matter - plus 1 that does not'),'all right plus one extra gets its own heading');
+ok(!fbt.includes('still need')&&fbt.includes('This one does not belong')&&fbt.includes('font does not change'),'extra pick is named with its why, no empty missing list');
+fbt=pickMulti([0,1,4]);
+ok(fbt.startsWith('Partial - 2 of 3')&&fbt.includes('still need')&&fbt.includes('This one does not belong'),'missed and extra are both named');
+fbt=pickMulti([0,1,3]);
+ok(fbt.startsWith('Complete'),'exact pick is complete');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
