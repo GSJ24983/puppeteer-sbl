@@ -43,7 +43,7 @@
  "options":[{"label":"...","sub":"..."}],
  "correct":[0,1,3],
  "successNote":"...","missNote":"Before Friday you still need: ","to":"n3"}</pre>
-<p>Feedback names both kinds of slip: the ones they missed (after <code>missNote</code>) and the ones they picked that do not belong (after <code>extraNote</code>, default 'This one does not belong: '). Give any option an optional <code>why</code> - one short clause - and it is shown next to that option whenever it is missed or wrongly picked: <code>{"label":"The prompt needs better wording","why":"the prompt is a symptom; the assistant reads an old source"}</code>.</p>
+<p>Feedback names both kinds of slip: the ones they missed (after <code>missNote</code>) and the ones they picked that do not belong (after <code>extraNote</code>, default 'This one does not belong: '). Give any option an optional <code>why</code> - one short clause - and once any option has one, the feedback after Submit lists every option with what the learner did - picked it and it matters, missed it, picked it and it does not belong, rightly left out - and its <code>why</code> underneath. Without any <code>why</code> the feedback stays a single message: <code>{"label":"The prompt needs better wording","why":"the prompt is a symptom; the assistant reads an old source"}</code>.</p>
 
 <p><b>evaluate</b> - free text against a rubric. Criteria light up as they are met, and the grade arrives with coaching, not just a score. Routes to <code>toPass</code> or <code>toFail</code>.</p>
 <pre>{"type":"evaluate","step":3,"scene":"data",

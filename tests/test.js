@@ -292,19 +292,27 @@ const good=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
 good.scenarios[0].nodes.brief.blocks=[{type:'image',alt:'A queue',src:'data:image/png;base64,AAAA'}];
 ok(sv.validate(good).length===0,'a valid image block passes');
 
-/* ---- multi feedback names extras, not an empty 'missing' list ---- */
+/* ---- multi feedback: names extras; per-option breakdown when options carry a why ---- */
 const mw=load(DEMO).window,md=mw.document,mn=mw.DATA.scenarios[0].nodes.n2;
 const pickMulti=idx=>{mw.start('signoff');mw.goTo('n2');
   md.querySelectorAll('.opt input').forEach(cb=>{cb.checked=idx.includes(+cb.value);});md.getElementById('sub').click();
   return md.querySelector('#fb .lesson').textContent;};
-mn.options[4].why='the font does not change what gets built';
 let fbt=pickMulti([0,1,3,4]);
-ok(fbt.startsWith('All 3 that matter - plus 1 that does not'),'all right plus one extra gets its own heading');
-ok(!fbt.includes('still need')&&fbt.includes('This one does not belong')&&fbt.includes('font does not change'),'extra pick is named with its why, no empty missing list');
+ok(fbt.startsWith('All 3 that matter - plus 1 that does not')&&fbt.includes('This one does not belong')&&!fbt.includes('still need'),'without any why: extra pick named in one message');
+ok(!md.querySelector('#fb .mb'),'without any why: no breakdown');
 fbt=pickMulti([0,1,4]);
-ok(fbt.startsWith('Partial - 2 of 3')&&fbt.includes('still need')&&fbt.includes('This one does not belong'),'missed and extra are both named');
+ok(fbt.startsWith('Partial - 2 of 3')&&fbt.includes('still need')&&fbt.includes('This one does not belong'),'without any why: missed and extra both named');
+ok(pickMulti([0,1,3]).startsWith('Complete'),'exact pick is complete');
+mn.options[0].why='the channel decides what gets built';mn.options[4].why='the font does not change what gets built';
+pickMulti([0,1,4]);
+const rows=[...md.querySelectorAll('#fb .mb li')];
+ok(rows.length===mn.options.length,'breakdown lists every option');
+ok(rows.map(r=>r.className).join(',')==='hit,hit,skip,miss,wrong','breakdown marks picked, missed, wrong and rightly left out');
+ok(rows[0].querySelector('.why').textContent.includes('channel decides')&&rows[4].querySelector('.why').textContent.includes('font does not'),'breakdown shows each why under its option');
+ok(md.querySelector('#fb .lesson').textContent.includes('Each one is below'),'lesson points to the breakdown');
+ok([...md.querySelectorAll('.opt input')].every(cb=>cb.disabled),'options lock after submit');
 fbt=pickMulti([0,1,3]);
-ok(fbt.startsWith('Complete'),'exact pick is complete');
+ok(fbt.startsWith('Complete')&&md.querySelectorAll('#fb .mb li.hit').length===3,'a full-marks run still sees the why for every right answer');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
