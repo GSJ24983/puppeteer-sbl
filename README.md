@@ -23,7 +23,7 @@ The Studio holds the engine as a template, validates a scenario, previews it liv
 
 Reads a situation. Makes a decision and lives the consequence. Taps Briefing to reread the briefing and their own path so far. Writes an answer against a rubric they cannot see until the instructor reveals it, and gets told how many rubric points they missed, with coaching that names what breaks if a criterion is missing - not just which box went unticked. They get three attempts: improve the answer, or submit it as it is. The last one submitted counts.
 
-The run ends with their path drawn as a diagram - every decision, what it led to - and a report they can save, with the stronger move wherever they took a trap and the model answer. They send their result to the trainer on WhatsApp or by email: a plain-English summary plus a result code. The trainer pastes the codes into the Studio's session dashboard, so the debrief runs off what the room actually did rather than a show of hands.
+The run ends with their path drawn as a diagram - every decision, what it led to - and a report they can save, with the stronger move wherever they took a trap and the model answer. They send their result to the trainer on WhatsApp or by email: a plain-English summary plus a result code. The trainer reads them in their own Studio, so the debrief runs off what the room actually did rather than a show of hands.
 
 ## Swanubhava™ grounding
 
@@ -35,9 +35,11 @@ The tag travels in every session summary, so a term of sessions pivots by anchor
 
 ## What is built
 
-Working: the player with four node types (narrative, branching choice, multi-select, written answer); rubric grading with per-criterion coaching, retry, and attempt-aware progression; a shipped model answer with an explanation of why it works; in-character dialogue prompts; cumulative context recall; dark and light themes; procedural scene art (or your own picture, or none); trainee and trainer exports of the same scenario, where only the trainer sees what each choice reveals and the debrief notes; send-to-trainer result codes; a saved learner report; and a session dashboard with decision splits, criteria met, answers to discuss and each learner's path.
+Working: the player with four node types (narrative, branching choice, multi-select, written answer); rubric grading with per-criterion coaching, retry, and attempt-aware progression; a shipped model answer with an explanation of why it works; in-character dialogue prompts; cumulative context recall; dark and light themes; procedural scene art (or your own picture, or none); trainee exports with every trainer-only field stripped; send-to-trainer result codes; a saved learner report; and a result tab that reads one learner's result and draws their path.
 
-The validator catches dangling branches, unreachable nodes, missing coaching, thin keyword lists - and grades each model answer against its own rubric, so a rubric that cannot recognise a good answer never ships. 157 automated tests cover every branch, every validator rule, both themes, both export views and the dashboard.
+**This is the trainee edition.** The Studio here builds scenarios and trainee files, and reads one learner's result at a time. The trainer edition - trainer view, trainer export, the class dashboard and projection mode - is kept private.
+
+The validator catches dangling branches, unreachable nodes, missing coaching, thin keyword lists - and grades each model answer against its own rubric, so a rubric that cannot recognise a good answer never ships. 164 automated tests cover every branch, every validator rule, both themes, the trainee export and the result tab, and check that no trainer feature is in this edition.
 
 Not built: server-side response collection (results travel as a code the learner sends), LLM-based grading, pre and post assessment instrumentation, multi-scenario progress tracking.
 
@@ -63,8 +65,8 @@ The trade-offs are the interesting part. A few, with what each one rules out, ar
 | `index.html` | the built Studio |
 | `demo/` | exported standalone scenarios |
 | `releases/` | a named copy of the Studio per version (`puppeteer_studio_v0.3.html`); `index.html` is always the latest. Bump `VERSION` and note the change in `CHANGELOG.md` before a release |
-| `src/` | engine template, studio shell, schema docs, sample scenario, build script (`python3 src/build.py` rebuilds `index.html` and `demo/`) |
-| `tests/` | 157 jsdom checks (`npm i jsdom`, then `node tests/test.js`) |
+| `src/` | engine template, studio shell, schema docs, sample scenario, build script (`python3 src/build.py` rebuilds `index.html` and `demo/`). The four source files are generated from the private full source - edit them there, not here |
+| `tests/` | 164 jsdom checks (`npm i jsdom`, then `node tests/test.js`) |
 | `docs/` | delivery workflow, authoring interface, decision log |
 
 ## Status
