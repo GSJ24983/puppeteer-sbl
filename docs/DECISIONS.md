@@ -74,3 +74,9 @@ Each entry names what the decision rules out. A trade-off with no cost is not a 
 
 **Why anyway:** anything hidden with CSS is one 'view source' away. What a choice reveals about a learner's thinking, and the debrief notes, are the trainer's material - so the trainee export removes them from the data itself. The rubric keywords and the model answer stay in the trainee file because the browser grades the answer; that is acceptable for practice and is why Strings, which is scored, is assessed by a person.
 
+## Two editions: trainee in public, trainer kept private
+
+**Rules out:** one Studio for everyone. A trainer needs a second, private file, and the public repo can no longer show the whole product.
+
+**Why anyway:** the public repo is what learners, students and anyone on LinkedIn can open. What a choice reveals about a learner, the debrief notes and the class dashboard are how the trainer teaches, and they have no reason to be one click from a learner. Both editions are built from one source by cutting the trainer parts out, so they cannot drift apart; if a cut stops matching, the build stops instead of shipping a half-stripped file.
+

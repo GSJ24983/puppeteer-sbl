@@ -110,18 +110,16 @@ w.start('signoff');toN1(d);d.querySelectorAll('.choice')[1].click();d.getElement
 [0,1,3].forEach(i=>{d.querySelectorAll('.opt input')[i].checked=true;});
 d.getElementById('sub').click();d.getElementById('go').click();
 ok(!d.getElementById('modelBtn'),'v0.3: no model answer button for trainees');
-{const tw=load(STUDIO).window,tf=path.join(os.tmpdir(),'trainer.html');
- fs.writeFileSync(tf,tw.build(JSON.parse(fs.readFileSync(SAMPLE,'utf8')),'trainer'));
- const tr=load(tf).window,td=tr.document;tr.start('signoff');tr.goTo('n3');
- ok(!!td.getElementById('modelBtn'),'model answer button present in the trainer view');
- td.getElementById('modelBtn').click();
- ok(td.getElementById('ans').value.length>40,'model answer loads into the box');
- ok(td.querySelector('#fb .aifb'),'model explanation shown');
- td.getElementById('sub').click();
- ok(td.querySelector('.scorepill.full'),'the shipped model answer scores full marks');
- ok(!!td.querySelector('.tview'),'trainer view is labelled');
- const tt=tw.build(JSON.parse(fs.readFileSync(SAMPLE,'utf8')),'trainee'),js=tt.slice(tt.indexOf('/*__SCENARIO_JSON__*/'));
- ok(!/"(trainerNote|reveals|redFlags)"/.test(tt.split('var DATA')[1]||tt),'trainee export strips trainer-only fields');}
+{/* trainee edition: no trainer view, even if a file is built with view 'trainer' */
+ const tw=load(STUDIO).window,tf=path.join(os.tmpdir(),'trainer.html');
+ const withNotes=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));withNotes.scenarios[0].nodes.n1.trainerNote='secret note';
+ fs.writeFileSync(tf,tw.build(withNotes,'trainer'));
+ const tr=load(tf).window,td=tr.document;tr.start('signoff');tr.goTo('n1');
+ ok(!td.querySelector('.tnote')&&!td.querySelector('.tsub')&&!td.querySelector('.tview'),'trainee edition engine never shows trainer notes, tags or the trainer badge');
+ tr.goTo('n3');
+ ok(!td.getElementById('modelBtn'),'no model answer button in any view of the trainee edition');
+ const tt=tw.build(withNotes,'trainee');
+ ok(!tt.includes('secret note'),'trainee export strips trainer-only fields');}
 
 // speaker-framed prompt
 const jd=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
@@ -337,15 +335,24 @@ ok(ad.querySelector('#stage .scene.img img')&&ad.querySelector('#stage .scene.im
 delete an.brief.sceneImg;aw.DATA.scenarios[0].hideArt=true;aw.start('signoff');
 ok(!ad.querySelector('#stage .scene'),'hideArt removes built-in art on every screen');
 
-/* ---- v0.3: dashboard reads result codes and draws each learner's path ---- */
+/* ---- trainee edition: no trainer parts; the result tab reads one learner ---- */
 const dw=load(STUDIO).window,dd=dw.document;
-const res=dw.sampleResults();
-ok((res.match(/PUP2:/g)||[]).length>=10,'sample results generate result codes');
-const parsed=dw.parseResults(res);
-ok(parsed.length>=10,'result codes parse back');
-const sc0=JSON.parse(fs.readFileSync(SAMPLE,'utf8')).scenarios[0];
-const ph=dw.pathOf(sc0,parsed[0]);
-ok(ph.includes('class="dpath"')&&ph.includes('class="pend"'),'drill-down path diagram renders for a learner');
+['btnExportR','vseg','btnProj','btnSampleRes'].forEach(id=>ok(!dd.getElementById(id),'trainee edition has no '+id));
+['sampleResults','scenarioDash','trainerGaps'].forEach(f=>ok(typeof dw[f]==='undefined','trainee edition has no '+f+'()'));
+ok(dd.body.textContent.includes('trainee edition'),'trainee edition is labelled');
+ok(!JSON.stringify(JSON.parse(fs.readFileSync(SAMPLE,'utf8'))).match(/"(trainerNote|reveals|redFlags)"/),'public sample carries no trainer-only fields');
+{const s0=JSON.parse(fs.readFileSync(SAMPLE,'utf8')).scenarios[0];
+ const code=r=>'PUP2:'+dw.b64(JSON.stringify(r));
+ const r1={v:2,s:'signoff',t:s0.title,n:'Asha',end:'good',log:[{k:'c',n:'n1',i:1,g:0},{k:'m',n:'n2',sel:[0,1,3]},{k:'w',n:'n3',met:[1,1,0],tr:2,mu:0,a:'We send an SMS.'}]};
+ const r2=Object.assign({},r1,{n:'Ravi'});
+ dd.getElementById('src').value=JSON.stringify({deckTitle:'x',scenarios:[s0]});
+ dd.getElementById('resIn').value='Asha: '+code(r1)+'\nRavi: '+code(r2);
+ dd.getElementById('btnDash').click();
+ const out=dd.getElementById('dashOut');
+ ok(out.querySelectorAll('.dcard').length===1&&out.textContent.includes('Asha')&&!out.textContent.includes('Ravi'),'result tab shows one learner only');
+ ok(dd.getElementById('dashCount').textContent.includes('first of 2'),'says it read only the first result');
+ ok(!!out.querySelector('.dpath .pend'),'learner path diagram renders');
+ ok(!out.textContent.includes('What it suggests')&&!out.querySelector('.tg'),'no reveals lines or expert/trap tags in the result tab');}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

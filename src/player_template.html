@@ -491,7 +491,7 @@ function stageOut(n,body,extraScene,headHTML){
     head+tnoteHTML(n)+body+'</div>';
 }
 /* v0.3 trainer view helpers */
-function isTrainer(){return VIEW==='trainer';}
+function isTrainer(){return false;}  /* trainee edition: no trainer view */
 function tnoteHTML(n){return isTrainer()&&n&&n.trainerNote?'<div class="tnote"><b>For the trainer</b>'+esc(n.trainerNote)+'</div>':'';}
 function choiceGood(n,c){var any=(n.choices||[]).some(function(x){return x.consequence&&x.consequence.good;});
   if(c.consequence&&c.consequence.good)return true;if(any)return false;if(n.gate)return c.correct!==false;return null;}
@@ -939,7 +939,6 @@ function reportHTML(endKey,e,name){var s=byId(S.sc),sec=[];
     '<h2>Your path</h2>'+pathHTML(endKey,e)+'<h2>Step by step</h2>'+sec.join('')+
     '<h2>How it ended</h2><div class="e"><b>'+esc((e&&e.title)||endKey)+'</b>'+(e&&e.moral?'<p><i>'+esc(e.moral)+'</i></p>':'')+
     '<p>'+esc((e&&e.verdict)||'')+'</p>'+(rev?'<ul>'+rev+'</ul>':'')+'</div></body></html>';}
-if(VIEW==='trainer')document.getElementById('deckTitle').insertAdjacentHTML('afterend','<span class="tview">Trainer view</span>');
 
 renderHub();
 </script>
