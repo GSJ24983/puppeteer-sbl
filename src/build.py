@@ -22,6 +22,12 @@ print('version',VERSION)
 print('studio bytes',len(out))
 # also emit a ready standalone of the sample by doing the same substitution the browser does
 j=json.loads(sample)
+# the public demo is a trainee file: drop what only a trainer should see, as the Studio's trainee export does
+def strip_trainer(o):
+    if isinstance(o,dict):return {k:strip_trainer(v) for k,v in o.items() if k not in('trainerNote','reveals','redFlags')}
+    if isinstance(o,list):return [strip_trainer(x) for x in o]
+    return o
+j=strip_trainer(j)
 title=(j.get('deckTitle','The Puppeteer'))+' - '+j['scenarios'][0]['title']
 s=eng.replace('__DECK_TITLE__',title)
 a=s.index('/*__SCENARIO_JSON__*/'); b=s.index('/*__END__*/')

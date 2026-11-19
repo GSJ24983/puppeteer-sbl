@@ -58,7 +58,14 @@ ok(d.querySelector('.lesson.good'),'holding the line with the cost visible is th
 d.getElementById('go').click();
 ok(d.querySelector('.moral'),'ending rendered');
 ok(d.querySelector('.stitle').textContent.includes('nowhere to hide'),'routed to good ending');
-const sum=d.getElementById('code').textContent.split('\n');
+ok(!d.getElementById('code'),'v0.3: no separate session summary box on the ending');
+ok(!!d.querySelector('.send #lname'),'v0.3: send-to-trainer box on the ending');
+ok(!!d.querySelector('.pathbox .pth .pend'),'v0.3: folded path diagram on the ending');
+const sent=decodeURIComponent(d.getElementById('sendWa').getAttribute('href').split('text=')[1]);
+const sum=sent.split('\n');
+ok(/PUP2:[A-Za-z0-9_-]+/.test(sent),'v0.3: the message carries a PUP2 result code');
+const rep=w.reportHTML('good',w.S.ending,'Test');
+ok(rep.includes('Your path')&&rep.includes('What happened')&&rep.includes('class="pth"'),'v0.3: saved report has the path diagram and what happened');
 ok(sum[0].includes("The Requirement That Wasn't"),'summary names the scenario');
 ok(sum.some(l=>l.startsWith('Anchor: Challenges assumptions, reframes and holds a point of view - pushes past the happy path')),'summary carries the anchor and behaviour');
 ok(sum.some(l=>l==='Pillar: Boundary defining posture'),'summary carries the pillar, derived from the anchor');
@@ -66,7 +73,7 @@ ok(!sum.some(l=>l.startsWith('Competency:')),'summary no longer says Competency'
 ok(sum.some(l=>l.startsWith('Chose:')),'summary states the choice in words');
 ok(sum.some(l=>l.startsWith('Written answer: 3/3')),'summary states the rubric score');
 ok(sum.some(l=>l.startsWith('Ending: ')),'summary names the ending');
-ok(sum[sum.length-1].startsWith('PUP|signoff|Challenges assumptions, reframes and holds a point of view|'),'compact code carries the anchor for pivoting');
+ok(sum.some(l=>l.startsWith('PUP|signoff|Challenges assumptions, reframes and holds a point of view|')),'compact code carries the anchor for pivoting');
 
 // weak answer routes to partial
 w.start('signoff');toN1(d);d.querySelectorAll('.choice')[0].click();d.getElementById('go').click();
@@ -76,16 +83,16 @@ d.getElementById('go').click();
 const weak='We will notify the customer promptly after approval.';
 d.getElementById('ans').value=weak;
 d.getElementById('sub').click();
-ok(!!d.getElementById('retry'),'retry offered on fail');
-ok(!d.getElementById('go'),'a weak first attempt cannot skip ahead');
-ok(d.querySelector('#fb .aifb').textContent.startsWith('Not yet.'),'coaching lead shown');
+ok(!!d.getElementById('retry')&&d.getElementById('retry').textContent==='Improve my answer','v0.3: improve offered on fail');
+ok(d.getElementById('go')&&d.getElementById('go').textContent==='Submit as is','v0.3: or submit as it is');
+ok(/^You met \d of 3 rubric points - \d missed\./.test(d.querySelector('#fb .aifb').textContent),'v0.3: says how many rubric points were missed');
+ok(d.querySelector('#fb .tleft').textContent.includes('2 more attempts'),'v0.3: says how many attempts are left');
 ok(d.querySelector('#fb .aifb').textContent.includes('name the channel that actually fires'),'coach sentence names the mechanism');
 d.getElementById('retry').click();
-ok(d.getElementById('rlab').textContent.startsWith('Attempt 2'),'retry shows the attempt count');
-d.getElementById('ans').value=weak;
-d.getElementById('sub').click();
-ok(!!d.getElementById('go'),'second attempt unlocks continue anyway');
-ok(d.getElementById('go').textContent==='Continue anyway','continue is labelled honestly');
+ok(d.getElementById('rlab').textContent.startsWith('Attempt 2 of 3'),'retry shows the attempt count');
+ok(d.getElementById('ans').value===weak,'v0.3: the answer stays in the box to improve');
+d.getElementById('sub').click();d.getElementById('retry').click();d.getElementById('sub').click();
+ok(!d.getElementById('retry')&&d.getElementById('go').textContent==='Continue','v0.3: after the third attempt only Continue is left');
 d.getElementById('go').click();
 ok(d.querySelector('.stitle').textContent.includes('readable two ways'),'routed to partial ending');
 
@@ -96,18 +103,25 @@ d.getElementById('sub').click();d.getElementById('go').click();
 d.getElementById('ans').value='We send an SMS, and if the customer has no mobile number on file we use email.';
 d.getElementById('sub').click();
 ok(d.querySelector('.scorepill').textContent.trim()==='2 / 3','near miss scores 2/3');
-ok(!!d.getElementById('go'),'a near miss can proceed on the first attempt');
+ok(!!d.getElementById('go'),'a near miss can be submitted as is on the first attempt');
 
 // model answer button
 w.start('signoff');toN1(d);d.querySelectorAll('.choice')[1].click();d.getElementById('go').click();
 [0,1,3].forEach(i=>{d.querySelectorAll('.opt input')[i].checked=true;});
 d.getElementById('sub').click();d.getElementById('go').click();
-ok(!!d.getElementById('modelBtn'),'model answer button present');
-d.getElementById('modelBtn').click();
-ok(d.getElementById('ans').value.length>40,'model answer loads into the box');
-ok(d.querySelector('#fb .aifb'),'model explanation shown');
-d.getElementById('sub').click();
-ok(d.querySelector('.scorepill.full'),'the shipped model answer scores full marks');
+ok(!d.getElementById('modelBtn'),'v0.3: no model answer button for trainees');
+{const tw=load(STUDIO).window,tf=path.join(os.tmpdir(),'trainer.html');
+ fs.writeFileSync(tf,tw.build(JSON.parse(fs.readFileSync(SAMPLE,'utf8')),'trainer'));
+ const tr=load(tf).window,td=tr.document;tr.start('signoff');tr.goTo('n3');
+ ok(!!td.getElementById('modelBtn'),'model answer button present in the trainer view');
+ td.getElementById('modelBtn').click();
+ ok(td.getElementById('ans').value.length>40,'model answer loads into the box');
+ ok(td.querySelector('#fb .aifb'),'model explanation shown');
+ td.getElementById('sub').click();
+ ok(td.querySelector('.scorepill.full'),'the shipped model answer scores full marks');
+ ok(!!td.querySelector('.tview'),'trainer view is labelled');
+ const tt=tw.build(JSON.parse(fs.readFileSync(SAMPLE,'utf8')),'trainee'),js=tt.slice(tt.indexOf('/*__SCENARIO_JSON__*/'));
+ ok(!/"(trainerNote|reveals|redFlags)"/.test(tt.split('var DATA')[1]||tt),'trainee export strips trainer-only fields');}
 
 // speaker-framed prompt
 const jd=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
@@ -313,6 +327,25 @@ ok(md.querySelector('#fb .lesson').textContent.includes('Each one is below'),'le
 ok([...md.querySelectorAll('.opt input')].every(cb=>cb.disabled),'options lock after submit');
 fbt=pickMulti([0,1,3]);
 ok(fbt.startsWith('Complete')&&md.querySelectorAll('#fb .mb li.hit').length===3,'a full-marks run still sees the why for every right answer');
+
+/* ---- v0.3: banner art can be removed or replaced ---- */
+const aw=load(DEMO).window,ad=aw.document,an=aw.DATA.scenarios[0].nodes;
+an.brief.scene='none';aw.start('signoff');ad.getElementById('go').click();
+ok(!ad.querySelector('#stage .scene'),'scene "none" drops the banner');
+an.brief.scene='office';an.brief.sceneImg='https://example.com/a.png';aw.start('signoff');ad.getElementById('go').click();
+ok(ad.querySelector('#stage .scene.img img')&&ad.querySelector('#stage .scene.img img').getAttribute('src')==='https://example.com/a.png','sceneImg replaces the art');
+delete an.brief.sceneImg;aw.DATA.scenarios[0].hideArt=true;aw.start('signoff');
+ok(!ad.querySelector('#stage .scene'),'hideArt removes built-in art on every screen');
+
+/* ---- v0.3: dashboard reads result codes and draws each learner's path ---- */
+const dw=load(STUDIO).window,dd=dw.document;
+const res=dw.sampleResults();
+ok((res.match(/PUP2:/g)||[]).length>=10,'sample results generate result codes');
+const parsed=dw.parseResults(res);
+ok(parsed.length>=10,'result codes parse back');
+const sc0=JSON.parse(fs.readFileSync(SAMPLE,'utf8')).scenarios[0];
+const ph=dw.pathOf(sc0,parsed[0]);
+ok(ph.includes('class="dpath"')&&ph.includes('class="pend"'),'drill-down path diagram renders for a learner');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

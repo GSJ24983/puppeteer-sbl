@@ -61,3 +61,16 @@ Each entry names what the decision rules out. A trade-off with no cost is not a 
 **Rules out:** a tidy single-line machine-readable format.
 
 **Why anyway:** the instructor skims these in the room while thirty people wait. Sentences are readable at a glance; the compact code on the last line still sorts forty of them afterwards.
+
+## Results travel as a code the learner sends, not to a server
+
+**Rules out:** results arriving on their own. If a learner never presses send, the trainer never sees their run.
+
+**Why anyway:** it keeps the one-file, no-backend promise. The scenario still opens offline, holds no keys and stores nothing about anyone. The learner chooses to send - by WhatsApp, email or copy - and the trainer pastes whatever arrives into the Studio, which reads every result code in the text. In a room, 'send it before you leave' is a facilitation step, not a feature. When a cohort is too big to chase by hand, that is the signal to build collection, not before.
+
+## Trainer-only content is stripped from the trainee file, not hidden
+
+**Rules out:** one file for everyone. A trainer and a trainee need different exports of the same scenario.
+
+**Why anyway:** anything hidden with CSS is one 'view source' away. What a choice reveals about a learner's thinking, and the debrief notes, are the trainer's material - so the trainee export removes them from the data itself. The rubric keywords and the model answer stay in the trainee file because the browser grades the answer; that is acceptable for practice and is why Strings, which is scored, is assessed by a person.
+

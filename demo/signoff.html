@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="generator" content="Puppeteer engine v0.2">
+<meta name="generator" content="Puppeteer engine v0.3">
 <title>The Puppeteer - The Requirement That Wasn't</title>
 <style>
 :root{
@@ -229,6 +229,27 @@ figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
   .revealed li{flex-direction:column;gap:3px}
   .revealed li span:first-child{width:auto}
 }
+
+/* v0.3: labelled helper buttons, trainer view, send to trainer */
+.choice .lb,.choice .sb{display:block}
+.aff button{width:auto;min-width:31px;padding:0 12px;border-radius:99px;font-family:var(--sans);font-size:13px;font-weight:600}
+.tview{display:inline-block;margin-left:8px;font-size:11.5px;font-weight:700;color:var(--deep);background:var(--gold);border-radius:99px;padding:2px 9px}
+.tnote{max-width:760px;border:1px dashed var(--gold);border-radius:10px;padding:10px 14px;margin:0 0 14px;background:var(--tint);font-size:14.5px;line-height:1.5;color:var(--body);white-space:pre-line}
+.tnote b{display:block;color:var(--gold);font-size:12px;font-weight:700;margin-bottom:3px;letter-spacing:.03em;text-transform:uppercase}
+.tsub{display:block;margin-top:7px;font-size:13.5px;line-height:1.45;color:var(--body);border-top:1px dashed var(--line);padding-top:6px;white-space:pre-line;font-weight:400}
+.tsub .tg{display:inline-block;font-size:11px;font-weight:700;border-radius:99px;padding:1px 8px;margin-right:6px}
+.tsub .tg.good{background:var(--teal);color:var(--onTeal)}
+.tsub .tg.trap{background:var(--coral);color:var(--onCoral)}
+.aifb .tleft{display:block;margin-top:8px;font-size:13.5px;color:var(--mute)}
+.send{max-width:760px;margin-top:24px;border:1px solid var(--teal);border-radius:12px;padding:16px 18px;background:var(--surface)}
+.send h3{font-family:var(--serif);font-size:17px;margin:0 0 4px;font-weight:600}
+.send p{margin:0 0 10px;font-size:13.5px;color:var(--mute)}
+.send label{display:block;font-size:13px;color:var(--mute);margin-bottom:4px}
+.send input{width:100%;max-width:320px;background:var(--deep);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font:inherit;font-size:16px}
+.send .row{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.send .sbtn{display:inline-block;text-decoration:none;background:var(--teal);color:var(--onTeal);border:0;border-radius:8px;padding:9px 14px;font-weight:650;font-size:14px;cursor:pointer;font-family:inherit}
+.send .sbtn.alt{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.send .sm{font-size:12.5px;color:var(--mute);margin:8px 0 0}
 </style>
 </head>
 <body>
@@ -243,7 +264,7 @@ figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
       <rect x="24.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 28 24.5)" fill="#F2C14E"/>
     </svg>
     <h1 id="deckTitle">The Puppeteer</h1>
-    <span class="sub" title="Puppeteer engine v0.2">Learn by deciding</span>
+    <span class="sub" title="Puppeteer engine v0.3">Learn by deciding</span>
     <button class="themeBtn" id="themeBtn" title="Switch theme" aria-label="Switch theme">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9">
         <circle cx="12" cy="12" r="4.4"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
@@ -271,6 +292,10 @@ figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
    ===================================================================== */
 var DATA = {
  "deckTitle": "The Puppeteer",
+ "sendTo": {
+  "whatsapp": "",
+  "email": ""
+ },
  "scenarios": [
   {
    "id": "signoff",
@@ -637,6 +662,7 @@ var DATA = {
   }
  ]
 };
+var VIEW = /*__VIEW__*/'trainee'/*__VIEWEND__*/;  /* 'trainer' shows trap/expert tags, reveals and trainer notes */
 
 /* ---------------------------- scene library ---------------------------- */
 var C={indigo:'var(--indigo)',deep:'var(--deep)',surf:'var(--surface)',surf2:'var(--surf2)',
@@ -732,7 +758,7 @@ function renderHub(){
   var wrap=document.getElementById('cards');wrap.innerHTML='';
   scenarios().forEach(function(s){
     var card=el('<article class="xcard"></article>');
-    card.innerHTML='<div class="thumb">'+sceneHTML(s.thumb)+'</div><div class="xbody">'+
+    card.innerHTML='<div class="thumb">'+(s.thumbImg?'<img src="'+attr(s.thumbImg)+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block">':sceneHTML(s.thumb))+'</div><div class="xbody">'+
       '<div class="tagrow"><span class="tag'+(s.highlight?' hot':'')+'">'+esc(s.tag||'Scenario')+'</span>'+
       (anchorOf(s)?'<span class="tag" title="'+esc(pillarOf(s))+'">'+esc(anchorOf(s))+'</span>':'')+
       (s.meta?'<span class="tag">'+esc(s.meta)+'</span>':'')+'</div>'+
@@ -796,8 +822,8 @@ function mediaHTML(m){
 }
 function affBar(n,rubricCount){
   var b='';
-  if(contextBits(n).length)b+='<button data-aff="i" title="Background so far">i</button>';
-  if(rubricCount)b+='<button data-aff="e" id="eBtn" title="Evaluation rubric">e</button>';
+  if(contextBits(n).length)b+='<button data-aff="i" title="Background so far">Briefing</button>';
+  if(rubricCount)b+='<button data-aff="e" id="eBtn" title="Evaluation rubric">Rubric</button>';
   return b?'<div class="aff">'+b+'</div>':'';
 }
 function contextBits(n){
@@ -821,15 +847,32 @@ function wireAff(n){
     });
   });
 }
+function attr(s){return esc(s).replace(/"/g,'&quot;');}
+function artHTML(n,k){var s=byId(S.sc)||{};
+  if(n&&n.sceneImg)return '<div class="scene img fade"><img src="'+attr(n.sceneImg)+'" alt="'+attr(n.sceneAlt||'')+'"></div>';
+  if(k==='none'||s.hideArt)return '';
+  return '<div class="scene fade">'+sceneHTML(k)+'</div>';}
 function stageOut(n,body,extraScene,headHTML){
   var head=(n.title||headHTML)?
     '<div class="phead">'+(n.title?'<h2 class="stitle">'+esc(n.title)+'</h2>':'<span style="flex:1"></span>')+
     (headHTML||'')+'</div>':'';
-  stageEl.innerHTML='<div class="scene fade">'+sceneHTML(extraScene||n.scene)+'</div>'+
+  stageEl.innerHTML=artHTML(n,extraScene||n.scene)+
     '<div class="panel fade">'+
     (n.eyebrow?'<div class="eyebrow"><span class="dot"></span>'+esc(n.eyebrow)+'</div>':'')+
-    head+body+'</div>';
+    head+tnoteHTML(n)+body+'</div>';
 }
+/* v0.3 trainer view helpers */
+function isTrainer(){return VIEW==='trainer';}
+function tnoteHTML(n){return isTrainer()&&n&&n.trainerNote?'<div class="tnote"><b>For the trainer</b>'+esc(n.trainerNote)+'</div>':'';}
+function choiceGood(n,c){var any=(n.choices||[]).some(function(x){return x.consequence&&x.consequence.good;});
+  if(c.consequence&&c.consequence.good)return true;if(any)return false;if(n.gate)return c.correct!==false;return null;}
+function tsubChoice(n,c){if(!isTrainer())return '';var g=choiceGood(n,c);
+  var tag=g===true?'<span class="tg good">Expert move</span>':g===false?'<span class="tg trap">Trap</span>':'';
+  var t=[c.reveals?'Reveals: '+c.reveals:'',c.trainerNote||''].filter(Boolean).join('\n');
+  return (tag||t)?'<span class="tsub">'+tag+esc(t)+'</span>':'';}
+function tsubOpt(n,o,i){if(!isTrainer())return '';var need=(n.correct||[]).indexOf(i)>-1;
+  var t=[o.reveals?'Reveals: '+o.reveals:'',o.why?'Why: '+o.why:'',o.trainerNote||''].filter(Boolean).join('\n');
+  return '<span class="tsub"><span class="tg '+(need?'good':'trap')+'">'+(need?'Must pick':'Leave out')+'</span>'+esc(t)+'</span>';}
 
 /* visual blocks */
 var AVC=['var(--teal)','var(--coral)','var(--gold)','var(--lav)'];
@@ -884,7 +927,7 @@ function renderChoice(n,nodeId){
     n.choices.map(function(c,i){
       return '<button class="choice" data-i="'+i+'"'+(dis.indexOf(i)>-1?' disabled':'')+'>'+
         '<span class="k">'+esc(c.k||String.fromCharCode(65+i))+'</span><span><span class="lb">'+
-        esc(c.label)+'</span>'+(c.sub?'<span class="sb">'+esc(c.sub)+'</span>':'')+'</span></button>';
+        esc(c.label)+'</span>'+(c.sub?'<span class="sb">'+esc(c.sub)+'</span>':'')+tsubChoice(n,c)+'</span></button>';
     }).join('')+'</div>';
   stageOut(n,body);wireAff(n);
   Array.prototype.forEach.call(stageEl.querySelectorAll('.choice'),function(b){
@@ -893,7 +936,7 @@ function renderChoice(n,nodeId){
 }
 function choose(n,nodeId,i){
   var c=n.choices[i];
-  S.log.push({node:nodeId,kind:'choice',pick:c.k||String.fromCharCode(65+i),
+  S.log.push({node:nodeId,kind:'choice',i:i,pick:c.k||String.fromCharCode(65+i),
     label:c.label,tag:c.tag||c.label,gated:!!(n.gate&&c.correct===false)});
   if(n.gate&&c.correct===false){
     S.disabled[nodeId]=(S.disabled[nodeId]||[]).concat([i]);
@@ -906,7 +949,7 @@ function choose(n,nodeId,i){
   var cq=c.consequence;
   if(!cq)return goTo(c.to||n.to);
   remember(cq.title||'What happened',withBlocks(cq,cq.text));
-  stageOut({scene:cq.scene||n.scene,title:cq.title,eyebrow:cq.eyebrow},
+  stageOut({scene:cq.scene||n.scene,sceneImg:cq.sceneImg||(cq.scene?'':n.sceneImg),title:cq.title,eyebrow:cq.eyebrow,trainerNote:cq.trainerNote},
     blocksHTML(cq,'top')+'<p class="stext">'+esc(cq.text)+'</p>'+blocksHTML(cq,'bottom')+
     (cq.lesson?'<div class="lesson'+(cq.good?' good':'')+'"><b>'+(cq.good?'Why this worked':'What this cost you')+'</b>'+esc(cq.lesson)+'</div>':'')+
     '<button class="cont" id="go">Continue &rarr;</button>');
@@ -919,7 +962,7 @@ function renderMulti(n,nodeId){
     ctxHTML(n)+mediaHTML(n.media)+
     '<div id="opts">'+n.options.map(function(o,i){
       return '<label class="opt"><input type="checkbox" value="'+i+'"><span>'+esc(o.label)+
-        (o.sub?'<span class="sb">'+esc(o.sub)+'</span>':'')+'</span></label>';}).join('')+'</div>'+
+        (o.sub?'<span class="sb">'+esc(o.sub)+'</span>':'')+tsubOpt(n,o,i)+'</span></label>';}).join('')+'</div>'+
     '<button class="primary" id="sub">Submit</button><div id="fb"></div>';
   stageOut(n,body);wireAff(n);
   Array.prototype.forEach.call(stageEl.querySelectorAll('.opt input'),function(cb){
@@ -933,7 +976,7 @@ function renderMulti(n,nodeId){
     var ok=hit===need.length&&extra===0;
     var miss=need.filter(function(i){return picked.indexOf(i)<0;})
       .map(function(i){return n.options[i].label;});
-    S.log.push({node:nodeId,kind:'multi',pick:picked.join('+'),score:hit+'/'+need.length,
+    S.log.push({node:nodeId,kind:'multi',sel:picked.slice(),pick:picked.join('+'),score:hit+'/'+need.length,
       missed:miss.slice(),extras:extra});
     var fb=document.getElementById('fb');
     /* name what was missed and what was picked that does not belong; an option's optional 'why' explains it */
@@ -991,9 +1034,11 @@ function redLineHTML(n){
   return '<div class="redline"><b>Red line - for discussion, not graded</b>'+esc(r.rule)+
     (r.phrases.length?'<div>'+r.phrases.map(function(p){return '<span class="rlp">'+esc(p)+'</span>';}).join('')+'</div>':'')+'</div>';
 }
+function maxTries(n){var m=parseInt(n.tries||DATA.tries||3,10);return m>0?m:3;}
 function renderEvaluate(n,nodeId){
-  var expand=n.showRubric===true;
-  var tries=S.tries[nodeId]||0;
+  var expand=n.showRubric===true||isTrainer();
+  var tries=S.tries[nodeId]||0,max=maxTries(n);
+  S.drafts=S.drafts||{};
   var ask=n.speaker
     ? '<div class="vpq"><b>'+esc(n.speaker)+'</b>&ldquo;'+esc(n.question||n.prompt)+'&rdquo;</div>'
     : '<p class="prompt">'+esc(n.question||n.prompt)+'</p>';
@@ -1001,22 +1046,22 @@ function renderEvaluate(n,nodeId){
     ? '<div class="phead"><span style="flex:1"></span>'+affBar(n,n.criteria.length)+'</div>'+ask
     : '<div class="phead">'+ask+affBar(n,n.criteria.length)+'</div>';
   var body=head+ctxHTML(n)+mediaHTML(n.media)+
-    '<textarea id="ans" placeholder="'+esc(n.placeholder||'Write your answer. Two or three sentences is enough.')+'"></textarea>'+
-    '<div class="rubwrap"><div class="rlab" id="rlab">'+n.criteria.length+' criteria - press e to show the rubric</div>'+
+    '<textarea id="ans" placeholder="'+esc(n.placeholder||'Write your answer. Two or three sentences is enough.')+'">'+esc(S.drafts[nodeId]||'')+'</textarea>'+
+    '<div class="rubwrap"><div class="rlab" id="rlab">'+n.criteria.length+' criteria - tap Rubric to show them</div>'+
     '<div class="rubric'+(expand?'':' folded')+'" id="rub">'+n.criteria.map(function(c){
       return '<div class="crit"><span class="mk"></span><span>'+esc(c.label)+'</span></div>';}).join('')+redLineHTML(n)+'</div></div>'+
-    '<div class="linkrow"><button class="primary" id="sub" style="margin-top:0">Submit for grading</button>'+
-    (n.model?'<button class="linkbtn" id="modelBtn">Show me a model answer</button>':'')+'</div>'+
+    '<div class="linkrow"><button class="primary" id="sub" style="margin-top:0">Submit for grading'+(max>1?' (attempt '+(tries+1)+' of '+max+')':'')+'</button>'+
+    (n.model&&isTrainer()?'<button class="linkbtn" id="modelBtn">Show me a model answer</button>':'')+'</div>'+
     '<div id="fb"></div>';
-  stageOut({scene:n.scene,eyebrow:n.eyebrow,title:n.title},body);
+  stageOut({scene:n.scene,sceneImg:n.sceneImg,eyebrow:n.eyebrow,title:n.title,trainerNote:n.trainerNote},body);
   wireAff(n);
   if(expand){var eb=document.getElementById('eBtn');if(eb)eb.classList.add('on');}
   if(tries)document.getElementById('rlab').textContent=
-    'Attempt '+(tries+1)+' - '+n.criteria.length+' criteria, press e to show the rubric';
+    'Attempt '+(tries+1)+' of '+max+' - '+n.criteria.length+' criteria, tap Rubric to show them';
 
   var mb=document.getElementById('modelBtn');
   if(mb)mb.addEventListener('click',function(){
-    document.getElementById('ans').value=n.model;
+    S.usedModel=S.usedModel||{};S.usedModel[nodeId]=1;document.getElementById('ans').value=n.model;
     document.getElementById('fb').innerHTML='<div class="aibox fade"><div class="alab">Model answer loaded</div>'+
       '<div class="aifb">'+(n.modelExplain||'This covers every rubric criterion. Edit it or submit it as it stands to see the grade.')+'</div></div>';
     document.getElementById('ans').focus();
@@ -1027,7 +1072,7 @@ function renderEvaluate(n,nodeId){
     if(txt.length<12){document.getElementById('fb').innerHTML=
       '<div class="aibox fade"><div class="alab" style="color:var(--coral)">Write a reply first</div>'+
       '<div class="aifb">Give it a real answer, even one sentence, and it will be graded against the rubric.</div></div>';return;}
-    S.tries[nodeId]=(S.tries[nodeId]||0)+1;
+    S.tries[nodeId]=(S.tries[nodeId]||0)+1;S.drafts[nodeId]=txt;
     document.getElementById('sub').disabled=true;
     document.getElementById('fb').innerHTML=
       '<div class="aibox fade"><div class="alab"><span class="spin"></span>Evaluating your answer</div></div>';
@@ -1047,30 +1092,32 @@ function revealGrade(n,nodeId,txt){
     setTimeout(function(){crits[i].classList.add('met');crits[i].style.opacity='';},130*i+120);
   });
   var pass=res.score>=(n.pass||total);
-  var tries=S.tries[nodeId];
-  var canGo=pass||res.score>=total-1||tries>=2;
+  var tries=S.tries[nodeId],left=Math.max(0,maxTries(n)-tries),miss=total-res.score;
   if(typeof n.step==='number')S.chips[n.step]=res.score+'/'+total;
   document.getElementById('rlab').textContent=
-    res.score+' of '+total+' criteria met - press e to see which';
+    res.score+' of '+total+' criteria met - tap Rubric to see which';
 
   var fb;
   if(pass){fb=n.passNote||'Every criterion covered.';}
   else{
-    var lead=res.score===total-1?'<b>Almost there.</b> ':'<b>Not yet.</b> ';
-    fb=lead+(n.coachLead||'To make this land, ')+joinCoach(coachList(n,res.met))+'.';
+    fb='<b>You met '+res.score+' of '+total+' rubric points - '+miss+' missed.</b> '+
+      (n.coachLead||'To make this land, ')+joinCoach(coachList(n,res.met))+'.'+
+      '<span class="tleft">'+(left?'You have '+left+' more attempt'+(left>1?'s':'')+'. Improve it, or submit it as it is - your last submitted answer is the one that counts.':
+        'That was your last attempt, so this answer is the one that counts.')+'</span>';
   }
   var box=document.getElementById('fb').querySelector('.aibox');
   box.innerHTML='<div class="alab"><span class="scorepill'+(pass?' full':'')+'">'+res.score+' / '+total+'</span>'+
     'Rubric evaluation</div><div class="aifb">'+fb+'</div>'+
     '<div class="linkrow">'+
-    (canGo?'<button class="primary" id="go" style="margin-top:0">'+(pass?'See how it lands':'Continue anyway')+'</button>':'')+
-    (pass?'':'<button class="linkbtn" id="retry">Try again</button>')+'</div>';
+    (pass?'<button class="primary" id="go" style="margin-top:0">See how it lands</button>':
+     left?'<button class="primary" id="retry" style="margin-top:0">Improve my answer</button><button class="linkbtn" id="go">Submit as is</button>':
+     '<button class="primary" id="go" style="margin-top:0">Continue</button>')+'</div>';
 
   if(!S.log.some(function(l){return l.node===nodeId&&l.kind==='written';}))
     S.log.push({node:nodeId,kind:'written',pick:'written',score:res.score+'/'+total,
-      missed:coachShort(n,res.met),answer:txt});
+      missed:coachShort(n,res.met),answer:txt,met:res.met.slice(),tries:tries});
   else S.log.forEach(function(l){if(l.node===nodeId&&l.kind==='written'){
-      l.score=res.score+'/'+total;l.missed=coachShort(n,res.met);l.answer=txt;l.tries=tries;}});
+      l.score=res.score+'/'+total;l.missed=coachShort(n,res.met);l.answer=txt;l.tries=tries;l.met=res.met.slice();}});
 
   var g=document.getElementById('go');
   if(g)g.addEventListener('click',function(){goTo(pass?(n.toPass||n.to):(n.toFail||n.to));});
@@ -1092,19 +1139,10 @@ function showEnding(key,e){
     blocksHTML(e,'top')+'<p class="stext">'+esc(e.verdict||'')+'</p>'+blocksHTML(e,'bottom')+
     (rev?'<ul class="revealed">'+rev+'</ul>':'')+
     mediaHTML(e.media)+
-    '<div class="summary"><h3>Your session summary</h3>'+
-    '<p>Copy this and drop it in the class channel. Your facilitator reads the decisions, not just the ending.</p>'+
-    '<div class="code" id="code" style="white-space:pre-wrap">'+esc(sessionSummary(key,e))+'</div>'+
-    '<button class="copy" id="cp">Copy summary</button></div>'+
+    '<details class="pathbox"><summary>See your path - every decision and what it led to</summary>'+pathHTML(key,e)+'</details>'+
+    sendHTML()+
     '<button class="ghost" id="again" style="margin-left:0">Run it again</button>',null,affBar(e,0));
-  wireAff(e);
-  document.getElementById('cp').addEventListener('click',function(){
-    var t=document.getElementById('code').textContent;
-    if(navigator.clipboard)navigator.clipboard.writeText(t);
-    else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
-      document.execCommand('copy');document.body.removeChild(ta);}
-    this.textContent='Copied';
-  });
+  wireAff(e);wireSend(key,e);
   document.getElementById('again').addEventListener('click',function(){start(S.sc);});
 }
 function list(a){
@@ -1143,6 +1181,136 @@ function sessionSummary(endKey,e){
     try{localStorage.setItem('pup-theme',light?'dark':'light');}catch(e){}
   });
 })();
+
+/* ---------------------------- v0.3: send to trainer ---------------------------- */
+function b64(s){try{return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}catch(x){return '';}}
+function resultObj(endKey,name){var s=byId(S.sc);
+  return {v:2,s:s.id,t:s.title,n:name||'',at:new Date().toISOString(),end:endKey,
+    log:S.log.map(function(l){
+      if(l.kind==='choice')return {k:'c',n:l.node,i:l.i,g:l.gated?1:0};
+      if(l.kind==='multi')return {k:'m',n:l.node,sel:l.sel||[]};
+      if(l.kind==='written')return {k:'w',n:l.node,met:(l.met||[]).map(function(x){return x?1:0;}),tr:l.tries||1,
+        mu:(S.usedModel&&S.usedModel[l.node])?1:0,a:l.answer||''};
+      return null;}).filter(Boolean)};}
+function resultCode(endKey,name){return 'PUP2:'+b64(JSON.stringify(resultObj(endKey,name)));}
+function savedName(){try{return localStorage.getItem('pup-name')||'';}catch(x){return '';}}
+function sendHTML(){var to=DATA.sendTo||{};
+  return '<div class="send"><h3>Send your result to your trainer</h3>'+
+    '<p>Your trainer sees your choices and what you wrote. In class, answers are shown without names.</p>'+
+    '<label for="lname">Your name</label><input id="lname" autocomplete="given-name" value="'+esc(savedName()).replace(/"/g,'&quot;')+'">'+
+    '<div class="row"><a class="sbtn" id="sendWa" target="_blank" rel="noopener" href="#">Send on WhatsApp</a>'+
+    '<a class="sbtn alt" id="sendMail" href="#">Send by email</a>'+
+    '<button class="sbtn alt" id="sendCopy">Copy result</button>'+
+    '<button class="sbtn alt" id="saveRep">Save my report</button></div>'+
+    '<p class="sm" style="margin-top:8px">The report has your path as a diagram, what each choice led to, and why.</p>'+
+    (to.whatsapp||to.email?'':'<p class="sm">Your trainer will tell you where to send it.</p>')+'</div>';}
+function sendText(endKey,e,name){return sessionSummary(endKey,e)+'\n\nResult code for your trainer:\n'+resultCode(endKey,name);}
+function copyText(t,done){var fb=function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');}catch(x){}document.body.removeChild(ta);done();};
+  try{if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,fb);else fb();}catch(x){fb();}}
+function wireSend(endKey,e){var to=DATA.sendTo||{},inp=document.getElementById('lname');if(!inp)return;
+  function upd(){var nm=inp.value.trim();try{localStorage.setItem('pup-name',nm);}catch(x){}
+    var t=sendText(endKey,e,nm),wa=String(to.whatsapp||'').replace(/[^0-9]/g,'');
+    document.getElementById('sendWa').href='https://wa.me/'+wa+'?text='+encodeURIComponent(t);
+    document.getElementById('sendMail').href='mailto:'+encodeURIComponent(to.email||'')+'?subject='+
+      encodeURIComponent('Puppeteer result - '+byId(S.sc).title+(nm?' - '+nm:''))+'&body='+encodeURIComponent(t);}
+  inp.addEventListener('input',upd);upd();
+  document.getElementById('sendCopy').addEventListener('click',function(){var b=this;
+    copyText(sendText(endKey,e,inp.value.trim()),function(){b.textContent='Copied';});});
+  document.getElementById('saveRep').addEventListener('click',function(){var b=this;
+    try{var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([reportHTML(endKey,e,inp.value.trim())],{type:'text/html'}));
+      a.download='my-report-'+byId(S.sc).id+'.html';document.body.appendChild(a);a.click();document.body.removeChild(a);b.textContent='Saved';}
+    catch(x){b.textContent='Could not save here';}});}
+/* v0.3: your path - every decision, what you picked, what it led to */
+var PATHCSS='.pth{--pg:var(--teal);--pb:#E4613F;display:flex;flex-direction:column;align-items:stretch;gap:0;margin:6px 0 4px}'+
+ '.pth .pn{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface)}'+
+ '.pth .pk{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:650}'+
+ '.pth .pq{font-size:14px;margin:3px 0 8px;color:var(--ink)}'+
+ '.pth .po{display:flex;flex-wrap:wrap;gap:6px}'+
+ '.pth .pc{font-size:12.5px;border:1px solid var(--line);border-radius:99px;padding:3px 10px;color:var(--mute);background:transparent}'+
+ '.pth .pc.on{color:#fff;font-weight:650;border-color:transparent;background:#6B6F8A}'+
+ '.pth .pc.on.good{background:var(--pg)}.pth .pc.on.trap{background:var(--pb)}'+
+ '.pth .pc.tried{text-decoration:line-through;border-style:dashed}'+
+ '.pth .pc.miss{border:1.5px dashed var(--pg);color:var(--ink)}'+
+ '.pth .pc.hit{background:var(--pg);color:#fff;border-color:transparent}.pth .pc.extra{background:var(--pb);color:#fff;border-color:transparent}'+
+ '.pth .pa{width:2px;height:18px;background:var(--line);margin:0 auto}'+
+ '.pth .pcq{border-left:4px solid #6B6F8A;border-radius:6px;padding:8px 12px;background:var(--deep);font-size:13.5px;color:var(--body)}'+
+ '.pth .pcq.good{border-left-color:var(--pg)}.pth .pcq.trap{border-left-color:var(--pb)}'+
+ '.pth .pcq b{display:block;color:var(--ink);font-size:12.5px;margin-bottom:2px}'+
+ '.pth .pend{border:2px solid var(--ink);border-radius:10px;padding:10px 12px;text-align:center;font-weight:650;color:var(--ink)}'+
+ '.pth .pend i{display:block;font-weight:400;color:var(--mute);font-size:13px;margin-top:2px}'+
+ '.pth .lg{font-size:12px;color:var(--mute);margin:0 0 8px}'+
+ '.pathbox{max-width:760px;margin-top:24px;border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:var(--surface)}'+
+ '.pathbox summary{cursor:pointer;font-weight:650}.pathbox[open] summary{margin-bottom:10px}'+
+ '.scene.img{background:var(--deep)}.scene img{display:block;width:100%;height:100%;object-fit:cover}';
+document.head.insertAdjacentHTML('beforeend','<style>'+PATHCSS+'</style>');
+function cut(t,n){t=String(t||'').replace(/\s+/g,' ').trim();if(t.length<=n)return t;var c=t.slice(0,n),i=c.lastIndexOf('. ');
+  return i>60?c.slice(0,i+1):c.replace(/\s\S*$/,'')+' ...';}
+function stepLabel(s,n,i){var l=typeof n.step==='number'&&s.steps?s.steps[n.step]:'';return l||('Step '+(i+1));}
+/* group the log by node, in the order the learner met them; gated wrong picks become 'tried first' */
+function pathGroups(){var s=byId(S.sc),g=[],at={};
+  S.log.forEach(function(l){var k=l.node+'|'+l.kind;if(!(k in at)){at[k]=g.length;g.push({node:l.node,kind:l.kind,n:(s.nodes||{})[l.node]||{},tried:[],l:null});}
+    var x=g[at[k]];if(l.gated)x.tried.push(l.i);else x.l=l;});
+  return g.filter(function(x){return x.l;});}
+function goodIdx(n){var r=-1;(n.choices||[]).forEach(function(c,i){if(r<0&&choiceGood(n,c)===true)r=i;});return r;}
+function pathHTML(endKey,e){var s=byId(S.sc),out=[];
+  pathGroups().forEach(function(x,gi){var n=x.n,l=x.l,head='<div class="pk">'+esc(stepLabel(s,n,gi))+'</div>';
+    if(x.kind==='choice'){var c=n.choices[l.i]||{},g=choiceGood(n,c),cq=c.consequence||{};
+      out.push('<div class="pn">'+head+'<div class="pq">'+esc(cut(n.prompt,140))+'</div><div class="po">'+
+        n.choices.map(function(o,i){var k=esc(o.k||String.fromCharCode(65+i)),t=esc(o.tag||o.chip||cut(o.label,40));
+          if(i===l.i)return '<span class="pc on '+(g===true?'good':g===false?'trap':'')+'">'+k+' · '+t+'</span>';
+          if(x.tried.indexOf(i)>-1)return '<span class="pc tried">'+k+' · '+t+'</span>';
+          return '<span class="pc">'+k+' · '+t+'</span>';}).join('')+'</div></div>');
+      if(cq.text){out.push('<div class="pa"></div><div class="pcq '+(cq.good?'good':g===false?'trap':'')+'"><b>'+esc(cq.title||'What happened')+'</b>'+esc(cut(cq.text,170))+'</div>');}}
+    if(x.kind==='multi'){var need=n.correct||[],sel=l.sel||[];
+      out.push('<div class="pn">'+head+'<div class="pq">You noticed '+esc(l.score)+' of what mattered</div><div class="po">'+
+        (n.options||[]).map(function(o,i){var p=sel.indexOf(i)>-1,m=need.indexOf(i)>-1,t=esc(cut(o.label,46));
+          if(p&&m)return '<span class="pc hit">&#10003; '+t+'</span>';if(p)return '<span class="pc extra">&#10007; '+t+'</span>';
+          if(m)return '<span class="pc miss">missed: '+t+'</span>';return '';}).join('')+'</div></div>');}
+    if(x.kind==='written'){var met=l.met||[];
+      out.push('<div class="pn">'+head+'<div class="pq">Your note met '+esc(l.score)+' of what a strong answer needs</div><div class="po">'+
+        (n.criteria||[]).map(function(c,i){return '<span class="pc '+(met[i]?'hit':'miss')+'">'+(met[i]?'&#10003; ':'')+esc(c.hint||cut(c.label,40))+'</span>';}).join('')+'</div></div>');}
+    out.push('<div class="pa"></div>');});
+  out.push('<div class="pend">'+esc((e&&e.title)||endKey)+(e&&e.moral?'<i>'+esc(e.moral)+'</i>':'')+'</div>');
+  return '<div class="pth"><p class="lg">Filled = what you picked (green worked, red cost you). Dashed = what you missed. Struck through = what you tried first.</p>'+out.join('')+'</div>';}
+function reportHTML(endKey,e,name){var s=byId(S.sc),sec=[];
+  pathGroups().forEach(function(x,gi){var n=x.n,l=x.l,h='<h3>'+esc(stepLabel(s,n,gi))+'</h3>';
+    if(x.kind==='choice'){var c=n.choices[l.i]||{},cq=c.consequence||{},g=choiceGood(n,c),gi2=goodIdx(n);
+      sec.push(h+(n.prompt?'<p class="sit">'+esc(n.prompt)+'</p>':'')+
+        (x.tried.length?'<p><b>You first tried:</b> '+esc(x.tried.map(function(i){return n.choices[i].label;}).join('; '))+'</p>':'')+
+        '<p><b>You chose:</b> '+esc(c.label)+'</p>'+
+        (cq.text?'<div class="cq '+(cq.good?'good':g===false?'trap':'')+'"><b>What happened</b><p>'+esc(cq.text)+'</p>'+
+          (cq.lesson?'<b>'+(cq.good?'Why this worked':'What this cost you')+'</b><p>'+esc(cq.lesson)+'</p>':'')+'</div>':'')+
+        (g===false&&gi2>-1?'<p class="alt"><b>The stronger move:</b> '+esc(n.choices[gi2].label)+'</p>':''));}
+    if(x.kind==='multi'){var need=n.correct||[],sel=l.sel||[];
+      sec.push(h+(n.prompt?'<p class="sit">'+esc(n.prompt)+'</p>':'')+'<ul class="ms">'+(n.options||[]).map(function(o,i){
+        var p=sel.indexOf(i)>-1,m=need.indexOf(i)>-1,mark=p&&m?'&#10003; You picked it, and it mattered':p?'&#10007; You picked it, but it did not matter':m?'&#9675; You missed this one':'Left out, rightly';
+        return '<li><b>'+esc(o.label)+'</b><br><span class="mk">'+mark+'</span>'+(o.why?'<br>'+esc(o.why):'')+'</li>';}).join('')+'</ul>');}
+    if(x.kind==='written'){var met=l.met||[],miss=[];
+      sec.push(h+(n.question?'<p class="sit">'+(n.speaker?'<b>'+esc(n.speaker)+':</b> ':'')+esc(n.question)+'</p>':n.prompt?'<p class="sit">'+esc(n.prompt)+'</p>':'')+
+        '<p><b>What you wrote</b></p><blockquote>'+esc(l.answer||'')+'</blockquote><ul class="ms">'+
+        (n.criteria||[]).map(function(c,i){if(!met[i]&&c.coach)miss.push(c.coach);
+          return '<li>'+(met[i]?'&#10003; ':'&#9675; ')+esc(c.label)+'</li>';}).join('')+'</ul>'+
+        (miss.length?'<div class="cq trap"><b>To make it stronger</b><p>'+esc((n.coachLead||'Next time, ')+miss.join('; and '))+'.</p></div>':'')+
+        (n.model?'<details><summary>A model answer</summary><p>'+esc(n.model)+'</p></details>':''));}});
+  var rev=(e&&e.revealed||[]).map(function(p){return '<li><b>'+esc(p[0])+':</b> '+esc(p[1])+'</li>';}).join('');
+  var css=':root{--teal:#0E7C6B;--line:#CFDDEC;--surface:#F4F8FC;--deep:#FFFFFF;--ink:#10233B;--mute:#5C7288;--body:#22364F}'+
+    'body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:720px;margin:32px auto;padding:0 18px;color:#10233B;line-height:1.55;background:#fff}'+
+    'h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:30px 0 10px;border-bottom:1px solid #CFDDEC;padding-bottom:6px}h3{font-size:16px;margin:24px 0 6px}'+
+    '.m{color:#5C7288;margin:0 0 6px}.sit{color:#22364F;background:#F4F8FC;border-radius:8px;padding:10px 12px;white-space:pre-line}'+
+    '.cq{border-left:4px solid #6B6F8A;padding:6px 14px;margin:10px 0;background:#FAFBFD}.cq.good{border-left-color:#0E7C6B}.cq.trap{border-left-color:#E4613F}'+
+    '.cq p{margin:2px 0 8px;white-space:pre-line}.alt{color:#0E7C6B}blockquote{margin:6px 0;padding:8px 14px;border-left:3px solid #CFDDEC;white-space:pre-line;color:#22364F}'+
+    '.ms{padding-left:18px}.ms li{margin:6px 0}.mk{font-size:13px;color:#5C7288}details{margin:10px 0}summary{cursor:pointer;font-weight:600}'+
+    '.e{border:2px solid #10233B;border-radius:10px;padding:10px 16px;margin:20px 0}.e p{white-space:pre-line}'+
+    '@media print{.pth .pa{height:12px}}'+PATHCSS;
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+
+    esc(s.title)+' - my report</title><style>'+css+'</style></head><body><h1>'+esc(s.title)+'</h1><p class="m">'+
+    esc(name||'')+(name?' - ':'')+esc(new Date().toLocaleDateString())+'</p>'+
+    (anchorOf(s)?'<p class="m">'+esc(anchorOf(s))+(s.behaviour?' - '+esc(s.behaviour):'')+'</p>':'')+
+    '<h2>Your path</h2>'+pathHTML(endKey,e)+'<h2>Step by step</h2>'+sec.join('')+
+    '<h2>How it ended</h2><div class="e"><b>'+esc((e&&e.title)||endKey)+'</b>'+(e&&e.moral?'<p><i>'+esc(e.moral)+'</i></p>':'')+
+    '<p>'+esc((e&&e.verdict)||'')+'</p>'+(rev?'<ul>'+rev+'</ul>':'')+'</div></body></html>';}
+if(VIEW==='trainer')document.getElementById('deckTitle').insertAdjacentHTML('afterend','<span class="tview">Trainer view</span>');
 
 renderHub();
 </script>
