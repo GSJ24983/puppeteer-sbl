@@ -1,10 +1,20 @@
+<h2>What changed in v0.3</h2>
+<ul>
+<li><b>Trainer-only fields.</b> <code>trainerNote</code> and <code>reveals</code> hold what only the trainer should read: why an option is a trap, what choosing it suggests about the learner's thinking, what to raise in the debrief.</li>
+<li><b>Two views, two exports.</b> Preview as a trainee or as a trainer. 'Export for trainees' removes every trainer-only field, so a curious learner can't read them in the page source. 'Export for trainer' keeps everything and opens in trainer view.</li>
+<li><b>Briefing and Rubric buttons.</b> The old <b>i</b> and <b>e</b> buttons now say what they do, which matters most on a phone.</li>
+<li><b>Send to trainer.</b> The last screen asks for the learner's name and sends the result by WhatsApp or email, or copies it. The learner can also save a personal report.</li>
+<li><b>Session dashboard.</b> Paste what learners sent and see the decision split, what the majority choice suggests, rubric gaps, answers to discuss and a drill-down per learner.</li>
+</ul>
+
 <h2>How this works</h2>
-<p>Left pane is content. The engine is frozen and lives inside this file. Preview runs the real engine in an iframe, so <b>what you see is byte-for-byte what exports</b>. Export gives you one self-contained HTML - offline, no dependencies, mail it to anyone.</p>
+<p>Left pane is content. The engine is frozen and lives inside this file. Preview runs the real engine in an iframe, so <b>what you see is byte-for-byte what exports</b>. Each export is one self-contained HTML file - offline, no dependencies, mail it to anyone.</p>
 <p><code>Cmd/Ctrl + Enter</code> re-runs the preview.</p>
 
 <h2>Scenario shape</h2>
 <pre>{
   "deckTitle": "The Puppeteer",
+  "sendTo": {"whatsapp":"919800000000","email":"you@example.com"},   <span class="k">// v0.3, optional - where 'Send to trainer' goes</span>
   "scenarios": [{
     "id": "signoff",              <span class="k">// slug, appears in the session code</span>
     "title": "...", "kicker": "...", "tag": "Product analysis",
@@ -25,30 +35,35 @@
 <h2>Node types</h2>
 <p><b>narrative</b> - sets the scene, one Continue button.</p>
 <pre>{"type":"narrative","step":0,"scene":"office","eyebrow":"Briefing",
- "title":"...","text":"...","media":[],"to":"n1"}</pre>
+ "title":"...","text":"...","trainerNote":"...","media":[],"to":"n1"}</pre>
 
 <p><b>choice</b> - the core mechanic. Each choice may carry a consequence screen before it routes on.</p>
 <pre>{"type":"choice","step":1,"scene":"office","prompt":"...",
+ "trainerNote":"what to raise in the debrief at this decision",   <span class="k">// v0.3, trainer only</span>
  "gate": false,                  <span class="k">// true = wrong answers disable and retry, no advance</span>
  "choices":[
    {"k":"A","label":"...","sub":"...","tag":"Signed as-is","chip":"Signed",
+    "reveals":"what choosing this suggests about the thinking",   <span class="k">// v0.3, trainer only</span>
+    "trainerNote":"anything else the trainer should know",        <span class="k">// v0.3, trainer only</span>
     "correct": false,            <span class="k">// only meaningful when gate:true</span>
     "lesson":"coaching note shown on a gated wrong answer",
     "consequence":{"scene":"storm","title":"...","text":"...",
-                   "lesson":"what this cost you","good":false},
+                   "lesson":"what this cost you","good":false,"trainerNote":"..."},
     "to":"n2"}]}</pre>
+<p>A choice is the <b>expert move</b> when its consequence has <code>"good": true</code>; the others in that decision are <b>traps</b>. Trainer view and the dashboard tag them that way.</p>
 
 <p><b>multi</b> - multi-select, rules-graded against <code>correct</code> indexes. No partial credit routing; it always continues to <code>to</code>, but the feedback names what was missed.</p>
 <pre>{"type":"multi","step":2,"scene":"matrix","prompt":"...",
- "options":[{"label":"...","sub":"..."}],
+ "options":[{"label":"...","sub":"...","why":"...","reveals":"..."}],
  "correct":[0,1,3],
  "successNote":"...","missNote":"Before Friday you still need: ","to":"n3"}</pre>
-<p>Feedback names both kinds of slip: the ones they missed (after <code>missNote</code>) and the ones they picked that do not belong (after <code>extraNote</code>, default 'This one does not belong: '). Give any option an optional <code>why</code> - one short clause - and once any option has one, the feedback after Submit lists every option with what the learner did - picked it and it matters, missed it, picked it and it does not belong, rightly left out - and its <code>why</code> underneath. Without any <code>why</code> the feedback stays a single message: <code>{"label":"The prompt needs better wording","why":"the prompt is a symptom; the assistant reads an old source"}</code>.</p>
+<p>Feedback names both kinds of slip: the ones they missed (after <code>missNote</code>) and the ones they picked that do not belong (after <code>extraNote</code>, default 'This one does not belong: '). Give any option an optional <code>why</code> - one short clause - and once any option has one, the feedback after Submit lists every option with what the learner did - picked it and it matters, missed it, picked it and it does not belong, rightly left out - and its <code>why</code> underneath. <code>why</code> is shown to learners; <code>reveals</code> is not.</p>
 
 <p><b>evaluate</b> - free text against a rubric. Criteria light up as they are met, and the grade arrives with coaching, not just a score. Routes to <code>toPass</code> or <code>toFail</code>.</p>
 <pre>{"type":"evaluate","step":3,"scene":"data",
  "speaker":"The delivery lead:",       <span class="k">// renders as in-character dialogue</span>
  "question":"Write me the line...",    <span class="k">// use "prompt" instead for a plain instruction</span>
+ "trainerNote":"the criterion rooms usually miss",   <span class="k">// v0.3, trainer only</span>
  "criteria":[{
    "label":"Names the specific channel",
    "keywords":["sms","email","in-app","sends an sms", ...],
@@ -61,28 +76,60 @@
  "model":"When a refund is approved, the system sends...",
  "modelExplain":"This covers all three: it &lt;b&gt;names the channel&lt;/b&gt;...",
  "redFlags":{"rule":"Any note that blames the customer fails, however good the rest is.",
-             "phrases":["should have read","her responsibility"]},   <span class="k">// optional, NOT graded</span>
+             "phrases":["should have read","her responsibility"]},   <span class="k">// optional, NOT graded, trainer only</span>
  "toPass":"good","toFail":"partial"}</pre>
 
-<p><b>redFlags (optional).</b> A red line for the facilitator to talk about. It sits inside the folded rubric, under the criteria, so it appears only when you press e - the same reveal as the rubric. The engine never grades it: an answer containing these phrases scores exactly as it would without them. The validator only checks that the model answer does not contain one. The phrases are prompts for the debrief, not a filter - some of them also turn up in good answers that argue against the red line, so read the sentence, not the word.</p>
+<p><b>redFlags (optional).</b> A red line for the facilitator to talk about. It sits inside the folded rubric, under the criteria, so it appears only when you tap Rubric - the same reveal as the rubric. The engine never grades it: an answer containing these phrases scores exactly as it would without them. The validator only checks that the model answer does not contain one. The dashboard shows an answer that uses a phrase under 'Answers to discuss'. Red flags are trainer material, so the trainee export removes them.</p>
 
 <p><b>Keywords: aim for 15-25 per criterion, mostly phrases.</b> Single words either fire on everything or miss how people actually write. Include contractions, partial words (<code>escalat</code> catches the whole family), and the sideways phrasings. The validator complains below 8.</p>
 
 <p><b>coach vs hint.</b> <code>hint</code> is a fragment for the session summary. <code>coach</code> is a full sentence naming the mechanism - what breaks, when, and who pays. Missed criteria are joined into one paragraph after <code>coachLead</code>. This is where the teaching happens, so it is required.</p>
 
-<p><b>model and modelExplain.</b> A 'Show me a model answer' button loads the model into the box with its explanation, and the learner can edit it or submit as it stands. Without this, a scenario run alone scores but does not teach. The validator grades the model against its own rubric and fails the scenario if it does not reach <code>pass</code> - so a rubric that cannot recognise a good answer never ships.</p>
+<p><b>model and modelExplain.</b> In the trainer view, a 'Show me a model answer' button loads the model into the box with its explanation. Trainees never get the button (v0.3): they see the model answer only in their saved report, after the scenario ends. The validator grades the model against its own rubric and fails the scenario if it does not reach <code>pass</code> - so a rubric that cannot recognise a good answer never ships.</p>
 
-<p><b>Attempts.</b> A weak first answer cannot skip ahead. Continue unlocks when the score reaches pass, or is one short, or on the second attempt - so nobody is ever trapped. Grading shows a spinner, then a score pill and criteria revealing in sequence; set <code>GRADE_DELAY = 0</code> in the exported file to make it instant.</p>
+<p><b>Attempts (v0.3).</b> A learner gets 3 attempts at the written answer - set <code>"tries"</code> on the node or the deck to change it. After each graded attempt short of pass, they see how many rubric points they missed and the coaching, then choose <b>Improve my answer</b> (their text stays in the box) or <b>Submit as is</b>. After the last attempt the button just says Continue. The last submitted answer is the one that counts for the ending, the result code and the report. Grading shows a spinner, then a score pill and criteria revealing in sequence; set <code>GRADE_DELAY = 0</code> in the exported file to make it instant.</p>
+
+<h2>Trainer-only fields<span class="new">v0.3</span></h2>
+<p><code>trainerNote</code> goes on any screen, decision, consequence, written node, ending or option. <code>reveals</code> goes on decision options and multi options. Both are plain text, and <code>\n</code> makes a line break.</p>
+<p><b>Write <code>reveals</code> as what choosing the option suggests about the learner's thinking</b>, not as the consequence. 'Treats agreement as proof of clarity' is a reveals line. 'The release slips' is a consequence. The dashboard shows the majority option's reveals line, so a trainer can say what the room was thinking without guessing live.</p>
+<p>Trainer view shows each option's Expert move or Trap tag, its reveals line and trainer note, and a dashed 'For the trainer' box on any screen with a <code>trainerNote</code>. It also opens the rubric by default. Trainee view and the trainee export show none of this.</p>
+
+<h2>Previews and exports<span class="new">v0.3</span></h2>
+<ul>
+<li><b>Trainee view / Trainer view</b> switches the preview. Laptop and Mobile switch its width.</li>
+<li><b>Export for trainees</b> removes <code>trainerNote</code>, <code>reveals</code> and <code>redFlags</code> everywhere, then builds the file. This is the one you send to learners.</li>
+<li><b>Export for trainer</b> keeps everything and opens in trainer view. Keep it to yourself; use it to rehearse, or project it when you want the tags on screen.</li>
+</ul>
+
+<h2>The Briefing button - context on demand</h2>
+<p>Every choice, multi, evaluate and ending node carries a <b>Briefing</b> button. It opens what the learner has seen so far - briefing text and the consequences of their own decisions - so nobody has to scroll back while writing. The engine assembles it automatically; you only add <code>context</code> when you want to inject something extra.</p>
+<pre>"context":[{"label":"Policy note","text":"Refunds over 5000 need a second approver."}]</pre>
+<p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
+
+<h2>Send to trainer and result codes<span class="new">v0.3</span></h2>
+<p>The last screen of every run now has a 'Send your result to your trainer' box. The learner types a name and taps one of:</p>
+<ul>
+<li><b>Send on WhatsApp</b> - opens WhatsApp with the result filled in, to the number in <code>sendTo.whatsapp</code> (digits with country code, for example <code>919800000000</code>). Leave it blank and the learner picks the chat.</li>
+<li><b>Send by email</b> - opens their mail app with the result, to <code>sendTo.email</code>.</li>
+<li><b>Copy result</b> - for anything else: Teams, a Google Form, a class channel.</li>
+<li><b>Save my report</b> - downloads a small page with their choices, what they wrote, which criteria they met and the ending. It is theirs to keep.</li>
+</ul>
+<p>The ending screen no longer shows a separate session summary (v0.3) - the send box replaces it. The message it sends holds the plain summary and a <b>result code</b> starting <code>PUP2:</code>. The code carries every choice, every pick in a multi, the written answer, which criteria it met, the number of attempts and whether the model answer was used. It is encoded, not encrypted: anyone with the code can decode it, so treat it like the answer itself. The older <code>PUP|</code> line stays in the summary for your spreadsheets.</p>
+
+<h2>Session dashboard<span class="new">v0.3</span></h2>
+<p>Open the <b>Session dashboard</b> tab above the preview. Paste whatever learners sent you - whole WhatsApp chats or emails are fine, every <code>PUP2:</code> code is found - and press <b>Build dashboard</b>. Keep the scenario JSON loaded on the left: the dashboard reads it to name options and criteria.</p>
+<ul>
+<li><b>Endings reached</b> for the group.</li>
+<li><b>Each decision:</b> the split across options, tagged Expert or Trap, the majority option's <code>reveals</code> line, and a plain insight when the trap is working or nobody took it.</li>
+<li><b>Each multi:</b> how often each option was picked, and the must-have most people missed.</li>
+<li><b>Each written answer:</b> how many met each criterion, full-marks rate, average attempts, model-answer use, the weakest criterion, and three answers to discuss - one full marks, one a criterion short, one with a red-flag phrase.</li>
+<li><b>Learners:</b> one row each; click a row for that person's path, what each choice suggests, their answer and criteria.</li>
+</ul>
+<p><b>Projection mode</b> hides names, tags, rubric detail and the learner list, so you can put the split on the room's screen. <b>Load sample results</b> fills the box with a pretend class of fourteen, so you can try it before a real session. Nothing here leaves your browser.</p>
 
 <h2>Anchor and pillar tagging</h2>
 <p>Scenarios are tagged to an anchor - one of the eight Swanubhava&trade; behavioural anchors, grouped in three pillars (Individual posture, Boundary defining posture, Collaboration posture) - and to the specific behaviour it trains. Put the anchor name in <code>anchor</code>, verbatim, sentence case: the tag groups sessions, so a changed capital letter becomes a new anchor in the spreadsheet. Older files that use <code>competency</code> still work. The pillar is filled in from the anchor; set <code>pillar</code> only to override it. The behaviour is where rubric criteria come from - it is already written as an observable behaviour, which is what a criterion has to be.</p>
 <p>The tag shows on the hub card and the rail, and travels in every session summary and compact code, so a term of sessions pivots by anchor (and pillar) in a spreadsheet: which anchors a cohort is weak on, not just which scenarios they found hard.</p>
-
-<h2>The i button - context on demand</h2>
-<p>Every choice, multi, evaluate and ending node carries an <b>i</b> button. It opens what the learner has seen so far - briefing text and the consequences of their own decisions - so nobody has to scroll back while writing. The engine assembles it automatically; you only add <code>context</code> when you want to inject something extra.</p>
-<pre>"context":[{"label":"Policy note","text":"Refunds over 5000 need a second approver."}]</pre>
-
-<p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
 
 <h2>Visual blocks</h2>
 <p>Narrative screens, consequences and endings take an optional <code>blocks</code> list. Each block sits above the text (<code>"at":"top"</code>, the default) or below it (<code>"at":"bottom"</code>). They are drawn from the theme, so they need no files and work in both themes and offline.</p>
@@ -95,16 +142,16 @@
   "people":[{"name":"Arjun","role":"Head of Customer Experience","lines":"..."}]},
  {"type":"image","alt":"what the picture shows","src":"","caption":"..."}
 ]</pre>
-<p><b>post</b> is a social post, chat message or email, with an optional quoted reply styled like a screenshot. <b>people</b> is a cast card: initials, name, role, a line or two each. <b>image</b> shows the picture when <code>src</code> is an https link or a <code>data:image</code> URI, and a dashed 'Image to come' placeholder with the <code>alt</code> text when it is blank - so a planned visual is visible in a session before it exists. What a post or people block says is added to the i panel, so learners can reread it while they write.</p>
+<p><b>post</b> is a social post, chat message or email, with an optional quoted reply styled like a screenshot. <b>people</b> is a cast card: initials, name, role, a line or two each. <b>image</b> shows the picture when <code>src</code> is an https link or a <code>data:image</code> URI, and a dashed 'Image to come' placeholder with the <code>alt</code> text when it is blank - so a planned visual is visible in a session before it exists. What a post or people block says is added to the Briefing panel, so learners can reread it while they write.</p>
 
 <h2>Line breaks</h2>
-<p>A <code>\n</code> inside any text field - narrative, consequence, lesson, prompt, verdict, the i panel - shows as a line break, and <code>\n\n</code> as a blank line between paragraphs. Long lines still wrap. Use it for pointers and short paragraphs on long screens.</p>
+<p>A <code>\n</code> inside any text field - narrative, consequence, lesson, prompt, verdict, the Briefing panel, trainer notes - shows as a line break, and <code>\n\n</code> as a blank line between paragraphs. Long lines still wrap. Use it for pointers and short paragraphs on long screens.</p>
 
 <h2>Endings</h2>
 <pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",
  "verdict":"what actually happened",
  "revealed":[["The probe","what the learner did and why it mattered"]],
- "media":[]}</pre>
+ "trainerNote":"...","media":[]}</pre>
 
 <h2>Media links</h2>
 <p>Any node takes a <code>media</code> array. Links, never embeds - the file stays small and portable.</p>
@@ -121,20 +168,24 @@
 <li>Every rubric criterion has keywords - one without them can never be met</li>
 <li>Every gated wrong answer carries a coaching note</li>
 <li>Every ending has a verdict</li>
+<li><code>trainerNote</code> and <code>reveals</code> are plain text, and <code>sendTo</code> is an object (v0.3)</li>
 </ul>
+<p>Separately, a gold line under the editor counts decision options with no <code>reveals</code> line. That one is a reminder, not an error: the scenario still plays and exports.</p>
 
 <h2>Theme</h2>
 <p>Every exported file carries a dark and a light theme, toggled from the sun icon in the header and remembered per device. Light is a white and blue scheme for projectors and printed handouts. Scene art follows the theme automatically - it is drawn from the same tokens as the text.</p>
 
 <h2>Layout</h2>
 <p>The scene is a banner, capped at roughly a fifth of the viewport, so the words get the page. If you are writing long narrative text, that is the ratio to design for - do not expect the picture to carry meaning it cannot carry.</p>
+<p><b>Your own picture, or none (v0.3).</b> Any screen, consequence or ending can take <code>"sceneImg": "https://..."</code> (with an optional <code>"sceneAlt"</code>) to replace the built-in art with your own image, or <code>"scene": "none"</code> to drop the banner. A consequence with no picture of its own uses its decision's. At scenario level, <code>"hideArt": true</code> removes the built-in art on every screen (your own pictures still show), and <code>"thumbImg"</code> replaces the card picture in the hub. Images are links, never embedded files.</p>
+<p><b>The end report (v0.3).</b> The ending screen has a folded 'See your path' diagram, and 'Save my report' downloads a page with the same diagram, then each step: the situation, what you chose, what happened, why it worked or what it cost, the stronger move where you missed it, what you noticed and missed, your written answer with what it met, and the model answer. It is built from the scenario itself - nothing extra to write.</p>
 
 <h2>Classroom</h2>
-<p>Each run ends with a copyable summary in plain sentences, with a compact code as the last line:</p>
+<p>Each run ends with the 'Send to trainer' box and a copyable summary in plain sentences, with a compact code as the last line:</p>
 <pre>The Requirement That Wasn't - Product analysis scenario
 Chose: Ask ops for a concrete case
 Gap check: 3/3 of the must-haves
 Written answer: 2/3 rubric criteria, short on who owns the call when it fails
 Ending: Better, but still readable two ways
 PUP|signoff|B>0+1+3(3/3)>written(2/3)|partial</pre>
-<p>Students drop it in the class channel. You read decisions, not just endings, and the debrief runs off what actually happened in the room.</p>
+<p>Students send it to you or drop it in the class channel. You read decisions, not just endings, and the debrief runs off what actually happened in the room - in the Session dashboard tab, or by reading the messages.</p>

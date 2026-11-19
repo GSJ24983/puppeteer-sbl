@@ -18,7 +18,7 @@ body{background:var(--deep);color:var(--ink);font-family:var(--sans);display:fle
 button{font-family:inherit}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
-.bar{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);background:var(--indigo);flex:none}
+.bar{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);background:var(--indigo);flex:none;flex-wrap:wrap}
 .bar svg{width:26px;height:26px;flex:none}
 .bar h1{font-family:var(--serif);font-size:16px;margin:0;font-weight:600}
 .bar .sp{flex:1}
@@ -31,8 +31,9 @@ button{font-family:inherit}
 .btn.go{background:var(--coral);border-color:var(--coral);color:#25100A;font-weight:650}
 .btn.go:hover{background:#FF835F}
 .btn.tl{background:var(--teal);border-color:var(--teal);color:#04211E;font-weight:650}
+.btn[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#2A1E00;font-weight:650}
 
-main{flex:1;display:grid;grid-template-columns:minmax(340px,44%) 1fr;min-height:0}
+main{flex:1;display:grid;grid-template-columns:minmax(340px,40%) 1fr;min-height:0}
 .left{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
 .tabs{display:flex;gap:2px;padding:8px 10px 0;flex:none}
 .tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--mute);
@@ -53,18 +54,73 @@ textarea:focus{outline:none}
 .doc ul{margin:0 0 12px;padding-left:19px;color:#DCD6F5}
 .doc li{margin-bottom:5px}
 .doc .k{color:var(--gold)}
+.doc .new{display:inline-block;font-family:var(--sans);font-size:11px;font-weight:700;color:#2A1E00;background:var(--gold);border-radius:99px;padding:1px 8px;vertical-align:2px;margin-left:6px}
 .right{min-height:0;display:flex;flex-direction:column;background:var(--indigo)}
-.phead{padding:9px 14px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mute);
-  display:flex;align-items:center;gap:10px;flex:none}
-.phead .seg{margin-left:auto;display:flex;gap:2px;background:var(--deep);border-radius:7px;padding:2px}
-.phead .seg button{background:none;border:0;color:var(--mute);font-size:12px;padding:4px 10px;border-radius:5px;cursor:pointer}
+.phead{padding:8px 14px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mute);
+  display:flex;align-items:center;gap:10px;flex:none;flex-wrap:wrap}
+.phead .seg{display:flex;gap:2px;background:var(--deep);border-radius:7px;padding:2px}
+.phead .seg button{background:none;border:0;color:var(--mute);font-size:12.5px;padding:5px 11px;border-radius:5px;cursor:pointer}
 .phead .seg button.on{background:var(--surface);color:var(--ink)}
+.phead .sp{flex:1}
+.rpane{flex:1;min-height:0;display:none}
+.rpane.on{display:flex;flex-direction:column}
 .frameWrap{flex:1;min-height:0;display:grid;place-items:center;overflow:auto;padding:14px}
 iframe{border:1px solid var(--line);border-radius:12px;background:var(--deep);width:100%;height:100%}
 iframe.mob{width:390px;max-width:100%;height:100%;max-height:780px}
 .err{margin:0;padding:11px 16px;background:rgba(255,107,74,.12);border-top:1px solid var(--coral);
   color:#FFC5B5;font-family:var(--mono);font-size:12px;white-space:pre-wrap;flex:none}
-.err.hidden{display:none}
+.tipbar{margin:0;padding:9px 16px;background:rgba(242,193,78,.10);border-top:1px solid var(--gold);color:#F6DFA3;font-size:12.5px;flex:none}
+.hidden{display:none!important}
+
+/* session dashboard */
+.dash{flex:1;overflow:auto;padding:14px 18px 40px;font-size:14px;line-height:1.5}
+.dash textarea{flex:none;min-height:96px;border:1px solid var(--line);border-radius:9px;font-size:12px}
+.drow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 14px}
+.dnote{color:var(--mute);font-size:13px;margin:0}
+.dcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 14px}
+.dcard h3{font-family:var(--serif);font-size:17px;margin:0 0 4px;font-weight:600}
+.dcard h4{font-size:13.5px;margin:0 0 8px;color:var(--lav);font-weight:600}
+.dtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:10px 0 0}
+.dtile{background:var(--deep);border-radius:9px;padding:8px 10px}
+.dtile small{display:block;color:var(--mute);font-size:11.5px}
+.dtile b{font-size:20px;font-variant-numeric:tabular-nums}
+.bar2{margin:7px 0}
+.bar2 .l{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.bar2 .l span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar2 .t{height:7px;background:var(--deep);border-radius:4px;margin-top:3px}
+.bar2 .f{height:7px;border-radius:4px;background:var(--lav)}
+.bar2.good .f{background:var(--teal)}
+.bar2.trap .f{background:var(--coral)}
+.tg{display:inline-block;font-size:11px;font-weight:700;border-radius:99px;padding:0 7px;margin-left:4px}
+.tg.good{background:var(--teal);color:#04211E}
+.tg.trap{background:var(--coral);color:#25100A}
+.ins{margin:8px 0 0;font-size:13px;color:#DCD6F5;border-left:3px solid var(--gold);padding:3px 10px}
+.ans{border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin:6px 0;font-size:13px;color:#DCD6F5;white-space:pre-line}
+.ans small{display:block;color:var(--mute);font-size:11.5px;margin-bottom:3px}
+table.lt{width:100%;border-collapse:collapse;font-size:13px}
+.lt th,.lt td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.lt th{color:var(--mute);font-weight:600;font-size:12px}
+.lt tr.click{cursor:pointer}
+.lt tr.click:hover td{background:var(--surf2)}
+.drill{margin:0}
+.dpath{display:flex;flex-direction:column;margin:4px 0 14px}
+.dpath .pn{border:1px solid var(--line);border-radius:9px;padding:8px 11px;background:var(--surf2)}
+.dpath .pk{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:650}
+.dpath .pq{font-size:13px;margin:2px 0 6px}
+.dpath .po{display:flex;flex-wrap:wrap;gap:5px}
+.dpath .pc{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:2px 9px;color:var(--mute)}
+.dpath .pc.on{color:#fff;font-weight:650;border-color:transparent;background:#6B6F8A}
+.dpath .pc.on.good,.dpath .pc.hit{background:var(--teal);color:#04211E;border-color:transparent}
+.dpath .pc.on.trap,.dpath .pc.extra{background:var(--coral);color:#25100A;border-color:transparent}
+.dpath .pc.tried{text-decoration:line-through;border-style:dashed}
+.dpath .pc.miss{border:1.5px dashed var(--teal);color:var(--ink)}
+.dpath .pa{width:2px;height:14px;background:var(--line);margin:0 auto}
+.dpath .pcq{border-left:4px solid #6B6F8A;border-radius:6px;padding:6px 10px;background:var(--deep);font-size:12.5px;color:#DCD6F5}
+.dpath .pcq.good{border-left-color:var(--teal)}.dpath .pcq.trap{border-left-color:var(--coral)}
+.dpath .pcq b{display:block;color:var(--ink);font-size:12px}
+.dpath .pend{border:2px solid var(--ink);border-radius:9px;padding:7px 10px;text-align:center;font-weight:650;font-size:13px}
+.drill dt{font-weight:600;margin-top:10px;color:var(--ink)}
+.drill dd{margin:2px 0 0;color:#DCD6F5;white-space:pre-line}
 @media (max-width:900px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.left{border-right:0;border-bottom:1px solid var(--line)}}
 </style>
 </head>
@@ -84,7 +140,8 @@ iframe.mob{width:390px;max-width:100%;height:100%;max-height:780px}
   <button class="btn" id="btnSkel">New skeleton</button>
   <button class="btn" id="btnSample">Load sample</button>
   <button class="btn go" id="btnRun">Preview</button>
-  <button class="btn tl" id="btnExport">Export standalone HTML</button>
+  <button class="btn tl" id="btnExportT" title="Trainer notes, 'reveals' lines and red flags are removed">Export for trainees</button>
+  <button class="btn" id="btnExportR" title="Everything included, opens in trainer view">Export for trainer</button>
 </header>
 
 <main>
@@ -95,14 +152,28 @@ iframe.mob{width:390px;max-width:100%;height:100%;max-height:780px}
     </div>
     <div class="pane on" id="p-edit"><textarea id="src" spellcheck="false"></textarea></div>
     <div class="pane" id="p-docs"><div class="doc" id="docs"></div></div>
+    <p class="tipbar hidden" id="tips"></p>
     <pre class="err hidden" id="err"></pre>
   </section>
   <section class="right">
     <div class="phead">
-      <span>Live preview - this is exactly what exports</span>
-      <span class="seg"><button class="on" data-w="desk">Laptop</button><button data-w="mob">Mobile</button></span>
+      <span class="seg" id="rtabs"><button class="on" data-r="pv">Preview</button><button data-r="db">Session dashboard</button></span>
+      <span class="sp"></span>
+      <span class="seg" id="vseg" title="Trainee view is what learners get. Trainer view adds trap and expert tags, 'reveals' lines and trainer notes."><button class="on" data-v="trainee">Trainee view</button><button data-v="trainer">Trainer view</button></span>
+      <span class="seg" id="wseg"><button class="on" data-w="desk">Laptop</button><button data-w="mob">Mobile</button></span>
     </div>
-    <div class="frameWrap"><iframe id="frame" title="Preview"></iframe></div>
+    <div class="rpane on" id="r-pv"><div class="frameWrap"><iframe id="frame" title="Preview"></iframe></div></div>
+    <div class="rpane" id="r-db"><div class="dash">
+      <textarea id="resIn" spellcheck="false" placeholder="Paste what learners sent you - whole WhatsApp or email messages are fine. Every PUP2: result code in the text is picked up."></textarea>
+      <div class="drow">
+        <button class="btn go" id="btnDash">Build dashboard</button>
+        <button class="btn" id="btnSampleRes">Load sample results</button>
+        <button class="btn" id="btnProj" aria-pressed="false">Projection mode</button>
+        <button class="btn" id="btnClear">Clear</button>
+        <span class="dnote" id="dashCount"></span>
+      </div>
+      <div id="dashOut"></div>
+    </div></div>
   </section>
 </main>
 
@@ -111,18 +182,31 @@ iframe.mob{width:390px;max-width:100%;height:100%;max-height:780px}
 <script type="text/plain" id="docsrc">__DOCS__</script>
 
 <script>
-var srcEl=document.getElementById('src'),errEl=document.getElementById('err'),
+var srcEl=document.getElementById('src'),errEl=document.getElementById('err'),tipEl=document.getElementById('tips'),
     frame=document.getElementById('frame'),stEl=document.getElementById('status');
+var VIEWMODE='trainee';
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function short(t,n){t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'…':t;}
+function pct(a,b){return b?Math.round(a/b*100):0;}
 
 function engineSrc(){
   return document.getElementById('engine').textContent.split(/<\\\/script>/g).join('<'+'/script>');
 }
-function build(json){
-  var s=engineSrc();
-  var title=(json.deckTitle||'The Puppeteer')+(json.scenarios&&json.scenarios.length===1?' - '+json.scenarios[0].title:'');
+/* trainee copies never carry trainer-only material */
+var TRAINER_ONLY={trainerNote:1,reveals:1,redFlags:1};
+function stripTrainer(o){
+  if(Array.isArray(o))return o.map(stripTrainer);
+  if(o&&typeof o==='object'){var r={};Object.keys(o).forEach(function(k){if(!TRAINER_ONLY[k])r[k]=stripTrainer(o[k]);});return r;}
+  return o;
+}
+function build(json,view){
+  var s=engineSrc(),d=view==='trainer'?json:stripTrainer(json);
+  var title=(json.deckTitle||'The Puppeteer')+(json.scenarios&&json.scenarios.length===1?' - '+json.scenarios[0].title:'')+(view==='trainer'?' (trainer)':'');
   s=s.replace('__DECK_TITLE__',title.replace(/[<>]/g,''));
+  if(view==='trainer')s=s.replace("/*__VIEW__*/'trainee'/*__VIEWEND__*/","/*__VIEW__*/'trainer'/*__VIEWEND__*/");
   var a=s.indexOf('/*__SCENARIO_JSON__*/'), b=s.indexOf('/*__END__*/');
-  return s.slice(0,a)+JSON.stringify(json,null,1)+s.slice(b+'/*__END__*/'.length);
+  return s.slice(0,a)+JSON.stringify(d,null,1).replace(/<\/(script)/gi,'<\\/$1')+s.slice(b+'/*__END__*/'.length);
 }
 
 var VALID_NODE={narrative:1,choice:1,multi:1,evaluate:1};
@@ -141,12 +225,22 @@ function validate(json){
         if(b.src&&!/^(https:\/\/|data:image\/)/.test(b.src))e.push(w+'(image) src must be an https link or a data:image URI');}
     });
   }
+  /* v0.3: trainer-only fields must be plain text */
+  function chkTrainer(o,where){
+    if(o==null||typeof o!=='object')return;
+    if(Array.isArray(o)){o.forEach(function(x){chkTrainer(x,where);});return;}
+    Object.keys(o).forEach(function(k){var v=o[k];
+      if((k==='trainerNote'||k==='reveals')&&typeof v!=='string')e.push(where+'"'+k+'" must be text');
+      else if(v&&typeof v==='object')chkTrainer(v,where);});
+  }
+  if(json.sendTo!=null&&(typeof json.sendTo!=='object'||Array.isArray(json.sendTo)))e.push('sendTo must look like {"whatsapp":"919800000000","email":"you@example.com"}');
   if(!json.scenarios||!json.scenarios.length){e.push('no scenarios array');return e;}
   json.scenarios.forEach(function(s,si){
     var p='scenario['+si+'] '+(s.id||'(no id)')+': ';
     if(!s.id)e.push(p+'missing id');
     if(!s.title)e.push(p+'missing title');
     if(!s.start)e.push(p+'missing start');
+    chkTrainer(s,p);
     var nodes=s.nodes||{},ends=s.endings||{};
     var targets=function(id){return nodes[id]||ends[id];};
     if(s.start&&!targets(s.start))e.push(p+'start "'+s.start+'" does not exist');
@@ -222,6 +316,13 @@ function validate(json){
   });
   return e;
 }
+/* not errors: what the trainer view and the dashboard are missing */
+function trainerGaps(json){
+  var opts=0,miss=0;
+  (json.scenarios||[]).forEach(function(s){Object.keys(s.nodes||{}).forEach(function(k){var n=s.nodes[k];
+    if(n.type==='choice')(n.choices||[]).forEach(function(c){opts++;if(!c.reveals)miss++;});});});
+  return miss?'Trainer view: '+miss+' of '+opts+' decision options have no "reveals" line, so the dashboard cannot say what choosing them suggests. Not an error.':'';
+}
 
 function run(){
   var json;
@@ -230,33 +331,35 @@ function run(){
   var errs=validate(json);
   if(errs.length){fail(errs.length+' problem'+(errs.length>1?'s':'')+':\n- '+errs.join('\n- '));}
   else{errEl.classList.add('hidden');stEl.textContent='valid';stEl.className='st ok';}
-  frame.srcdoc=build(json);
+  var tip=trainerGaps(json);tipEl.textContent=tip;tipEl.classList.toggle('hidden',!tip);
+  frame.srcdoc=build(json,VIEWMODE);
+  if(document.getElementById('r-db').classList.contains('on'))renderDash();
   return json;
 }
 function fail(msg){
   errEl.textContent=msg;errEl.classList.remove('hidden');
   stEl.textContent='check errors';stEl.className='st bad';
 }
-function download(){
+function download(view){
   var json;try{json=JSON.parse(srcEl.value);}catch(ex){fail('JSON syntax: '+ex.message);return;}
-  var name=(json.scenarios&&json.scenarios.length===1?json.scenarios[0].id:'puppeteer_deck')+'.html';
-  var blob=new Blob([build(json)],{type:'text/html'});
+  var name=(json.scenarios&&json.scenarios.length===1?json.scenarios[0].id:'puppeteer_deck')+(view==='trainer'?'-trainer':'')+'.html';
+  var blob=new Blob([build(json,view)],{type:'text/html'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
 }
 
-var SKELETON={deckTitle:'The Puppeteer',scenarios:[{
+var SKELETON={deckTitle:'The Puppeteer',sendTo:{whatsapp:'',email:''},scenarios:[{
   id:'new_scenario',title:'Untitled scenario',kicker:'',tag:'Training',meta:'5 min - 2 decisions',
   thumb:'stage',blurb:'One sentence of tension. Something is at stake and the learner has to decide.',
   steps:['Briefing','The decision','Write it down','Debrief'],start:'brief',
   nodes:{
-    brief:{type:'narrative',step:0,scene:'office',eyebrow:'Briefing',title:'',text:'',to:'n1'},
-    n1:{type:'choice',step:1,scene:'office',prompt:'',choices:[
-      {k:'A',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:''},to:'n2'},
-      {k:'B',label:'',sub:'',tag:'',consequence:{title:'',text:'',lesson:'',good:true},to:'n2'}
+    brief:{type:'narrative',step:0,scene:'office',eyebrow:'Briefing',title:'',text:'',trainerNote:'',to:'n1'},
+    n1:{type:'choice',step:1,scene:'office',prompt:'',trainerNote:'',choices:[
+      {k:'A',label:'',sub:'',tag:'',reveals:'',trainerNote:'',consequence:{title:'',text:'',lesson:''},to:'n2'},
+      {k:'B',label:'',sub:'',tag:'',reveals:'',trainerNote:'',consequence:{title:'',text:'',lesson:'',good:true},to:'n2'}
     ]},
-    n2:{type:'evaluate',step:2,scene:'data',speaker:'',question:'',criteria:[
+    n2:{type:'evaluate',step:2,scene:'data',speaker:'',question:'',trainerNote:'',criteria:[
       {label:'',keywords:[],hint:'',coach:''},{label:'',keywords:[],hint:'',coach:''}
     ],pass:2,showRubric:false,model:'',modelExplain:'',coachLead:'To make this land, ',
     toPass:'good',toFail:'partial'}
@@ -267,12 +370,193 @@ var SKELETON={deckTitle:'The Puppeteer',scenarios:[{
   }
 }]};
 
+/* ---------------------------- session dashboard ---------------------------- */
+var D={results:[],proj:false,open:null};
+function b64(s){try{return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}catch(x){return '';}}
+function unb64(c){try{var b=c.replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';return JSON.parse(decodeURIComponent(escape(atob(b))));}catch(x){return null;}}
+function parseResults(txt){var out=[],seen={},m,re=/PUP2:([A-Za-z0-9_-]+)/g;
+  while((m=re.exec(txt))){if(seen[m[1]])continue;seen[m[1]]=1;var r=unb64(m[1]);if(r&&r.s&&r.log)out.push(r);}return out;}
+function curDeck(){try{return JSON.parse(srcEl.value);}catch(x){return null;}}
+function orderIds(s){var nodes=s.nodes||{},ends=s.endings||{},seen={},order=[];
+  (function walk(id){if(!id||seen[id]||(!nodes[id]&&!ends[id]))return;seen[id]=1;order.push(id);var n=nodes[id];if(!n)return;
+    (n.choices||[]).forEach(function(c){walk(c.to||n.to);});walk(n.to);walk(n.toPass);walk(n.toFail);})(s.start);
+  return order;}
+function choiceGood(n,c){var any=(n.choices||[]).some(function(x){return x.consequence&&x.consequence.good;});
+  if(c.consequence&&c.consequence.good)return true;if(any)return false;if(n.gate)return c.correct!==false;return null;}
+function finalPick(r,id){var x=null;(r.log||[]).forEach(function(l){if(l.n===id&&l.k==='c'&&!l.g)x=l;});return x;}
+function entry(r,id,k){var x=null;(r.log||[]).forEach(function(l){if(l.n===id&&l.k===k)x=l;});return x;}
+function norm(x){return String(x||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
+function rfHits(n,text){var rf=n.redFlags;if(!rf)return [];var ph=Array.isArray(rf)?rf:(rf.phrases||[]),t=' '+norm(text)+' ';
+  return ph.filter(function(p){return t.indexOf(' '+norm(p)+' ')>-1;});}
+function bar(label,n,tot,cls){return '<div class="bar2 '+(cls||'')+'"><div class="l"><span>'+label+'</span><span>'+pct(n,tot)+'% ('+n+')</span></div>'+
+  '<div class="t"><div class="f" style="width:'+pct(n,tot)+'%"></div></div></div>';}
+function tag(g){return D.proj||g==null?'':(g?' <span class="tg good">Expert</span>':' <span class="tg trap">Trap</span>');}
+
+function renderDash(){
+  var box=document.getElementById('dashOut'),deck=curDeck(),h='';
+  document.getElementById('dashCount').textContent=D.results.length?D.results.length+' result'+(D.results.length>1?'s':'')+' read':'';
+  if(!D.results.length){box.innerHTML='<div class="dcard"><h3>No results yet</h3><p class="dnote">Learners finish a scenario, type their name and tap Send on WhatsApp, Send by email or Copy result. Paste whatever they send you into the box above - whole messages are fine - and press Build dashboard. To see how it looks first, press Load sample results.</p></div>';return;}
+  if(!deck||!deck.scenarios){box.innerHTML='<div class="dcard"><p class="dnote">The scenario JSON on the left has a problem. Fix it first: the dashboard reads it to name the options.</p></div>';return;}
+  var by={};D.results.forEach(function(r){(by[r.s]=by[r.s]||[]).push(r);});
+  Object.keys(by).forEach(function(sid){
+    var s=deck.scenarios.filter(function(x){return x.id===sid;})[0],rs=by[sid];
+    if(!s){h+='<div class="dcard"><h3>'+esc(rs[0].t||sid)+'</h3><p class="dnote">'+rs.length+' result(s) for "'+esc(sid)+'", but that scenario is not in the JSON on the left. Paste it there to read these results.</p></div>';return;}
+    h+=scenarioDash(s,rs);
+  });
+  box.innerHTML=h;
+  Array.prototype.forEach.call(box.querySelectorAll('[data-open]'),function(tr){
+    tr.addEventListener('click',function(){var k=tr.getAttribute('data-open');D.open=D.open===k?null:k;renderDash();});});
+}
+function scenarioDash(s,rs){
+  var ids=orderIds(s),nodes=s.nodes||{},ends=s.endings||{},h='',goodRates=[];
+  var endCount={};rs.forEach(function(r){endCount[r.end]=(endCount[r.end]||0)+1;});
+  h+='<div class="dcard"><h3>'+esc(s.title)+'</h3><p class="dnote">'+rs.length+' learner'+(rs.length>1?'s':'')+' sent a result. Only people who sent one appear here.'+
+    (D.proj?' Projection mode: no names, no tags, no rubric detail.':'')+'</p><div class="dtiles">'+
+    Object.keys(endCount).map(function(k){return '<div class="dtile"><small>'+esc(short((ends[k]&&ends[k].title)||k,44))+'</small><b>'+endCount[k]+'</b></div>';}).join('')+'</div></div>';
+  ids.forEach(function(id){var n=nodes[id];if(!n)return;
+    if(n.type==='choice'){
+      var cnt=(n.choices||[]).map(function(){return 0;}),tot=0;
+      rs.forEach(function(r){var p=finalPick(r,id);if(p&&cnt[p.i]!=null){cnt[p.i]++;tot++;}});
+      if(!tot)return;
+      var mx=0,goodN=0,trapN=0;cnt.forEach(function(c,i){if(c>cnt[mx])mx=i;});
+      var bars=(n.choices||[]).map(function(c,i){var g=choiceGood(n,c);if(g===true)goodN+=cnt[i];if(g===false)trapN+=cnt[i];
+        return bar(esc(c.k||String.fromCharCode(65+i))+'. '+esc(short(c.label,72))+tag(g),cnt[i],tot,g===true?'good':g===false?'trap':'');}).join('');
+      var mc=n.choices[mx],gm=choiceGood(n,mc),lines=[];
+      lines.push('Most chose '+(mc.k||String.fromCharCode(65+mx))+'.'+(mc.reveals?' What it suggests: '+mc.reveals:' (Add a "reveals" line to this option and the dashboard will say what choosing it suggests.)'));
+      if(gm===false&&pct(cnt[mx],tot)>=50)lines.push('The trap is working. Debrief on the cues first, before anyone says what they chose.');
+      if(goodN+trapN&&pct(trapN,tot)<20&&tot>=5)lines.push('Hardly anyone took the trap. Check whether the briefing gave the cue away.');
+      if(goodN+trapN)goodRates.push(pct(goodN,tot));
+      h+='<div class="dcard"><h4>Decision - '+esc(short(n.title||n.prompt,96))+'</h4>'+bars+lines.map(function(l){return '<p class="ins">'+esc(l)+'</p>';}).join('')+'</div>';
+    }
+    if(n.type==='multi'){
+      var opts=n.options||[],pc=opts.map(function(){return 0;}),tot2=0,need=n.correct||[],worst=null;
+      rs.forEach(function(r){var m=entry(r,id,'m');if(m){tot2++;(m.sel||[]).forEach(function(i){if(pc[i]!=null)pc[i]++;});}});
+      if(!tot2)return;
+      var bars2=opts.map(function(o,i){var nd=need.indexOf(i)>-1;if(nd&&(worst===null||pc[i]<pc[worst]))worst=i;
+        return bar(esc(short(o.label,72))+(D.proj?'':' <span class="tg '+(nd?'good':'trap')+'">'+(nd?'Must pick':'Leave out')+'</span>'),pc[i],tot2,nd?'good':'trap');}).join('');
+      h+='<div class="dcard"><h4>Noticing - '+esc(short(n.prompt,96))+'</h4>'+bars2+
+        (worst!==null?'<p class="ins">Most missed must-have: '+esc(opts[worst].label)+' ('+pct(pc[worst],tot2)+'% picked it).</p>':'')+'</div>';
+    }
+    if(n.type==='evaluate'){
+      var cr=n.criteria||[],met=cr.map(function(){return 0;}),tot3=0,full=0,tries=0,mu=0,ws=[];
+      rs.forEach(function(r){var w=entry(r,id,'w');if(!w)return;tot3++;var sc=0;
+        cr.forEach(function(c,i){if((w.met||[])[i]){met[i]++;sc++;}});if(sc===cr.length)full++;tries+=w.tr||1;if(w.mu)mu++;ws.push({r:r,w:w,sc:sc});});
+      if(!tot3)return;
+      var low=0;met.forEach(function(c,i){if(c<met[low])low=i;});
+      var l3=[],fullPct=pct(full,tot3);
+      if(full===tot3&&tot3>=3)l3.push('Everyone reached full marks. The keywords may be too generous - try the weak answer from your rubric test.');
+      else l3.push('The gap is "'+short(cr[low].label,64)+'": '+pct(met[low],tot3)+'% met it. If that stays low, its coach sentence is not landing, or the question does not ask for it.');
+      var avg=goodRates.length?goodRates.reduce(function(a,b){return a+b;},0)/goodRates.length:null;
+      if(avg!==null&&avg>=60&&fullPct<40)l3.push('Good choices, weaker writing: they know the move but cannot yet say it. Sharpen the question before the criteria.');
+      var pick=[],f1=ws.filter(function(x){return x.sc===cr.length&&!x.w.mu;})[0],b1=ws.filter(function(x){return x.sc===cr.length-1;})[0],
+          rf1=ws.filter(function(x){return rfHits(n,x.w.a).length;})[0];
+      if(f1)pick.push(['Full marks',f1]);if(b1)pick.push(['One criterion short',b1]);
+      if(rf1&&!D.proj)pick.push(['Red flag phrase: '+rfHits(n,rf1.w.a).join(', '),rf1]);
+      h+='<div class="dcard"><h4>Written - '+esc(short(n.title||n.question||n.prompt,96))+'</h4>'+
+        (D.proj?'':cr.map(function(c,i){return bar(esc(short(c.label,72)),met[i],tot3,'');}).join(''))+
+        '<div class="dtiles"><div class="dtile"><small>Full marks</small><b>'+fullPct+'%</b></div><div class="dtile"><small>Average attempts</small><b>'+(tries/tot3).toFixed(1)+
+        '</b></div><div class="dtile"><small>Used the model answer</small><b>'+mu+'</b></div></div>'+
+        (D.proj?'':l3.map(function(l){return '<p class="ins">'+esc(l)+'</p>';}).join(''))+
+        (pick.length?'<h4 style="margin-top:12px">Answers to discuss</h4>'+pick.map(function(p){
+          return '<div class="ans"><small>'+esc(p[0])+(D.proj?'':' - '+esc(p[1].r.n||'(no name)'))+'</small>'+esc(short(p[1].w.a,340))+'</div>';}).join(''):'')+'</div>';
+    }
+  });
+  if(!D.proj){
+    h+='<div class="dcard"><h4>Learners - click a row for the detail</h4><table class="lt"><tr><th>Name</th><th>Choices</th><th>Written</th><th>Ending</th></tr>'+
+      rs.map(function(r,ri){var key=s.id+'|'+ri;
+        var path=(r.log||[]).filter(function(l){return l.k==='c'&&!l.g;}).map(function(l){var n=nodes[l.n],c=n&&n.choices&&n.choices[l.i];
+          return c?(c.k||String.fromCharCode(65+l.i)):'?';}).join(' > ');
+        var wr=(r.log||[]).filter(function(l){return l.k==='w';}).map(function(l){return (l.met||[]).filter(Boolean).length+'/'+(l.met||[]).length+(l.tr>1?' ('+l.tr+' tries)':'');}).join(', ');
+        return '<tr class="click" data-open="'+esc(key)+'"><td>'+esc(r.n||'(no name)')+'</td><td>'+esc(path)+'</td><td>'+esc(wr)+'</td><td>'+
+          esc(short((ends[r.end]&&ends[r.end].title)||r.end,40))+'</td></tr>'+(D.open===key?'<tr><td colspan="4">'+drill(s,r)+'</td></tr>':'');}).join('')+'</table></div>';
+  }
+  return h;
+}
+function cutP(x,n){x=String(x||'').replace(/\s+/g,' ').trim();if(x.length<=n)return x;var c=x.slice(0,n),i=c.lastIndexOf('. ');
+  return i>50?c.slice(0,i+1):c.replace(/\s\S*$/,'')+' ...';}
+/* the same path diagram the learner's report shows, rebuilt from the result code */
+function pathOf(s,r){var nodes=s.nodes||{},seen={},grp=[],out=[];
+  (r.log||[]).forEach(function(l){var k=l.n+'|'+l.k;if(!(k in seen)){seen[k]=grp.length;grp.push({l:null,tried:[]});}
+    var g=grp[seen[k]];if(l.k==='c'&&l.g)g.tried.push(l.i);else g.l=l;});
+  grp.forEach(function(g,gi){var l=g.l;if(!l)return;var n=nodes[l.n];if(!n)return;
+    var lab=(typeof n.step==='number'&&s.steps&&s.steps[n.step])||('Step '+(gi+1)),hd='<div class="pk">'+esc(lab)+'</div>';
+    if(l.k==='c'){var c=(n.choices||[])[l.i]||{},gd=choiceGood(n,c),cq=c.consequence||{};
+      out.push('<div class="pn">'+hd+'<div class="pq">'+esc(cutP(n.prompt,120))+'</div><div class="po">'+(n.choices||[]).map(function(o,i){
+        var k=esc(o.k||String.fromCharCode(65+i)),x=esc(o.tag||o.chip||cutP(o.label,36));
+        if(i===l.i)return '<span class="pc on '+(gd===true?'good':gd===false?'trap':'')+'">'+k+' · '+x+'</span>';
+        return '<span class="pc'+(g.tried.indexOf(i)>-1?' tried':'')+'">'+k+' · '+x+'</span>';}).join('')+'</div></div>');
+      if(cq.text)out.push('<div class="pa"></div><div class="pcq '+(cq.good?'good':gd===false?'trap':'')+'"><b>'+esc(cq.title||'What happened')+'</b>'+esc(cutP(cq.text,150))+'</div>');}
+    if(l.k==='m'){var need=n.correct||[],sel=l.sel||[];
+      out.push('<div class="pn">'+hd+'<div class="pq">Noticed '+need.filter(function(i){return sel.indexOf(i)>-1;}).length+' of '+need.length+'</div><div class="po">'+
+        (n.options||[]).map(function(o,i){var p=sel.indexOf(i)>-1,m=need.indexOf(i)>-1,x=esc(cutP(o.label,42));
+          return p&&m?'<span class="pc hit">&#10003; '+x+'</span>':p?'<span class="pc extra">&#10007; '+x+'</span>':m?'<span class="pc miss">missed: '+x+'</span>':'';}).join('')+'</div></div>');}
+    if(l.k==='w'){var met=l.met||[];
+      out.push('<div class="pn">'+hd+'<div class="pq">Final answer met '+met.filter(Boolean).length+' of '+(n.criteria||[]).length+
+        ' - '+(l.tr||1)+' attempt'+((l.tr||1)>1?'s':'')+'</div><div class="po">'+(n.criteria||[]).map(function(c,i){
+          return '<span class="pc '+(met[i]?'hit':'miss')+'">'+(met[i]?'&#10003; ':'')+esc(c.hint||cutP(c.label,36))+'</span>';}).join('')+'</div></div>');}
+    out.push('<div class="pa"></div>');});
+  var e=(s.endings||{})[r.end]||{};
+  out.push('<div class="pend">'+esc(e.title||r.end||'No ending')+'</div>');
+  return '<div class="dpath">'+out.join('')+'</div>';}
+function drill(s,r){var nodes=s.nodes||{},h=pathOf(s,r)+'<dl class="drill">';
+  (r.log||[]).forEach(function(l){var n=nodes[l.n];if(!n)return;
+    if(l.k==='c'){var c=(n.choices||[])[l.i]||{},g=choiceGood(n,c);
+      h+='<dt>'+(l.g?'Wrong turn, then retried - ':'')+esc(short(n.prompt||n.title||l.n,96))+'</dt><dd>'+esc(c.label||'')+tag(g)+
+        (c.reveals?'\nWhat it suggests: '+esc(c.reveals):'')+(c.trainerNote?'\nTrainer note: '+esc(c.trainerNote):'')+'</dd>';}
+    if(l.k==='m'){var need=n.correct||[],sel=l.sel||[],opts=n.options||[];
+      var miss=need.filter(function(i){return sel.indexOf(i)<0;}).map(function(i){return opts[i]?opts[i].label:'?';}),
+          extra=sel.filter(function(i){return need.indexOf(i)<0;}).map(function(i){return opts[i]?opts[i].label:'?';});
+      h+='<dt>Noticing - '+esc(short(n.prompt,96))+'</dt><dd>'+(need.length-miss.length)+' of '+need.length+' must-haves'+
+        (miss.length?'\nMissed: '+esc(miss.join('; ')):'')+(extra.length?'\nPicked but not needed: '+esc(extra.join('; ')):'')+'</dd>';}
+    if(l.k==='w'){var cr=n.criteria||[],rf=rfHits(n,l.a);
+      h+='<dt>Written - '+(l.tr||1)+' attempt'+((l.tr||1)>1?'s':'')+(l.mu?', used the model answer':'')+'</dt><dd>'+esc(l.a)+'\n\n'+
+        cr.map(function(c,i){return ((l.met||[])[i]?'[met] ':'[not yet] ')+esc(c.label);}).join('\n')+
+        (rf.length?'\nRed flag phrases: '+esc(rf.join(', ')):'')+'</dd>';}
+  });
+  return h+'</dl>';}
+
+/* sample results: a stable pretend class, so the dashboard can be tried before a real session */
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function simRun(s,name,rnd){var log=[],id=s.start,guard=0,nodes=s.nodes||{};
+  while(guard++<80){var n=nodes[id];if(!n)break;
+    if(n.type==='narrative'){id=n.to;continue;}
+    if(n.type==='choice'){var ch=n.choices||[],goods=[],traps=[];
+      ch.forEach(function(c,i){(choiceGood(n,c)===true?goods:traps).push(i);});
+      var pick=(traps.length&&rnd()<0.55)?traps[Math.floor(rnd()*traps.length)]:(goods.length?goods[Math.floor(rnd()*goods.length)]:Math.floor(rnd()*ch.length));
+      if(n.gate&&ch[pick].correct===false){log.push({k:'c',n:id,i:pick,g:1});pick=goods.length?goods[0]:pick;}
+      log.push({k:'c',n:id,i:pick,g:0});id=ch[pick].to||n.to;continue;}
+    if(n.type==='multi'){var sel=(n.correct||[]).filter(function(){return rnd()<0.75;});
+      (n.options||[]).forEach(function(o,i){if((n.correct||[]).indexOf(i)<0&&rnd()<0.2)sel.push(i);});
+      log.push({k:'m',n:id,sel:sel});id=n.to;continue;}
+    if(n.type==='evaluate'){var met=(n.criteria||[]).map(function(){return rnd()<0.62?1:0;}),full=met.every(Boolean);
+      var ans=full?(n.model||''):'I would talk to the team and make sure the line is clear before Friday, so nobody is surprised later.';
+      log.push({k:'w',n:id,met:met,tr:full?1+(rnd()<0.3?1:0):2+(rnd()<0.4?1:0),mu:(!full&&rnd()<0.2)?1:0,a:ans});
+      id=full?(n.toPass||n.to):(n.toFail||n.to);continue;}
+    break;}
+  return {v:2,s:s.id,t:s.title,n:name,at:new Date().toISOString(),end:id,log:log};}
+var NAMES=['Ananya','Kabir','Neha','Rohan','Ishita','Arjun','Meera','Vikram','Sana','Aditya','Priya','Dev','Kavya','Rahul'];
+function sampleResults(){var deck=curDeck();if(!deck||!deck.scenarios)return '';var rnd=rng(42),lines=[];
+  deck.scenarios.forEach(function(s){NAMES.forEach(function(nm){
+    lines.push(nm+': done! PUP2:'+b64(JSON.stringify(simRun(s,nm,rnd))));});});
+  return lines.join('\n');}
+
+/* ---------------------------- wiring ---------------------------- */
 document.getElementById('btnRun').addEventListener('click',run);
-document.getElementById('btnExport').addEventListener('click',download);
+document.getElementById('btnExportT').addEventListener('click',function(){download('trainee');});
+document.getElementById('btnExportR').addEventListener('click',function(){download('trainer');});
 document.getElementById('btnSample').addEventListener('click',function(){
-  srcEl.value=document.getElementById('sample').textContent.trim();run();});
+  srcEl.value=JSON.stringify(JSON.parse(document.getElementById('sample').textContent),null,2);run();});
 document.getElementById('btnSkel').addEventListener('click',function(){
   srcEl.value=JSON.stringify(SKELETON,null,2);run();});
+document.getElementById('btnDash').addEventListener('click',function(){
+  D.results=parseResults(document.getElementById('resIn').value);D.open=null;renderDash();});
+document.getElementById('btnSampleRes').addEventListener('click',function(){
+  document.getElementById('resIn').value=sampleResults();D.results=parseResults(document.getElementById('resIn').value);D.open=null;renderDash();});
+document.getElementById('btnProj').addEventListener('click',function(){
+  D.proj=!D.proj;this.setAttribute('aria-pressed',D.proj?'true':'false');D.open=null;renderDash();});
+document.getElementById('btnClear').addEventListener('click',function(){
+  document.getElementById('resIn').value='';D.results=[];D.open=null;renderDash();});
 
 Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
   t.addEventListener('click',function(){
@@ -281,13 +565,15 @@ Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
     t.classList.add('on');document.getElementById('p-'+t.getAttribute('data-p')).classList.add('on');
   });
 });
-Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(b){
-  b.addEventListener('click',function(){
-    document.querySelectorAll('.seg button').forEach(function(x){x.classList.remove('on');});
-    b.classList.add('on');
-    frame.className=b.getAttribute('data-w')==='mob'?'mob':'';
-  });
-});
+function segWire(id,fn){var g=document.getElementById(id);
+  Array.prototype.forEach.call(g.querySelectorAll('button'),function(b){b.addEventListener('click',function(){
+    g.querySelectorAll('button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');fn(b);});});}
+segWire('wseg',function(b){frame.className=b.getAttribute('data-w')==='mob'?'mob':'';});
+segWire('vseg',function(b){VIEWMODE=b.getAttribute('data-v');run();});
+segWire('rtabs',function(b){var db=b.getAttribute('data-r')==='db';
+  document.getElementById('r-pv').classList.toggle('on',!db);document.getElementById('r-db').classList.toggle('on',db);
+  document.getElementById('vseg').style.visibility=db?'hidden':'';document.getElementById('wseg').style.visibility=db?'hidden':'';
+  if(db)renderDash();});
 srcEl.addEventListener('keydown',function(e){
   if((e.metaKey||e.ctrlKey)&&(e.key==='Enter'||e.key==='s')){e.preventDefault();run();}
   if(e.key==='Tab'){e.preventDefault();var s=srcEl.selectionStart;
@@ -296,7 +582,7 @@ srcEl.addEventListener('keydown',function(e){
 });
 
 document.getElementById('docs').innerHTML=document.getElementById('docsrc').textContent;
-srcEl.value=document.getElementById('sample').textContent.trim();
+srcEl.value=JSON.stringify(JSON.parse(document.getElementById('sample').textContent),null,2);
 run();
 </script>
 </body>
