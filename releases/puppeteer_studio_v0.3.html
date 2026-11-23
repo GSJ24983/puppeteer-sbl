@@ -720,6 +720,8 @@ function isTrainer(){return false;}  /* trainee edition: no trainer view */
 function tnoteHTML(n){return isTrainer()&&n&&n.trainerNote?'<div class="tnote"><b>For the trainer</b>'+esc(n.trainerNote)+'</div>':'';}
 function choiceGood(n,c){var any=(n.choices||[]).some(function(x){return x.consequence&&x.consequence.good;});
   if(c.consequence&&c.consequence.good)return true;if(any)return false;if(n.gate)return c.correct!==false;return null;}
+/* trainer view: the consequence screen repeats what the option reveals and its notes, so a trainer who jumps in (or previews one option) still sees them */
+function cqNote(c){var cq=c.consequence||{};return [c.reveals?'This choice reveals: '+c.reveals:'',c.trainerNote||'',cq.trainerNote||''].filter(Boolean).join('\n\n');}
 function tsubChoice(n,c){if(!isTrainer())return '';var g=choiceGood(n,c);
   var tag=g===true?'<span class="tg good">Expert move</span>':g===false?'<span class="tg trap">Trap</span>':'';
   var t=[c.reveals?'Reveals: '+c.reveals:'',c.trainerNote||''].filter(Boolean).join('\n');
@@ -805,7 +807,7 @@ function choose(n,nodeId,i){
   if(!cq)return goTo(c.to||n.to);
   S.inCq={node:nodeId,log:logBefore,chips:chipsBefore};navState();
   remember(cq.title||'What happened',withBlocks(cq,cq.text));
-  stageOut({scene:cq.scene||n.scene,sceneImg:cq.sceneImg||(cq.scene?'':n.sceneImg),title:cq.title,eyebrow:cq.eyebrow,trainerNote:cq.trainerNote},
+  stageOut({scene:cq.scene||n.scene,sceneImg:cq.sceneImg||(cq.scene?'':n.sceneImg),title:cq.title,eyebrow:cq.eyebrow,trainerNote:cqNote(c)},
     blocksHTML(cq,'top')+'<div class="stext">'+fmt(cq.text)+'</div>'+blocksHTML(cq,'bottom')+
     (cq.lesson?'<div class="lesson'+(cq.good?' good':'')+'"><b>'+(cq.good?'Why this worked':'What this cost you')+'</b>'+fmt(cq.lesson)+'</div>':'')+
     '<button class="cont" id="go">Continue &rarr;</button>');
