@@ -763,6 +763,8 @@ function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'
 /* authored formatting: **bold**, __underline__, '- ' bullets, '1. ' numbering. Escaped first, so nothing else becomes HTML */
 function inl(s){return esc(s).replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g,'<strong>$1</strong>')
   .replace(/(^|[^A-Za-z0-9_])__(\S(?:[^\n]*?\S)?)__(?![A-Za-z0-9_])/g,'$1<u class="ul">$2</u>');}
+/* older files wrote <b>..</b> in modelExplain: read it as **..** so both work, and nothing else is ever treated as HTML */
+function oldBold(s){return String(s==null?'':s).replace(/<\s*(b|strong)\s*>/gi,'**').replace(/<\s*\/\s*(b|strong)\s*>/gi,'**');}
 function plainTxt(s){return String(s==null?'':s).replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g,'$1').replace(/(^|[^A-Za-z0-9_])__(\S(?:[^\n]*?\S)?)__(?![A-Za-z0-9_])/g,'$1$2');}
 var BUL=/^\s*[-•]\s+(.*)$/,NUM=/^\s*(\d+)[.)]\s+(.*)$/;
 function fmt(s){var L=String(s==null?'':s).split('\n'),parts=[],cur=null,txt=[],m,i,j;
@@ -1116,7 +1118,7 @@ function renderEvaluate(n,nodeId){
   if(mb)mb.addEventListener('click',function(){
     S.usedModel=S.usedModel||{};S.usedModel[nodeId]=1;document.getElementById('ans').value=n.model;
     document.getElementById('fb').innerHTML='<div class="aibox fade"><div class="alab">Model answer loaded</div>'+
-      '<div class="aifb">'+(n.modelExplain||'This covers every rubric criterion. Edit it or submit it as it stands to see the grade.')+'</div></div>';
+      '<div class="aifb">'+(n.modelExplain?fmt(oldBold(n.modelExplain)):'This covers every rubric criterion. Edit it or submit it as it stands to see the grade.')+'</div></div>';
     document.getElementById('ans').focus();
   });
 
