@@ -184,7 +184,7 @@ var srcEl=document.getElementById('src'),errEl=document.getElementById('err'),ti
 var VIEWMODE='trainee';
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function short(t,n){t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'…':t;}
+function short(t,n){t=String(t||'').replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g,'$1').replace(/(^|[^A-Za-z0-9_])__(\S(?:[^\n]*?\S)?)__(?![A-Za-z0-9_])/g,'$1$2').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'…':t;}
 function pct(a,b){return b?Math.round(a/b*100):0;}
 
 function engineSrc(){
@@ -369,7 +369,7 @@ function parseResults(txt){var out=[],seen={},m,re=/PUP2:([A-Za-z0-9_-]+)/g;
 function curDeck(){try{return JSON.parse(srcEl.value);}catch(x){return null;}}
 function choiceGood(n,c){var any=(n.choices||[]).some(function(x){return x.consequence&&x.consequence.good;});
   if(c.consequence&&c.consequence.good)return true;if(any)return false;if(n.gate)return c.correct!==false;return null;}
-function cutP(x,n){x=String(x||'').replace(/\s+/g,' ').trim();if(x.length<=n)return x;var c=x.slice(0,n),i=c.lastIndexOf('. ');
+function cutP(x,n){x=String(x||'').replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g,'$1').replace(/(^|[^A-Za-z0-9_])__(\S(?:[^\n]*?\S)?)__(?![A-Za-z0-9_])/g,'$1$2').replace(/\s+/g,' ').trim();if(x.length<=n)return x;var c=x.slice(0,n),i=c.lastIndexOf('. ');
   return i>50?c.slice(0,i+1):c.replace(/\s\S*$/,'')+' ...';}
 function pathOf(s,r){var nodes=s.nodes||{},seen={},grp=[],out=[];
   (r.log||[]).forEach(function(l){var k=l.n+'|'+l.k;if(!(k in seen)){seen[k]=grp.length;grp.push({l:null,tried:[]});}

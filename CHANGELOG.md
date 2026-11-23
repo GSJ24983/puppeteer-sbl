@@ -4,6 +4,7 @@ The Studio's version shows in its header, beside the title. Every exported scena
 
 ## v0.3 - 19 Nov 2026
 
+- **Text formatting (23 Nov).** Narrative, consequence, lesson, prompt, question and verdict text take `**bold**`, `__underline__`, `- ` bullets and `1. ` numbering, shown formatted to learners and in their report. Plain places drop the marks; everything else is still escaped.
 - **Two editions.** This public Studio is now the **trainee edition**: it builds scenarios and trainee files and has a Learner result tab that reads one learner's result and draws their path. The trainer view, trainer export, class dashboard, sample class and projection mode are in a private trainer edition built from the same source. The trainee engine never shows trainer notes, tags or the model answer button, whatever view a file is built with.
 - **Trainee and trainer views.** Export the same scenario twice. The trainer file shows, on every option, whether it is the expert move or the trap and what choosing it reveals about the learner's thinking (`reveals`), plus debrief notes (`trainerNote`) on any screen. The trainee file strips `reveals`, `trainerNote` and `redFlags` from the data, not just the screen.
 - **Briefing and Rubric buttons** replace the `i` and `e` keys, so it works on a phone.

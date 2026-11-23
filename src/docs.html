@@ -128,6 +128,16 @@
 <h2>Line breaks</h2>
 <p>A <code>\n</code> inside any text field - narrative, consequence, lesson, prompt, verdict, the Briefing panel, trainer notes - shows as a line break, and <code>\n\n</code> as a blank line between paragraphs. Long lines still wrap. Use it for pointers and short paragraphs on long screens.</p>
 
+<h2>Formatting<span class="new">v0.3</span></h2>
+<p>Learner-facing text - narrative, consequence, lesson, prompt, question, verdict and the Briefing panel - takes four marks. Everything else stays plain.</p>
+<ul>
+<li><code>**words**</code> - <b>bold</b>. Use it for one phrase a screen, not a sentence.</li>
+<li><code>__words__</code> - underline. Drawn in text colour so it is not mistaken for a link. Underscores inside a word (<code>file_name</code>) are left alone.</li>
+<li>A line starting <code>- </code> - a bullet. Consecutive bullet lines, even with a blank line between them, make one list.</li>
+<li>A line starting <code>1. </code> - a numbered list. Numbering starts from the first number you write.</li>
+</ul>
+<p>Option labels, keywords, model answers, trainer notes and learners' own answers stay plain. The session summary, WhatsApp message and dashboard excerpts drop the marks.</p>
+
 <h2>Endings</h2>
 <pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",
  "verdict":"what actually happened",
