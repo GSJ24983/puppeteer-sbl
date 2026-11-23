@@ -918,6 +918,9 @@ function tnoteHTML(n){return isTrainer()&&n&&n.trainerNote?'<div class="tnote"><
 function choiceGood(n,c){var any=(n.choices||[]).some(function(x){return x.consequence&&x.consequence.good;});
   if(c.consequence&&c.consequence.good)return true;if(any)return false;if(n.gate)return c.correct!==false;return null;}
 /* trainer view: the consequence screen repeats what the option reveals and its notes, so a trainer who jumps in (or previews one option) still sees them */
+/* debrief rows: [label, text] pairs the author writes, on any page - endings had them first */
+function revHTML(rows){var r=(rows||[]).filter(function(p){return p&&(p[0]||p[1]);});
+  return r.length?'<ul class="revealed">'+r.map(function(p){return '<li><span>'+esc(p[0])+'</span><span>'+esc(p[1])+'</span></li>';}).join('')+'</ul>':'';}
 function cqNote(c){var cq=c.consequence||{};return [c.reveals?'This choice reveals: '+c.reveals:'',c.trainerNote||'',cq.trainerNote||''].filter(Boolean).join('\n\n');}
 function tsubChoice(n,c){if(!isTrainer())return '';var g=choiceGood(n,c);
   var tag=g===true?'<span class="tg good">Expert move</span>':g===false?'<span class="tg trap">Trap</span>':'';
@@ -967,7 +970,7 @@ function remember(label,text){
 }
 function renderNarrative(n){
   remember(n.title||n.eyebrow||'Earlier',withBlocks(n,n.text));
-  stageOut(n,blocksHTML(n,'top')+(n.text?'<div class="stext narr">'+fmt(n.text)+'</div>':'')+blocksHTML(n,'bottom')+mediaHTML(n.media)+
+  stageOut(n,blocksHTML(n,'top')+(n.text?'<div class="stext narr">'+fmt(n.text)+'</div>':'')+blocksHTML(n,'bottom')+revHTML(n.revealed)+mediaHTML(n.media)+
     '<button class="cont" id="go">Continue &rarr;</button>');
   document.getElementById('go').addEventListener('click',function(){goTo(n.to);});
 }
@@ -1006,7 +1009,7 @@ function choose(n,nodeId,i){
   remember(cq.title||'What happened',withBlocks(cq,cq.text));
   stageOut({scene:cq.scene||n.scene,sceneImg:cq.sceneImg||(cq.scene?'':n.sceneImg),title:cq.title,eyebrow:cq.eyebrow,trainerNote:cqNote(c)},
     blocksHTML(cq,'top')+'<div class="stext">'+fmt(cq.text)+'</div>'+blocksHTML(cq,'bottom')+
-    (cq.lesson?'<div class="lesson'+(cq.good?' good':'')+'"><b>'+(cq.good?'Why this worked':'What this cost you')+'</b>'+fmt(cq.lesson)+'</div>':'')+
+    (cq.lesson?'<div class="lesson'+(cq.good?' good':'')+'"><b>'+(cq.good?'Why this worked':'What this cost you')+'</b>'+fmt(cq.lesson)+'</div>':'')+revHTML(cq.revealed)+
     '<button class="cont" id="go">Continue &rarr;</button>');
   document.getElementById('go').addEventListener('click',function(){goTo(c.to||n.to);});
 }
@@ -1054,7 +1057,7 @@ function renderMulti(n,nodeId){
     if(hasWhy&&!ok)body=missW.length&&extraW.length?'You missed some that matter and picked some that do not. Each one is below, with why.':
       missW.length?'You missed '+(missW.length===1?'one that matters':missW.length+' that matter')+'. Each one is below, with why.':
       'You picked '+(extraW.length===1?'one that does not belong':extraW.length+' that do not belong')+'. Each one is below, with why.';
-    fb.innerHTML='<div class="lesson'+(ok?' good':'')+'" style="margin-top:16px"><b>'+esc(head)+'</b>'+esc(body)+'</div>'+breakdown+
+    fb.innerHTML='<div class="lesson'+(ok?' good':'')+'" style="margin-top:16px"><b>'+esc(head)+'</b>'+esc(body)+'</div>'+breakdown+revHTML(n.revealed)+
       '<button class="cont" id="go">Continue &rarr;</button>';
     document.getElementById('sub').disabled=true;
     Array.prototype.forEach.call(stageEl.querySelectorAll('.opt input'),function(cb){cb.disabled=true;});
@@ -1162,7 +1165,7 @@ function revealGrade(n,nodeId,txt){
   }
   var box=document.getElementById('fb').querySelector('.aibox');
   box.innerHTML='<div class="alab"><span class="scorepill'+(pass?' full':'')+'">'+res.score+' / '+total+'</span>'+
-    'Rubric evaluation</div><div class="aifb">'+fb+'</div>'+
+    'Rubric evaluation</div><div class="aifb">'+fb+'</div>'+((pass||!left)?revHTML(n.revealed):'')+
     '<div class="linkrow">'+
     (pass?'<button class="primary" id="go" style="margin-top:0">See how it lands</button>':
      left?'<button class="primary" id="retry" style="margin-top:0">Improve my answer</button><button class="linkbtn" id="go">Submit as is</button>':
