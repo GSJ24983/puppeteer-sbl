@@ -351,6 +351,10 @@ textarea:focus{border-color:var(--lav);outline:none}
 .moral{font-family:var(--serif);font-size:23px;font-style:italic;color:var(--gold);margin:0 0 14px;max-width:60ch}
 /* authored line breaks (\n in the JSON) show as line breaks; long lines still wrap */
 .stext,.lesson,.prompt,.vpq,.moral,.aifb,.ctx .bit,.revealed li span:last-child{white-space:pre-line}
+.fl{margin:6px 0 14px;padding-left:24px;white-space:normal}.fl li{margin:5px 0;padding-left:2px}
+ol.fl li::marker{font-weight:600;color:var(--mute)}ul.fl li::marker{color:var(--coral)}
+u.ul{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px;color:inherit}
+strong{font-weight:700;color:var(--ink)}
 /* visual blocks: post, people, image - drawn from the theme tokens, no files needed */
 figure.blk{max-width:680px;margin:0 0 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px 16px}
 .b-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--deep);flex:none}
@@ -561,6 +565,23 @@ var S={sc:null,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:
 
 function el(h){var d=document.createElement('div');d.innerHTML=h.trim();return d.firstChild;}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+/* authored formatting: **bold**, __underline__, '- ' bullets, '1. ' numbering. Escaped first, so nothing else becomes HTML */
+function inl(s){return esc(s).replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g,'<strong>$1</strong>')
+  .replace(/(^|[^A-Za-z0-9_])__(\S(?:[^\n]*?\S)?)__(?![A-Za-z0-9_])/g,'$1<u class="ul">$2</u>');}
+function plainTxt(s){return String(s==null?'':s).replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g,'$1').replace(/(^|[^A-Za-z0-9_])__(\S(?:[^\n]*?\S)?)__(?![A-Za-z0-9_])/g,'$1$2');}
+var BUL=/^\s*[-•]\s+(.*)$/,NUM=/^\s*(\d+)[.)]\s+(.*)$/;
+function fmt(s){var L=String(s==null?'':s).split('\n'),parts=[],cur=null,txt=[],m,i,j;
+  var endText=function(){if(txt.length){parts.push({t:txt.join('\n')});txt=[];}};
+  for(i=0;i<L.length;i++){var ln=L[i];
+    if((m=ln.match(BUL))){endText();if(!cur||cur.k!=='ul'){cur={k:'ul',items:[]};parts.push(cur);}cur.items.push(m[1]);continue;}
+    if((m=ln.match(NUM))){endText();if(!cur||cur.k!=='ol'){cur={k:'ol',start:+m[1],items:[]};parts.push(cur);}cur.items.push(m[2]);continue;}
+    if(!ln.trim()&&cur){for(j=i+1;j<L.length&&!L[j].trim();j++);
+      if(j<L.length&&(cur.k==='ul'?BUL:NUM).test(L[j])){i=j-1;continue;}}
+    cur=null;txt.push(ln);}
+  endText();
+  return parts.map(function(p){if(p.t!==undefined)return inl(p.t.replace(/^\n+|\n+$/g,''));
+    return '<'+p.k+' class="fl"'+(p.k==='ol'&&p.start!==1?' start="'+p.start+'"':'')+'>'+
+      p.items.map(function(x){return '<li>'+inl(x)+'</li>';}).join('')+'</'+p.k+'>';}).join('');}
 function scenarios(){return DATA.scenarios||[];}
 function byId(id){var a=scenarios(),i;for(i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null;}
 
@@ -667,7 +688,7 @@ function contextBits(n){
 function ctxHTML(n){
   var bits=contextBits(n);
   return '<div class="ctx hidden" id="ctxPanel"><h4>Where you are</h4>'+
-    bits.map(function(b){return '<p class="bit"><b>'+esc(b.label)+'</b>'+esc(b.text)+'</p>';}).join('')+'</div>';
+    bits.map(function(b){return '<div class="bit"><b>'+esc(b.label)+'</b>'+fmt(b.text)+'</div>';}).join('')+'</div>';
 }
 function wireAff(n){
   var bar=stageEl.querySelector('.aff');if(!bar)return;
@@ -715,7 +736,7 @@ function blockHTML(b){
   if(b.type==='post'){var r=b.reply||{};
     return '<figure class="blk post"><div class="b-h"><span class="b-av" style="background:'+AVC[0]+'">'+esc(initials(b.author))+'</span><span><b>'+esc(b.author||'')+'</b>'+
       (b.handle?'<span class="b-hd">'+esc(b.handle)+'</span>':'')+(b.meta?'<span class="b-hd">'+esc(b.meta)+'</span>':'')+'</span></div>'+
-      (b.text?'<p class="b-t">'+esc(b.text)+'</p>':'')+
+      (b.text?'<p class="b-t">'+inl(b.text)+'</p>':'')+
       (r.text?'<div class="b-shot"><div class="b-sl">'+esc(r.from||'Reply')+'</div><p>'+esc(r.text)+'</p>'+(r.link?'<span class="b-lk">'+esc(r.link)+'</span>':'')+'</div>':'')+
       (b.after?'<p class="b-t">'+esc(b.after)+'</p>':'')+(b.stats?'<div class="b-st">'+esc(b.stats)+'</div>':'')+'</figure>';}
   if(b.type==='people')
@@ -747,7 +768,7 @@ function remember(label,text){
 }
 function renderNarrative(n){
   remember(n.title||n.eyebrow||'Earlier',withBlocks(n,n.text));
-  stageOut(n,blocksHTML(n,'top')+(n.text?'<p class="stext narr">'+esc(n.text)+'</p>':'')+blocksHTML(n,'bottom')+mediaHTML(n.media)+
+  stageOut(n,blocksHTML(n,'top')+(n.text?'<div class="stext narr">'+fmt(n.text)+'</div>':'')+blocksHTML(n,'bottom')+mediaHTML(n.media)+
     '<button class="cont" id="go">Continue &rarr;</button>');
   document.getElementById('go').addEventListener('click',function(){goTo(n.to);});
 }
@@ -755,7 +776,7 @@ function renderNarrative(n){
 /* choice */
 function renderChoice(n,nodeId){
   var dis=S.disabled[nodeId]||[];
-  var body='<div class="phead"><p class="prompt">'+esc(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
+  var body='<div class="phead"><p class="prompt">'+inl(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
     ctxHTML(n)+mediaHTML(n.media)+'<div class="choices">'+
     n.choices.map(function(c,i){
       return '<button class="choice" data-i="'+i+'"'+(dis.indexOf(i)>-1?' disabled':'')+'>'+
@@ -776,7 +797,7 @@ function choose(n,nodeId,i){
     S.disabled[nodeId]=(S.disabled[nodeId]||[]).concat([i]);
     renderChoice(n,nodeId);
     var p=stageEl.querySelector('.choices');
-    p.parentNode.insertBefore(el('<div class="lesson"><b>Not yet</b>'+esc(c.lesson||c.note||'')+'</div>'),p);
+    p.parentNode.insertBefore(el('<div class="lesson"><b>Not yet</b>'+fmt(c.lesson||c.note||'')+'</div>'),p);
     return;
   }
   if(typeof n.step==='number'&&c.chip)S.chips[n.step]=c.chip;
@@ -785,15 +806,15 @@ function choose(n,nodeId,i){
   S.inCq={node:nodeId,log:logBefore,chips:chipsBefore};navState();
   remember(cq.title||'What happened',withBlocks(cq,cq.text));
   stageOut({scene:cq.scene||n.scene,sceneImg:cq.sceneImg||(cq.scene?'':n.sceneImg),title:cq.title,eyebrow:cq.eyebrow,trainerNote:cq.trainerNote},
-    blocksHTML(cq,'top')+'<p class="stext">'+esc(cq.text)+'</p>'+blocksHTML(cq,'bottom')+
-    (cq.lesson?'<div class="lesson'+(cq.good?' good':'')+'"><b>'+(cq.good?'Why this worked':'What this cost you')+'</b>'+esc(cq.lesson)+'</div>':'')+
+    blocksHTML(cq,'top')+'<div class="stext">'+fmt(cq.text)+'</div>'+blocksHTML(cq,'bottom')+
+    (cq.lesson?'<div class="lesson'+(cq.good?' good':'')+'"><b>'+(cq.good?'Why this worked':'What this cost you')+'</b>'+fmt(cq.lesson)+'</div>':'')+
     '<button class="cont" id="go">Continue &rarr;</button>');
   document.getElementById('go').addEventListener('click',function(){goTo(c.to||n.to);});
 }
 
 /* multi-select, rules-based */
 function renderMulti(n,nodeId){
-  var body='<div class="phead"><p class="prompt">'+esc(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
+  var body='<div class="phead"><p class="prompt">'+inl(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
     ctxHTML(n)+mediaHTML(n.media)+
     '<div id="opts">'+n.options.map(function(o,i){
       return '<label class="opt"><input type="checkbox" value="'+i+'"><span>'+esc(o.label)+
@@ -875,8 +896,8 @@ function renderEvaluate(n,nodeId){
   var tries=S.tries[nodeId]||0,max=maxTries(n);
   S.drafts=S.drafts||{};
   var ask=n.speaker
-    ? '<div class="vpq"><b>'+esc(n.speaker)+'</b>&ldquo;'+esc(n.question||n.prompt)+'&rdquo;</div>'
-    : '<p class="prompt">'+esc(n.question||n.prompt)+'</p>';
+    ? '<div class="vpq"><b>'+esc(n.speaker)+'</b>&ldquo;'+inl(n.question||n.prompt)+'&rdquo;</div>'
+    : '<p class="prompt">'+inl(n.question||n.prompt)+'</p>';
   var head=n.speaker
     ? '<div class="phead"><span style="flex:1"></span>'+affBar(n,n.criteria.length)+'</div>'+ask
     : '<div class="phead">'+ask+affBar(n,n.criteria.length)+'</div>';
@@ -970,8 +991,8 @@ function showEnding(key,e){
     return '<li><span>'+esc(p[0])+'</span><span>'+esc(p[1])+'</span></li>';}).join('');
   stageOut(e,
     ctxHTML(e)+
-    (e.moral?'<p class="moral">'+esc(e.moral)+'</p>':'')+
-    blocksHTML(e,'top')+'<p class="stext">'+esc(e.verdict||'')+'</p>'+blocksHTML(e,'bottom')+
+    (e.moral?'<p class="moral">'+inl(e.moral)+'</p>':'')+
+    blocksHTML(e,'top')+'<div class="stext">'+fmt(e.verdict||'')+'</div>'+blocksHTML(e,'bottom')+
     (rev?'<ul class="revealed">'+rev+'</ul>':'')+
     mediaHTML(e.media)+
     '<details class="pathbox"><summary>See your path - every decision and what it led to</summary>'+pathHTML(key,e)+'</details>'+
@@ -1091,12 +1112,12 @@ function goodIdx(n){var r=-1;(n.choices||[]).forEach(function(c,i){if(r<0&&choic
 function pathHTML(endKey,e){var s=byId(S.sc),out=[];
   pathGroups().forEach(function(x,gi){var n=x.n,l=x.l,head='<div class="pk">'+esc(stepLabel(s,n,gi))+'</div>';
     if(x.kind==='choice'){var c=n.choices[l.i]||{},g=choiceGood(n,c),cq=c.consequence||{};
-      out.push('<div class="pn">'+head+'<div class="pq">'+esc(cut(n.prompt,140))+'</div><div class="po">'+
+      out.push('<div class="pn">'+head+'<div class="pq">'+esc(cut(plainTxt(n.prompt),140))+'</div><div class="po">'+
         n.choices.map(function(o,i){var k=esc(o.k||String.fromCharCode(65+i)),t=esc(o.tag||o.chip||cut(o.label,40));
           if(i===l.i)return '<span class="pc on '+(g===true?'good':g===false?'trap':'')+'">'+k+' · '+t+'</span>';
           if(x.tried.indexOf(i)>-1)return '<span class="pc tried">'+k+' · '+t+'</span>';
           return '<span class="pc">'+k+' · '+t+'</span>';}).join('')+'</div></div>');
-      if(cq.text){out.push('<div class="pa"></div><div class="pcq '+(cq.good?'good':g===false?'trap':'')+'"><b>'+esc(cq.title||'What happened')+'</b>'+esc(cut(cq.text,170))+'</div>');}}
+      if(cq.text){out.push('<div class="pa"></div><div class="pcq '+(cq.good?'good':g===false?'trap':'')+'"><b>'+esc(cq.title||'What happened')+'</b>'+esc(cut(plainTxt(cq.text),170))+'</div>');}}
     if(x.kind==='multi'){var need=n.correct||[],sel=l.sel||[];
       out.push('<div class="pn">'+head+'<div class="pq">You noticed '+esc(l.score)+' of what mattered</div><div class="po">'+
         (n.options||[]).map(function(o,i){var p=sel.indexOf(i)>-1,m=need.indexOf(i)>-1,t=esc(cut(o.label,46));
@@ -1111,18 +1132,18 @@ function pathHTML(endKey,e){var s=byId(S.sc),out=[];
 function reportHTML(endKey,e,name){var s=byId(S.sc),sec=[];
   pathGroups().forEach(function(x,gi){var n=x.n,l=x.l,h='<h3>'+esc(stepLabel(s,n,gi))+'</h3>';
     if(x.kind==='choice'){var c=n.choices[l.i]||{},cq=c.consequence||{},g=choiceGood(n,c),gi2=goodIdx(n);
-      sec.push(h+(n.prompt?'<p class="sit">'+esc(n.prompt)+'</p>':'')+
+      sec.push(h+(n.prompt?'<div class="sit">'+fmt(n.prompt)+'</div>':'')+
         (x.tried.length?'<p><b>You first tried:</b> '+esc(x.tried.map(function(i){return n.choices[i].label;}).join('; '))+'</p>':'')+
         '<p><b>You chose:</b> '+esc(c.label)+'</p>'+
-        (cq.text?'<div class="cq '+(cq.good?'good':g===false?'trap':'')+'"><b>What happened</b><p>'+esc(cq.text)+'</p>'+
-          (cq.lesson?'<b>'+(cq.good?'Why this worked':'What this cost you')+'</b><p>'+esc(cq.lesson)+'</p>':'')+'</div>':'')+
+        (cq.text?'<div class="cq '+(cq.good?'good':g===false?'trap':'')+'"><b>What happened</b><div class="tx">'+fmt(cq.text)+'</div>'+
+          (cq.lesson?'<b>'+(cq.good?'Why this worked':'What this cost you')+'</b><div class="tx">'+fmt(cq.lesson)+'</div>':'')+'</div>':'')+
         (g===false&&gi2>-1?'<p class="alt"><b>The stronger move:</b> '+esc(n.choices[gi2].label)+'</p>':''));}
     if(x.kind==='multi'){var need=n.correct||[],sel=l.sel||[];
-      sec.push(h+(n.prompt?'<p class="sit">'+esc(n.prompt)+'</p>':'')+'<ul class="ms">'+(n.options||[]).map(function(o,i){
+      sec.push(h+(n.prompt?'<div class="sit">'+fmt(n.prompt)+'</div>':'')+'<ul class="ms">'+(n.options||[]).map(function(o,i){
         var p=sel.indexOf(i)>-1,m=need.indexOf(i)>-1,mark=p&&m?'&#10003; You picked it, and it mattered':p?'&#10007; You picked it, but it did not matter':m?'&#9675; You missed this one':'Left out, rightly';
         return '<li><b>'+esc(o.label)+'</b><br><span class="mk">'+mark+'</span>'+(o.why?'<br>'+esc(o.why):'')+'</li>';}).join('')+'</ul>');}
     if(x.kind==='written'){var met=l.met||[],miss=[];
-      sec.push(h+(n.question?'<p class="sit">'+(n.speaker?'<b>'+esc(n.speaker)+':</b> ':'')+esc(n.question)+'</p>':n.prompt?'<p class="sit">'+esc(n.prompt)+'</p>':'')+
+      sec.push(h+(n.question?'<div class="sit">'+(n.speaker?'<b>'+esc(n.speaker)+':</b> ':'')+inl(n.question)+'</div>':n.prompt?'<div class="sit">'+fmt(n.prompt)+'</div>':'')+
         '<p><b>What you wrote</b></p><blockquote>'+esc(l.answer||'')+'</blockquote><ul class="ms">'+
         (n.criteria||[]).map(function(c,i){if(!met[i]&&c.coach)miss.push(c.coach);
           return '<li>'+(met[i]?'&#10003; ':'&#9675; ')+esc(c.label)+'</li>';}).join('')+'</ul>'+
@@ -1134,7 +1155,7 @@ function reportHTML(endKey,e,name){var s=byId(S.sc),sec=[];
     'h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:30px 0 10px;border-bottom:1px solid #CFDDEC;padding-bottom:6px}h3{font-size:16px;margin:24px 0 6px}'+
     '.m{color:#5C7288;margin:0 0 6px}.sit{color:#22364F;background:#F4F8FC;border-radius:8px;padding:10px 12px;white-space:pre-line}'+
     '.cq{border-left:4px solid #6B6F8A;padding:6px 14px;margin:10px 0;background:#FAFBFD}.cq.good{border-left-color:#0E7C6B}.cq.trap{border-left-color:#E4613F}'+
-    '.cq p{margin:2px 0 8px;white-space:pre-line}.alt{color:#0E7C6B}blockquote{margin:6px 0;padding:8px 14px;border-left:3px solid #CFDDEC;white-space:pre-line;color:#22364F}'+
+    '.cq p,.tx{margin:2px 0 8px;white-space:pre-line}.fl{white-space:normal;margin:6px 0 10px;padding-left:22px}u.ul{text-underline-offset:3px}.alt{color:#0E7C6B}blockquote{margin:6px 0;padding:8px 14px;border-left:3px solid #CFDDEC;white-space:pre-line;color:#22364F}'+
     '.ms{padding-left:18px}.ms li{margin:6px 0}.mk{font-size:13px;color:#5C7288}details{margin:10px 0}summary{cursor:pointer;font-weight:600}'+
     '.e{border:2px solid #10233B;border-radius:10px;padding:10px 16px;margin:20px 0}.e p{white-space:pre-line}'+
     '@media print{.pth .pa{height:12px}}'+PATHCSS;
@@ -1144,7 +1165,7 @@ function reportHTML(endKey,e,name){var s=byId(S.sc),sec=[];
     (anchorOf(s)?'<p class="m">'+esc(anchorOf(s))+(s.behaviour?' - '+esc(s.behaviour):'')+'</p>':'')+
     '<h2>Your path</h2>'+pathHTML(endKey,e)+'<h2>Step by step</h2>'+sec.join('')+
     '<h2>How it ended</h2><div class="e"><b>'+esc((e&&e.title)||endKey)+'</b>'+(e&&e.moral?'<p><i>'+esc(e.moral)+'</i></p>':'')+
-    '<p>'+esc((e&&e.verdict)||'')+'</p>'+(rev?'<ul>'+rev+'</ul>':'')+'</div></body></html>';}
+    '<div class="tx">'+fmt((e&&e.verdict)||'')+'</div>'+(rev?'<ul>'+rev+'</ul>':'')+'</div></body></html>';}
 
 renderHub();
 <\/script>
@@ -1654,6 +1675,16 @@ renderHub();
 <h2>Line breaks</h2>
 <p>A <code>\n</code> inside any text field - narrative, consequence, lesson, prompt, verdict, the Briefing panel, trainer notes - shows as a line break, and <code>\n\n</code> as a blank line between paragraphs. Long lines still wrap. Use it for pointers and short paragraphs on long screens.</p>
 
+<h2>Formatting<span class="new">v0.3</span></h2>
+<p>Learner-facing text - narrative, consequence, lesson, prompt, question, verdict and the Briefing panel - takes four marks. Everything else stays plain.</p>
+<ul>
+<li><code>**words**</code> - <b>bold</b>. Use it for one phrase a screen, not a sentence.</li>
+<li><code>__words__</code> - underline. Drawn in text colour so it is not mistaken for a link. Underscores inside a word (<code>file_name</code>) are left alone.</li>
+<li>A line starting <code>- </code> - a bullet. Consecutive bullet lines, even with a blank line between them, make one list.</li>
+<li>A line starting <code>1. </code> - a numbered list. Numbering starts from the first number you write.</li>
+</ul>
+<p>Option labels, keywords, model answers, trainer notes and learners' own answers stay plain. The session summary, WhatsApp message and dashboard excerpts drop the marks.</p>
+
 <h2>Endings</h2>
 <pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",
  "verdict":"what actually happened",
@@ -1704,7 +1735,7 @@ var srcEl=document.getElementById('src'),errEl=document.getElementById('err'),ti
 var VIEWMODE='trainee';
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function short(t,n){t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'…':t;}
+function short(t,n){t=String(t||'').replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g,'$1').replace(/(^|[^A-Za-z0-9_])__(\S(?:[^\n]*?\S)?)__(?![A-Za-z0-9_])/g,'$1$2').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'…':t;}
 function pct(a,b){return b?Math.round(a/b*100):0;}
 
 function engineSrc(){
@@ -1889,7 +1920,7 @@ function parseResults(txt){var out=[],seen={},m,re=/PUP2:([A-Za-z0-9_-]+)/g;
 function curDeck(){try{return JSON.parse(srcEl.value);}catch(x){return null;}}
 function choiceGood(n,c){var any=(n.choices||[]).some(function(x){return x.consequence&&x.consequence.good;});
   if(c.consequence&&c.consequence.good)return true;if(any)return false;if(n.gate)return c.correct!==false;return null;}
-function cutP(x,n){x=String(x||'').replace(/\s+/g,' ').trim();if(x.length<=n)return x;var c=x.slice(0,n),i=c.lastIndexOf('. ');
+function cutP(x,n){x=String(x||'').replace(/\*\*(\S(?:[^\n]*?\S)?)\*\*/g,'$1').replace(/(^|[^A-Za-z0-9_])__(\S(?:[^\n]*?\S)?)__(?![A-Za-z0-9_])/g,'$1$2').replace(/\s+/g,' ').trim();if(x.length<=n)return x;var c=x.slice(0,n),i=c.lastIndexOf('. ');
   return i>50?c.slice(0,i+1):c.replace(/\s\S*$/,'')+' ...';}
 function pathOf(s,r){var nodes=s.nodes||{},seen={},grp=[],out=[];
   (r.log||[]).forEach(function(l){var k=l.n+'|'+l.k;if(!(k in seen)){seen[k]=grp.length;grp.push({l:null,tried:[]});}

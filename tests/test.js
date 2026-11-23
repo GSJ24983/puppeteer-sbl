@@ -335,6 +335,17 @@ ok(ad.querySelector('#stage .scene.img img')&&ad.querySelector('#stage .scene.im
 delete an.brief.sceneImg;aw.DATA.scenarios[0].hideArt=true;aw.start('signoff');
 ok(!ad.querySelector('#stage .scene'),'hideArt removes built-in art on every screen');
 
+/* ---- formatting: bold, underline, bullets, numbering; everything else escaped ---- */
+{const fw=load(DEMO).window,fd=fw.document,fn=fw.DATA.scenarios[0].nodes;
+ fn.brief.text='Plain **bold words** and __under line__ and file_name_here stay.\n\nPoints:\n- one\n\n- two\n1. first\n2. second\n<img src=x onerror=alert(1)>';
+ fw.start('signoff');fd.getElementById('go').click();const st=fd.querySelector('.stext');
+ ok(st.querySelector('strong')&&st.querySelector('strong').textContent==='bold words','**text** renders bold');
+ ok(st.querySelector('u.ul')&&st.querySelector('u.ul').textContent==='under line','__text__ renders underlined');
+ ok(st.textContent.includes('file_name_here'),'underscores inside a word are left alone');
+ ok(st.querySelectorAll('ul.fl li').length===2,'dash lines become one bulleted list, even with a blank line between');
+ ok(st.querySelectorAll('ol.fl li').length===2,'numbered lines become a numbered list');
+ ok(!st.querySelector('img')&&st.textContent.includes('<img'),'HTML typed into text stays text');
+ ok(fw.plainTxt('a **b** __c__')==='a b c','plain text drops the marks');}
 /* ---- trainee edition: no trainer parts; the result tab reads one learner ---- */
 const dw=load(STUDIO).window,dd=dw.document;
 ['btnExportR','vseg','btnProj','btnSampleRes'].forEach(id=>ok(!dd.getElementById(id),'trainee edition has no '+id));
