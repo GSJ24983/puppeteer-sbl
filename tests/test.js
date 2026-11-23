@@ -346,6 +346,9 @@ ok(!ad.querySelector('#stage .scene'),'hideArt removes built-in art on every scr
  ok(st.querySelectorAll('ol.fl li').length===2,'numbered lines become a numbered list');
  ok(!st.querySelector('img')&&st.textContent.includes('<img'),'HTML typed into text stays text');
  ok(fw.plainTxt('a **b** __c__')==='a b c','plain text drops the marks');}
+{const pw=load(DEMO).window,pd=pw.document,pn=pw.DATA.scenarios[0].nodes;
+ pn.n1.prompt='Pick one:\n- **ship** it\n- hold it';pw.start('signoff');pw.goTo('n1');
+ ok(pd.querySelectorAll('.prompt ul.fl li').length===2&&pd.querySelector('.prompt strong'),'decision prompts take lists and bold');}
 /* ---- trainee edition: no trainer parts; the result tab reads one learner ---- */
 const dw=load(STUDIO).window,dd=dw.document;
 ['btnExportR','vseg','btnProj','btnSampleRes'].forEach(id=>ok(!dd.getElementById(id),'trainee edition has no '+id));
