@@ -931,7 +931,7 @@ function blockHTML(b){
   if(b.type==='post'){var r=b.reply||{};
     return '<figure class="blk post"><div class="b-h"><span class="b-av" style="background:'+AVC[0]+'">'+esc(initials(b.author))+'</span><span><b>'+esc(b.author||'')+'</b>'+
       (b.handle?'<span class="b-hd">'+esc(b.handle)+'</span>':'')+(b.meta?'<span class="b-hd">'+esc(b.meta)+'</span>':'')+'</span></div>'+
-      (b.text?'<p class="b-t">'+inl(b.text)+'</p>':'')+
+      (b.text?'<div class="b-t">'+fmt(b.text)+'</div>':'')+
       (r.text?'<div class="b-shot"><div class="b-sl">'+esc(r.from||'Reply')+'</div><p>'+esc(r.text)+'</p>'+(r.link?'<span class="b-lk">'+esc(r.link)+'</span>':'')+'</div>':'')+
       (b.after?'<p class="b-t">'+esc(b.after)+'</p>':'')+(b.stats?'<div class="b-st">'+esc(b.stats)+'</div>':'')+'</figure>';}
   if(b.type==='people')
@@ -971,7 +971,7 @@ function renderNarrative(n){
 /* choice */
 function renderChoice(n,nodeId){
   var dis=S.disabled[nodeId]||[];
-  var body='<div class="phead"><p class="prompt">'+inl(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
+  var body='<div class="phead"><div class="prompt">'+fmt(n.prompt)+'</div>'+affBar(n,0)+'</div>'+
     ctxHTML(n)+mediaHTML(n.media)+'<div class="choices">'+
     n.choices.map(function(c,i){
       return '<button class="choice" data-i="'+i+'"'+(dis.indexOf(i)>-1?' disabled':'')+'>'+
@@ -1009,7 +1009,7 @@ function choose(n,nodeId,i){
 
 /* multi-select, rules-based */
 function renderMulti(n,nodeId){
-  var body='<div class="phead"><p class="prompt">'+inl(n.prompt)+'</p>'+affBar(n,0)+'</div>'+
+  var body='<div class="phead"><div class="prompt">'+fmt(n.prompt)+'</div>'+affBar(n,0)+'</div>'+
     ctxHTML(n)+mediaHTML(n.media)+
     '<div id="opts">'+n.options.map(function(o,i){
       return '<label class="opt"><input type="checkbox" value="'+i+'"><span>'+esc(o.label)+
@@ -1091,8 +1091,8 @@ function renderEvaluate(n,nodeId){
   var tries=S.tries[nodeId]||0,max=maxTries(n);
   S.drafts=S.drafts||{};
   var ask=n.speaker
-    ? '<div class="vpq"><b>'+esc(n.speaker)+'</b>&ldquo;'+inl(n.question||n.prompt)+'&rdquo;</div>'
-    : '<p class="prompt">'+inl(n.question||n.prompt)+'</p>';
+    ? '<div class="vpq"><b>'+esc(n.speaker)+'</b>&ldquo;'+fmt(n.question||n.prompt)+'&rdquo;</div>'
+    : '<div class="prompt">'+fmt(n.question||n.prompt)+'</div>';
   var head=n.speaker
     ? '<div class="phead"><span style="flex:1"></span>'+affBar(n,n.criteria.length)+'</div>'+ask
     : '<div class="phead">'+ask+affBar(n,n.criteria.length)+'</div>';
@@ -1338,7 +1338,7 @@ function reportHTML(endKey,e,name){var s=byId(S.sc),sec=[];
         var p=sel.indexOf(i)>-1,m=need.indexOf(i)>-1,mark=p&&m?'&#10003; You picked it, and it mattered':p?'&#10007; You picked it, but it did not matter':m?'&#9675; You missed this one':'Left out, rightly';
         return '<li><b>'+esc(o.label)+'</b><br><span class="mk">'+mark+'</span>'+(o.why?'<br>'+esc(o.why):'')+'</li>';}).join('')+'</ul>');}
     if(x.kind==='written'){var met=l.met||[],miss=[];
-      sec.push(h+(n.question?'<div class="sit">'+(n.speaker?'<b>'+esc(n.speaker)+':</b> ':'')+inl(n.question)+'</div>':n.prompt?'<div class="sit">'+fmt(n.prompt)+'</div>':'')+
+      sec.push(h+(n.question?'<div class="sit">'+(n.speaker?'<b>'+esc(n.speaker)+':</b> ':'')+fmt(n.question)+'</div>':n.prompt?'<div class="sit">'+fmt(n.prompt)+'</div>':'')+
         '<p><b>What you wrote</b></p><blockquote>'+esc(l.answer||'')+'</blockquote><ul class="ms">'+
         (n.criteria||[]).map(function(c,i){if(!met[i]&&c.coach)miss.push(c.coach);
           return '<li>'+(met[i]?'&#10003; ':'&#9675; ')+esc(c.label)+'</li>';}).join('')+'</ul>'+
