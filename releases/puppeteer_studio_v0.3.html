@@ -244,6 +244,12 @@ ol.steps li:last-child:after{display:none}
 ol.steps li.done{color:var(--lav)}
 ol.steps li.done:before{background:var(--teal);border-color:var(--teal)}
 ol.steps li.now{color:var(--ink);font-weight:600}
+/* trainer view: steps jump, Back goes to the previous screen */
+ol.steps.jump li{cursor:pointer;border-radius:6px}
+ol.steps.jump li:hover{color:var(--ink)}
+ol.steps.jump li:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.navback{display:block;margin:4px 0 10px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13.5px;cursor:pointer;font-family:inherit}
+.navback:disabled{opacity:.45;cursor:default}
 ol.steps li.now:before{background:var(--coral);border-color:var(--coral);box-shadow:0 0 0 4px rgba(255,107,74,.18)}
 .chip{display:inline-block;margin-left:7px;font-size:11px;font-weight:500;color:var(--deep);
   background:var(--lav);border-radius:99px;padding:1px 7px;vertical-align:1px}
@@ -456,6 +462,7 @@ figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
       <h2 class="railTitle" id="railTitle"></h2>
       <p class="railKicker" id="railKicker"></p>
       <ol class="steps" id="steps"></ol>
+      <button class="navback hidden" id="navBack" title="Previous screen (trainer view)">&larr; Back</button>
       <button class="backlink" id="backBtn">&larr; All scenarios</button>
     </aside>
     <main class="stage" id="stage"></main>
@@ -579,6 +586,9 @@ function backToHub(){
   playerEl.classList.add('hidden');hubEl.classList.remove('hidden');window.scrollTo(0,0);
 }
 document.getElementById('backBtn').addEventListener('click',backToHub);
+document.getElementById('navBack').addEventListener('click',goBack);
+stepsEl.addEventListener('click',function(e){var li=e.target.closest&&e.target.closest('li[data-step]');if(li)jumpStep(+li.getAttribute('data-step'));});
+stepsEl.addEventListener('keydown',function(e){var li=e.target.closest&&e.target.closest('li[data-step]');if(li&&(e.key==='Enter'||e.key===' ')){e.preventDefault();jumpStep(+li.getAttribute('data-step'));}});
 
 /* Swanubhava tagging: 'anchor' (preferred) or the older 'competency' field; the pillar is derived from the anchor unless given */
 var PILLAR_OF={'acts with integrity under pressure':'Individual posture',"embodies a learner's mindset":'Individual posture',
@@ -589,7 +599,7 @@ function pillarOf(s){return s.pillar||PILLAR_OF[String(anchorOf(s)).trim().toLow
 /* ---------------------------- run ---------------------------- */
 function start(id){
   var s=byId(id);if(!s)return;
-  S={sc:id,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{}};
+  S={sc:id,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{},hist:[],here:null,inCq:null};
   document.getElementById('railTitle').textContent=s.title;
   document.getElementById('railKicker').textContent=
     anchorOf(s)?(anchorOf(s)+(s.kicker?' - '+s.kicker:'')):(s.kicker||'');
@@ -605,11 +615,29 @@ function renderSteps(){
   (s.steps||[]).forEach(function(label,i){
     var cls=i<cur?'done':(i===cur?'now':'');
     var chip=S.chips[i]?'<span class="chip">'+esc(S.chips[i])+'</span>':'';
-    stepsEl.appendChild(el('<li class="'+cls+'">'+esc(label)+chip+'</li>'));
+    stepsEl.appendChild(el('<li class="'+cls+'"'+(isTrainer()?' data-step="'+i+'" tabindex="0" title="Jump to this step"':'')+'>'+esc(label)+chip+'</li>'));
   });
+  stepsEl.classList.toggle('jump',isTrainer());navState();
 }
+/* trainer navigation: remember each screen so Back can return to it, and let a step jump straight to its first screen */
+function remember2(){if(S.here)S.hist.push({id:S.here,log:S.hereLog||0,chips:S.hereChips||{}});}
+function navState(){var b=document.getElementById('navBack');if(!b)return;b.classList.toggle('hidden',!isTrainer());
+  b.disabled=!(S.inCq||(S.hist&&S.hist.length));}
+function goBack(){if(!isTrainer())return;
+  if(S.inCq){var c=S.inCq;S.log.length=c.log;S.chips=c.chips;S.inCq=null;S.here=null;S.navigating=1;goTo(c.node);S.navigating=0;return;}
+  var p=S.hist.pop();if(!p)return;S.log.length=p.log;S.chips=p.chips;if(S.tries)S.tries[p.id]=0;if(S.disabled)S.disabled[p.id]=[];
+  S.here=null;S.navigating=1;goTo(p.id);S.navigating=0;}
+function firstOfStep(i){var s=byId(S.sc),nodes=s.nodes||{},ends=s.endings||{},seen={},q=[s.start],hit=null;
+  while(q.length&&!hit){var id=q.shift();if(seen[id])continue;seen[id]=1;var n=nodes[id]||ends[id];if(!n)continue;
+    if(n.step===i){hit=id;break;}
+    [n.to,n.toPass,n.toFail].concat((n.choices||[]).map(function(c){return c.to||n.to;})).forEach(function(x){if(x&&!seen[x])q.push(x);});}
+  if(!hit)Object.keys(nodes).concat(Object.keys(ends)).forEach(function(k){var n=nodes[k]||ends[k];if(!hit&&n.step===i)hit=k;});
+  return hit;}
+function jumpStep(i){if(!isTrainer())return;var id=firstOfStep(i);if(!id)return;S.inCq=null;goTo(id);}
 function goTo(nodeId){
   var s=byId(S.sc),n=(s.nodes||{})[nodeId];
+  if(!S.navigating&&S.here!==nodeId)remember2();
+  if(S.here!==nodeId||S.navigating){S.hereLog=S.log.length;S.hereChips=JSON.parse(JSON.stringify(S.chips||{}));}S.here=nodeId;S.inCq=null;
   if(!n){ var e=(s.endings||{})[nodeId]; if(e){return showEnding(nodeId,e);} 
     stageEl.innerHTML='<p class="stext">Missing node: '+esc(nodeId)+'</p>';return;}
   S.node=nodeId;S.ending=null;renderSteps();
@@ -740,6 +768,7 @@ function renderChoice(n,nodeId){
   });
 }
 function choose(n,nodeId,i){
+  var logBefore=S.log.length,chipsBefore=JSON.parse(JSON.stringify(S.chips||{}));
   var c=n.choices[i];
   S.log.push({node:nodeId,kind:'choice',i:i,pick:c.k||String.fromCharCode(65+i),
     label:c.label,tag:c.tag||c.label,gated:!!(n.gate&&c.correct===false)});
@@ -753,6 +782,7 @@ function choose(n,nodeId,i){
   if(typeof n.step==='number'&&c.chip)S.chips[n.step]=c.chip;
   var cq=c.consequence;
   if(!cq)return goTo(c.to||n.to);
+  S.inCq={node:nodeId,log:logBefore,chips:chipsBefore};navState();
   remember(cq.title||'What happened',withBlocks(cq,cq.text));
   stageOut({scene:cq.scene||n.scene,sceneImg:cq.sceneImg||(cq.scene?'':n.sceneImg),title:cq.title,eyebrow:cq.eyebrow,trainerNote:cq.trainerNote},
     blocksHTML(cq,'top')+'<p class="stext">'+esc(cq.text)+'</p>'+blocksHTML(cq,'bottom')+
