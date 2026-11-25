@@ -61,7 +61,9 @@ ok(d.querySelector('.stitle').textContent.includes('nowhere to hide'),'routed to
 ok(!d.getElementById('code'),'v0.3: no separate session summary box on the ending');
 ok(!!d.querySelector('.send #lname'),'v0.3: send-to-trainer box on the ending');
 ok(!!d.querySelector('.pathbox .pth .pend'),'v0.3: folded path diagram on the ending');
-const sent=decodeURIComponent(d.getElementById('sendWa').getAttribute('href').split('text=')[1]);
+ok(!d.getElementById('sendWa'),'v0.4: no WhatsApp button');
+ok(d.getElementById('sendGmail').getAttribute('href').startsWith('https://mail.google.com/mail/?view=cm'),'v0.5: Send with Gmail opens web compose');
+const sent=decodeURIComponent(d.getElementById('sendMail').getAttribute('href').split('body=')[1]);
 const sum=sent.split('\n');
 ok(/PUP2:[A-Za-z0-9_-]+/.test(sent),'v0.3: the message carries a PUP2 result code');
 const rep=w.reportHTML('good',w.S.ending,'Test');
@@ -176,17 +178,13 @@ doc.querySelectorAll('.choice')[1].click();doc.getElementById('go').click(); // 
 ok(doc.querySelector('[data-aff="i"]'),'i button on multi node');
 [0,1,3].forEach(i=>{doc.querySelectorAll('.opt input')[i].checked=true;});
 doc.getElementById('sub').click();doc.getElementById('go').click();          // evaluate
-ok(doc.getElementById('eBtn'),'e button on evaluate node');
-ok(doc.getElementById('rub').classList.contains('folded'),'rubric collapsed by default');
+ok(!doc.getElementById('eBtn'),'v0.5: no Rubric button for learners');
+ok(doc.getElementById('rub').classList.contains('folded'),'rubric hidden for learners');
 doc.querySelector('[data-aff="i"]').click();
 ok(doc.getElementById('ctxPanel').textContent.includes('example does the work'),'context carries the consequence the learner earned');
-doc.getElementById('eBtn').click();
-ok(!doc.getElementById('rub').classList.contains('folded'),'e expands the rubric');
-doc.getElementById('eBtn').click();
-ok(doc.getElementById('rub').classList.contains('folded'),'e collapses again');
 doc.getElementById('ans').value="When a refund is approved the system sends an SMS. If the customer has no mobile number on file it falls back to email, and ops owns the decision.";
 doc.getElementById('sub').click();
-ok(doc.getElementById('rlab').textContent.startsWith('3 of 3'),'score shown on the collapsed rubric label');
+ok(doc.getElementById('rlab').textContent==='3 of 3 criteria met','v0.5: learner sees the score, no Rubric hint');
 ok(doc.querySelectorAll('.crit.met').length===3,'ticks set even while collapsed');
 doc.getElementById('go').click();
 ok(doc.querySelector('[data-aff="i"]'),'i button on the hold-the-line choice');

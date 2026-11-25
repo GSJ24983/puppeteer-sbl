@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="generator" content="Puppeteer engine v0.3">
+<meta name="generator" content="Puppeteer engine v0.5">
 <title>The Puppeteer - The Requirement That Wasn't</title>
 <style>
 :root{
@@ -274,7 +274,7 @@ figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
       <rect x="24.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 28 24.5)" fill="#F2C14E"/>
     </svg>
     <h1 id="deckTitle">The Puppeteer</h1>
-    <span class="sub" title="Puppeteer engine v0.3">Learn by deciding</span>
+    <span class="sub" title="Puppeteer engine v0.5">Learn by deciding</span>
     <button class="themeBtn" id="themeBtn" title="Switch theme" aria-label="Switch theme">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9">
         <circle cx="12" cy="12" r="4.4"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
@@ -304,8 +304,7 @@ figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
 var DATA = {
  "deckTitle": "The Puppeteer",
  "sendTo": {
-  "whatsapp": "",
-  "email": ""
+  "email": "swanubhava.by.gsj@gmail.com"
  },
  "scenarios": [
   {
@@ -674,6 +673,7 @@ var DATA = {
  ]
 };
 var VIEW = /*__VIEW__*/'trainee'/*__VIEWEND__*/;  /* 'trainer' shows trap/expert tags, reveals and trainer notes */
+var DEFAULT_EMAIL = 'swanubhava.by.gsj@gmail.com';  /* v0.4: where 'Send by email' goes when the deck sets no sendTo.email */
 
 /* ---------------------------- scene library ---------------------------- */
 var C={indigo:'var(--indigo)',deep:'var(--deep)',surf:'var(--surface)',surf2:'var(--surf2)',
@@ -817,7 +817,7 @@ function pillarOf(s){return s.pillar||PILLAR_OF[String(anchorOf(s)).trim().toLow
 /* ---------------------------- run ---------------------------- */
 function start(id){
   var s=byId(id);if(!s)return;
-  S={sc:id,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{},hist:[],here:null,inCq:null};
+  S={sc:id,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{},hist:[],here:null,inCq:null,seed:Math.floor(Math.random()*1e6)};
   document.getElementById('railTitle').textContent=s.title;
   document.getElementById('railKicker').textContent=
     anchorOf(s)?(anchorOf(s)+(s.kicker?' - '+s.kicker:'')):(s.kicker||'');
@@ -1081,7 +1081,7 @@ function joinCoach(a){
   if(a.length===1)return a[0];
   return a.slice(0,-1).join('; ')+'; and '+a[a.length-1];
 }
-/* redFlags: a talking point for the facilitator. Shown inside the folded rubric (press e), never graded. */
+/* redFlags: a talking point for the facilitator. Shown inside the folded rubric (Rubric button, trainer view), never graded. */
 function redFlagsOf(n){
   var r=n.redFlags;if(!r)return null;
   if(Array.isArray(r))r={phrases:r};
@@ -1094,18 +1094,21 @@ function redLineHTML(n){
 }
 function maxTries(n){var m=parseInt(n.tries||DATA.tries||3,10);return m>0?m:3;}
 function renderEvaluate(n,nodeId){
-  var expand=n.showRubric===true||isTrainer();
+  /* v0.5: the Rubric button is trainer-only, and the rubric starts folded so the trainer chooses when to reveal it.
+     showRubric:true (a rubric-teaching scenario) shows it to everyone, open. */
+  var rubBtn=isTrainer()||n.showRubric===true,expand=n.showRubric===true;
+  var tapTxt=rubBtn?' - tap Rubric to show them':'';
   var tries=S.tries[nodeId]||0,max=maxTries(n);
   S.drafts=S.drafts||{};
   var ask=n.speaker
     ? '<div class="vpq"><b>'+esc(n.speaker)+'</b>&ldquo;'+fmt(n.question||n.prompt)+'&rdquo;</div>'
     : '<div class="prompt">'+fmt(n.question||n.prompt)+'</div>';
   var head=n.speaker
-    ? '<div class="phead"><span style="flex:1"></span>'+affBar(n,n.criteria.length)+'</div>'+ask
-    : '<div class="phead">'+ask+affBar(n,n.criteria.length)+'</div>';
+    ? '<div class="phead"><span style="flex:1"></span>'+affBar(n,rubBtn?n.criteria.length:0)+'</div>'+ask
+    : '<div class="phead">'+ask+affBar(n,rubBtn?n.criteria.length:0)+'</div>';
   var body=head+ctxHTML(n)+mediaHTML(n.media)+
     '<textarea id="ans" placeholder="'+esc(n.placeholder||'Write your answer. Two or three sentences is enough.')+'">'+esc(S.drafts[nodeId]||'')+'</textarea>'+
-    '<div class="rubwrap"><div class="rlab" id="rlab">'+n.criteria.length+' criteria - tap Rubric to show them</div>'+
+    '<div class="rubwrap"><div class="rlab" id="rlab">'+(rubBtn?n.criteria.length+' criteria'+tapTxt:'Graded against '+n.criteria.length+' criteria')+'</div>'+
     '<div class="rubric'+(expand?'':' folded')+'" id="rub">'+n.criteria.map(function(c){
       return '<div class="crit"><span class="mk"></span><span>'+esc(c.label)+'</span></div>';}).join('')+redLineHTML(n)+'</div></div>'+
     '<div class="linkrow"><button class="primary" id="sub" style="margin-top:0">Submit for grading'+(max>1?' (attempt '+(tries+1)+' of '+max+')':'')+'</button>'+
@@ -1115,7 +1118,7 @@ function renderEvaluate(n,nodeId){
   wireAff(n);
   if(expand){var eb=document.getElementById('eBtn');if(eb)eb.classList.add('on');}
   if(tries)document.getElementById('rlab').textContent=
-    'Attempt '+(tries+1)+' of '+max+' - '+n.criteria.length+' criteria, tap Rubric to show them';
+    'Attempt '+(tries+1)+' of '+max+' - '+n.criteria.length+' criteria'+(rubBtn?', tap Rubric to show them':'');
 
   var mb=document.getElementById('modelBtn');
   if(mb)mb.addEventListener('click',function(){
@@ -1153,7 +1156,7 @@ function revealGrade(n,nodeId,txt){
   var tries=S.tries[nodeId],left=Math.max(0,maxTries(n)-tries),miss=total-res.score;
   if(typeof n.step==='number')S.chips[n.step]=res.score+'/'+total;
   document.getElementById('rlab').textContent=
-    res.score+' of '+total+' criteria met - tap Rubric to see which';
+    res.score+' of '+total+' criteria met'+((isTrainer()||n.showRubric===true)?' - tap Rubric to see which':'');
 
   var fb;
   if(pass){fb=n.passNote||'Every criterion covered.';}
@@ -1198,7 +1201,7 @@ function showEnding(key,e){
     (rev?'<ul class="revealed">'+rev+'</ul>':'')+
     mediaHTML(e.media)+
     '<details class="pathbox"><summary>See your path - every decision and what it led to</summary>'+pathHTML(key,e)+'</details>'+
-    sendHTML()+
+    cardHTML()+sendHTML()+
     '<button class="ghost" id="again" style="margin-left:0">Run it again</button>',null,affBar(e,0));
   wireAff(e);wireSend(key,e);
   document.getElementById('again').addEventListener('click',function(){start(S.sc);});
@@ -1243,7 +1246,7 @@ function sessionSummary(endKey,e){
 /* ---------------------------- v0.3: send to trainer ---------------------------- */
 function b64(s){try{return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}catch(x){return '';}}
 function resultObj(endKey,name){var s=byId(S.sc);
-  return {v:2,s:s.id,t:s.title,n:name||'',at:new Date().toISOString(),end:endKey,
+  return {v:2,s:s.id,t:s.title,n:name||'',at:new Date().toISOString(),end:endKey,r:S.seed,
     log:S.log.map(function(l){
       if(l.kind==='choice')return {k:'c',n:l.node,i:l.i,g:l.gated?1:0};
       if(l.kind==='multi')return {k:'m',n:l.node,sel:l.sel||[]};
@@ -1252,27 +1255,65 @@ function resultObj(endKey,name){var s=byId(S.sc);
       return null;}).filter(Boolean)};}
 function resultCode(endKey,name){return 'PUP2:'+b64(JSON.stringify(resultObj(endKey,name)));}
 function savedName(){try{return localStorage.getItem('pup-name')||'';}catch(x){return '';}}
-function sendHTML(){var to=DATA.sendTo||{};
+function sendEmail(){var to=DATA.sendTo||{};return String(to.email||'').trim()||DEFAULT_EMAIL;}
+function sendHTML(){
   return '<div class="send"><h3>Send your result to your trainer</h3>'+
     '<p>Your trainer sees your choices and what you wrote. In class, answers are shown without names.</p>'+
     '<label for="lname">Your name</label><input id="lname" autocomplete="given-name" value="'+esc(savedName()).replace(/"/g,'&quot;')+'">'+
-    '<div class="row"><a class="sbtn" id="sendWa" target="_blank" rel="noopener" href="#">Send on WhatsApp</a>'+
-    '<a class="sbtn alt" id="sendMail" href="#">Send by email</a>'+
+    '<p class="sm" id="consent">By sending this, you agree that Gaurav Joshi sees your name, choices and written answers to give you feedback. Your name is optional.</p>'+
+    '<div class="row"><a class="sbtn" id="sendGmail" href="#" target="_blank" rel="noopener">Send with Gmail</a>'+
+    '<a class="sbtn alt" id="sendOutlook" href="#" target="_blank" rel="noopener">Send with Outlook</a>'+
+    '<a class="sbtn alt" id="sendMail" href="#">Mail app</a>'+
     '<button class="sbtn alt" id="sendCopy">Copy result</button>'+
     '<button class="sbtn alt" id="saveRep">Save my report</button></div>'+
-    '<p class="sm" style="margin-top:8px">The report has your path as a diagram, what each choice led to, and why.</p>'+
-    (to.whatsapp||to.email?'':'<p class="sm">Your trainer will tell you where to send it.</p>')+'</div>';}
-function sendText(endKey,e,name){return sessionSummary(endKey,e)+'\n\nResult code for your trainer:\n'+resultCode(endKey,name);}
+    '<p class="sm" style="margin-top:8px">Email goes to '+esc(sendEmail())+'. Gmail and Outlook open in your browser with the email written for you; your result is copied as well, so if the email comes up empty, paste it in. Nothing works? Tap Copy result and send it however you like.</p>'+
+    '<p class="sm">The report has your path as a diagram, what each choice led to, and why.</p></div>';}
+function sendText(endKey,e,name){var c=cardCode(endKey,name);
+  return sessionSummary(endKey,e)+'\n\nResult code for your trainer:\n'+resultCode(endKey,name)+(c?'\n\nYour persona card code:\n'+c:'');}
+/* ---------------------------- v0.5: persona card ----------------------------
+   Indicative bands from this run, for the public card page. The card code carries the scenario, the anchor number,
+   the bands and the learner's name (they can switch it off on the card page) - never their choices or written answers. */
+var CARD_URL='https://gsj24983.github.io/swanubhava-play/card.html';
+var ANCHOR_NO={'acts with integrity under pressure':1,"embodies a learner's mindset":2,'strives for clarity and outcomes':3,
+ 'builds trust and psychological safety':4,'stays present and grounded under ambiguity':5,'listens beyond the ask to uncover the need':6,
+ 'challenges assumptions, reframes and holds a point of view':7,'converts insight into owned outcomes':8};
+function bandOf(f){return f==null?null:f>=0.85?4:f>=0.6?3:f>=0.35?2:1;}
+function cardData(){var s=byId(S.sc),no=ANCHOR_NO[String(anchorOf(s)).trim().toLowerCase()];if(!no)return null;
+  var nodes=s.nodes||{},first={},dec=[],notc=[],say=[];
+  S.log.forEach(function(l){if(l.kind==='choice'&&!(l.node in first))first[l.node]=l;});
+  Object.keys(first).forEach(function(k){var n=nodes[k],c=n&&n.choices&&n.choices[first[k].i];if(!c)return;var g=choiceGood(n,c);if(g!==null)dec.push(g?1:0);});
+  S.log.forEach(function(l){var n=nodes[l.node];if(!n)return;
+    if(l.kind==='multi'){var need=n.correct||[],sel=l.sel||[],hit=0,ex=0;sel.forEach(function(i){need.indexOf(i)>-1?hit++:ex++;});
+      if(need.length)notc.push(Math.max(0,Math.min(1,(hit-ex)/need.length)));}
+    if(l.kind==='written'){var m=l.met||[];if(m.length)say.push(m.filter(Boolean).length/m.length);}});
+  var avg=function(a){return a.length?a.reduce(function(x,y){return x+y;},0)/a.length:null;};
+  var fn=avg(notc),fd=avg(dec),fw=avg(say),all=[fn,fd,fw].filter(function(x){return x!=null;});
+  if(!all.length)return null;
+  return {v:1,s:s.id,t:s.title,a:no,b:[bandOf(fn),bandOf(fd),bandOf(fw)],o:bandOf(avg(all)),r:S.seed||0,d:new Date().toISOString().slice(0,10)};}
+function cardCode(endKey,name){var c=cardData();if(!c)return '';c.n=name||'';return 'CARD1:'+b64(JSON.stringify(c));}
+function cardUrl(name){var c=cardCode(null,name);return c?(DATA.cardUrl||CARD_URL)+'#c='+c.slice(6):'';}
+function cardHTML(){if(!cardData())return '';
+  return '<div class="send pcard"><h3>Make your persona card</h3>'+
+    '<p>See which Swanubhava&trade; persona this run brought out, and share the card if you like. It shows your name, the scenario and indicative bands - never your answers. You can take your name off on the card page.</p>'+
+    '<div class="row"><a class="sbtn" id="cardGo" href="#" target="_blank" rel="noopener">Make my persona card</a></div>'+
+    '<p class="sm"><b>Send your result to your trainer below for your full Swanubhava Revelation.</b></p></div>';}
 function copyText(t,done){var fb=function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
     try{document.execCommand('copy');}catch(x){}document.body.removeChild(ta);done();};
   try{if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,fb);else fb();}catch(x){fb();}}
-function wireSend(endKey,e){var to=DATA.sendTo||{},inp=document.getElementById('lname');if(!inp)return;
+function wireSend(endKey,e){var inp=document.getElementById('lname');if(!inp)return;
   function upd(){var nm=inp.value.trim();try{localStorage.setItem('pup-name',nm);}catch(x){}
-    var t=sendText(endKey,e,nm),wa=String(to.whatsapp||'').replace(/[^0-9]/g,'');
-    document.getElementById('sendWa').href='https://wa.me/'+wa+'?text='+encodeURIComponent(t);
-    document.getElementById('sendMail').href='mailto:'+encodeURIComponent(to.email||'')+'?subject='+
-      encodeURIComponent('Puppeteer result - '+byId(S.sc).title+(nm?' - '+nm:''))+'&body='+encodeURIComponent(t);}
+    var t=sendText(endKey,e,nm);
+    /* v0.5: mailto needs a mail app set as the default, and on many laptops there is none (the browser then asks
+       which app to open, and a browser opens blank). Gmail and Outlook on the web need only a browser. */
+    var to=encodeURIComponent(sendEmail()),su=encodeURIComponent('Puppeteer result - '+byId(S.sc).title+(nm?' - '+nm:'')),bo=encodeURIComponent(t);
+    document.getElementById('sendGmail').href='https://mail.google.com/mail/?view=cm&fs=1&to='+to+'&su='+su+'&body='+bo;
+    document.getElementById('sendOutlook').href='https://outlook.office.com/mail/deeplink/compose?to='+to+'&subject='+su+'&body='+bo;
+    document.getElementById('sendMail').href='mailto:'+to+'?subject='+su+'&body='+bo;
+    var cg=document.getElementById('cardGo');if(cg)cg.href=cardUrl(nm);}
   inp.addEventListener('input',upd);upd();
+  /* every send also copies the result, so a mail page that drops a long body is one paste away */
+  ['sendGmail','sendOutlook','sendMail'].forEach(function(id){document.getElementById(id).addEventListener('click',function(){
+    copyText(sendText(endKey,e,inp.value.trim()),function(){var c=document.getElementById('sendCopy');if(c)c.textContent='Copied too';});});});
   document.getElementById('sendCopy').addEventListener('click',function(){var b=this;
     copyText(sendText(endKey,e,inp.value.trim()),function(){b.textContent='Copied';});});
   document.getElementById('saveRep').addEventListener('click',function(){var b=this;

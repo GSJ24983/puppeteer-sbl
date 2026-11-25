@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Puppeteer Studio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,500&family=Instrument+Sans:wght@400;600;700&display=swap">
 <style>
 :root{
   --indigo:#201A3E;--deep:#15112B;--surface:#2B2456;--surf2:#352C68;--coral:#FF6B4A;
@@ -134,7 +135,7 @@ table.lt{width:100%;border-collapse:collapse;font-size:13px}
     <rect x="24.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 28 24.5)" fill="#F2C14E"/>
   </svg>
   <h1>Puppeteer Studio</h1>
-  <span class="st" title="Studio and engine version">v0.3</span>
+  <span class="st" title="Studio and engine version">v0.5</span>
   <span class="st" title="Builds scenarios and trainee files, and reads one learner's result. The trainer edition is separate.">trainee edition</span>
   <span class="st" id="status">ready</span>
   <span class="sp"></span>
@@ -163,10 +164,12 @@ table.lt{width:100%;border-collapse:collapse;font-size:13px}
     </div>
     <div class="rpane on" id="r-pv"><div class="frameWrap"><iframe id="frame" title="Preview"></iframe></div></div>
     <div class="rpane" id="r-db"><div class="dash">
-      <textarea id="resIn" spellcheck="false" placeholder="Paste one learner's message - a whole WhatsApp or email message is fine. The first PUP2: result code in it is read."></textarea>
+      <textarea id="resIn" spellcheck="false" placeholder="Paste one learner's message - a whole email or pasted message is fine. The first PUP2: result code in it is read."></textarea>
       <div class="drow">
         <button class="btn go" id="btnDash">Show result</button>
         <button class="btn" id="btnClear">Clear</button>
+        <button class="btn" id="btnOpenFile" title="Pick a scenario file you exported - from the builder or this Studio. Its scenario joins the JSON on the left.">Open scenario file</button>
+        <input type="file" id="fileIn" accept=".html,.htm,.json" multiple hidden>
         <span class="dnote" id="dashCount"></span>
       </div>
       <div id="dashOut"></div>
@@ -179,7 +182,7 @@ table.lt{width:100%;border-collapse:collapse;font-size:13px}
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="generator" content="Puppeteer engine v0.3">
+<meta name="generator" content="Puppeteer engine v0.5">
 <title>__DECK_TITLE__</title>
 <style>
 :root{
@@ -450,7 +453,7 @@ figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
       <rect x="24.5" y="21" width="7" height="7" rx="1.4" transform="rotate(45 28 24.5)" fill="#F2C14E"/>
     </svg>
     <h1 id="deckTitle">The Puppeteer</h1>
-    <span class="sub" title="Puppeteer engine v0.3">Learn by deciding</span>
+    <span class="sub" title="Puppeteer engine v0.5">Learn by deciding</span>
     <button class="themeBtn" id="themeBtn" title="Switch theme" aria-label="Switch theme">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9">
         <circle cx="12" cy="12" r="4.4"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
@@ -479,6 +482,7 @@ figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
    ===================================================================== */
 var DATA = /*__SCENARIO_JSON__*/ {"deckTitle":"The Puppeteer","scenarios":[]} /*__END__*/;
 var VIEW = /*__VIEW__*/'trainee'/*__VIEWEND__*/;  /* 'trainer' shows trap/expert tags, reveals and trainer notes */
+var DEFAULT_EMAIL = 'swanubhava.by.gsj@gmail.com';  /* v0.4: where 'Send by email' goes when the deck sets no sendTo.email */
 
 /* ---------------------------- scene library ---------------------------- */
 var C={indigo:'var(--indigo)',deep:'var(--deep)',surf:'var(--surface)',surf2:'var(--surf2)',
@@ -622,7 +626,7 @@ function pillarOf(s){return s.pillar||PILLAR_OF[String(anchorOf(s)).trim().toLow
 /* ---------------------------- run ---------------------------- */
 function start(id){
   var s=byId(id);if(!s)return;
-  S={sc:id,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{},hist:[],here:null,inCq:null};
+  S={sc:id,node:null,chips:{},log:[],disabled:{},ending:null,story:[],tries:{},hist:[],here:null,inCq:null,seed:Math.floor(Math.random()*1e6)};
   document.getElementById('railTitle').textContent=s.title;
   document.getElementById('railKicker').textContent=
     anchorOf(s)?(anchorOf(s)+(s.kicker?' - '+s.kicker:'')):(s.kicker||'');
@@ -886,7 +890,7 @@ function joinCoach(a){
   if(a.length===1)return a[0];
   return a.slice(0,-1).join('; ')+'; and '+a[a.length-1];
 }
-/* redFlags: a talking point for the facilitator. Shown inside the folded rubric (press e), never graded. */
+/* redFlags: a talking point for the facilitator. Shown inside the folded rubric (Rubric button, trainer view), never graded. */
 function redFlagsOf(n){
   var r=n.redFlags;if(!r)return null;
   if(Array.isArray(r))r={phrases:r};
@@ -899,18 +903,21 @@ function redLineHTML(n){
 }
 function maxTries(n){var m=parseInt(n.tries||DATA.tries||3,10);return m>0?m:3;}
 function renderEvaluate(n,nodeId){
-  var expand=n.showRubric===true||isTrainer();
+  /* v0.5: the Rubric button is trainer-only, and the rubric starts folded so the trainer chooses when to reveal it.
+     showRubric:true (a rubric-teaching scenario) shows it to everyone, open. */
+  var rubBtn=isTrainer()||n.showRubric===true,expand=n.showRubric===true;
+  var tapTxt=rubBtn?' - tap Rubric to show them':'';
   var tries=S.tries[nodeId]||0,max=maxTries(n);
   S.drafts=S.drafts||{};
   var ask=n.speaker
     ? '<div class="vpq"><b>'+esc(n.speaker)+'</b>&ldquo;'+fmt(n.question||n.prompt)+'&rdquo;</div>'
     : '<div class="prompt">'+fmt(n.question||n.prompt)+'</div>';
   var head=n.speaker
-    ? '<div class="phead"><span style="flex:1"></span>'+affBar(n,n.criteria.length)+'</div>'+ask
-    : '<div class="phead">'+ask+affBar(n,n.criteria.length)+'</div>';
+    ? '<div class="phead"><span style="flex:1"></span>'+affBar(n,rubBtn?n.criteria.length:0)+'</div>'+ask
+    : '<div class="phead">'+ask+affBar(n,rubBtn?n.criteria.length:0)+'</div>';
   var body=head+ctxHTML(n)+mediaHTML(n.media)+
     '<textarea id="ans" placeholder="'+esc(n.placeholder||'Write your answer. Two or three sentences is enough.')+'">'+esc(S.drafts[nodeId]||'')+'</textarea>'+
-    '<div class="rubwrap"><div class="rlab" id="rlab">'+n.criteria.length+' criteria - tap Rubric to show them</div>'+
+    '<div class="rubwrap"><div class="rlab" id="rlab">'+(rubBtn?n.criteria.length+' criteria'+tapTxt:'Graded against '+n.criteria.length+' criteria')+'</div>'+
     '<div class="rubric'+(expand?'':' folded')+'" id="rub">'+n.criteria.map(function(c){
       return '<div class="crit"><span class="mk"></span><span>'+esc(c.label)+'</span></div>';}).join('')+redLineHTML(n)+'</div></div>'+
     '<div class="linkrow"><button class="primary" id="sub" style="margin-top:0">Submit for grading'+(max>1?' (attempt '+(tries+1)+' of '+max+')':'')+'</button>'+
@@ -920,7 +927,7 @@ function renderEvaluate(n,nodeId){
   wireAff(n);
   if(expand){var eb=document.getElementById('eBtn');if(eb)eb.classList.add('on');}
   if(tries)document.getElementById('rlab').textContent=
-    'Attempt '+(tries+1)+' of '+max+' - '+n.criteria.length+' criteria, tap Rubric to show them';
+    'Attempt '+(tries+1)+' of '+max+' - '+n.criteria.length+' criteria'+(rubBtn?', tap Rubric to show them':'');
 
   var mb=document.getElementById('modelBtn');
   if(mb)mb.addEventListener('click',function(){
@@ -958,7 +965,7 @@ function revealGrade(n,nodeId,txt){
   var tries=S.tries[nodeId],left=Math.max(0,maxTries(n)-tries),miss=total-res.score;
   if(typeof n.step==='number')S.chips[n.step]=res.score+'/'+total;
   document.getElementById('rlab').textContent=
-    res.score+' of '+total+' criteria met - tap Rubric to see which';
+    res.score+' of '+total+' criteria met'+((isTrainer()||n.showRubric===true)?' - tap Rubric to see which':'');
 
   var fb;
   if(pass){fb=n.passNote||'Every criterion covered.';}
@@ -1003,7 +1010,7 @@ function showEnding(key,e){
     (rev?'<ul class="revealed">'+rev+'</ul>':'')+
     mediaHTML(e.media)+
     '<details class="pathbox"><summary>See your path - every decision and what it led to</summary>'+pathHTML(key,e)+'</details>'+
-    sendHTML()+
+    cardHTML()+sendHTML()+
     '<button class="ghost" id="again" style="margin-left:0">Run it again</button>',null,affBar(e,0));
   wireAff(e);wireSend(key,e);
   document.getElementById('again').addEventListener('click',function(){start(S.sc);});
@@ -1048,7 +1055,7 @@ function sessionSummary(endKey,e){
 /* ---------------------------- v0.3: send to trainer ---------------------------- */
 function b64(s){try{return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}catch(x){return '';}}
 function resultObj(endKey,name){var s=byId(S.sc);
-  return {v:2,s:s.id,t:s.title,n:name||'',at:new Date().toISOString(),end:endKey,
+  return {v:2,s:s.id,t:s.title,n:name||'',at:new Date().toISOString(),end:endKey,r:S.seed,
     log:S.log.map(function(l){
       if(l.kind==='choice')return {k:'c',n:l.node,i:l.i,g:l.gated?1:0};
       if(l.kind==='multi')return {k:'m',n:l.node,sel:l.sel||[]};
@@ -1057,27 +1064,65 @@ function resultObj(endKey,name){var s=byId(S.sc);
       return null;}).filter(Boolean)};}
 function resultCode(endKey,name){return 'PUP2:'+b64(JSON.stringify(resultObj(endKey,name)));}
 function savedName(){try{return localStorage.getItem('pup-name')||'';}catch(x){return '';}}
-function sendHTML(){var to=DATA.sendTo||{};
+function sendEmail(){var to=DATA.sendTo||{};return String(to.email||'').trim()||DEFAULT_EMAIL;}
+function sendHTML(){
   return '<div class="send"><h3>Send your result to your trainer</h3>'+
     '<p>Your trainer sees your choices and what you wrote. In class, answers are shown without names.</p>'+
     '<label for="lname">Your name</label><input id="lname" autocomplete="given-name" value="'+esc(savedName()).replace(/"/g,'&quot;')+'">'+
-    '<div class="row"><a class="sbtn" id="sendWa" target="_blank" rel="noopener" href="#">Send on WhatsApp</a>'+
-    '<a class="sbtn alt" id="sendMail" href="#">Send by email</a>'+
+    '<p class="sm" id="consent">By sending this, you agree that Gaurav Joshi sees your name, choices and written answers to give you feedback. Your name is optional.</p>'+
+    '<div class="row"><a class="sbtn" id="sendGmail" href="#" target="_blank" rel="noopener">Send with Gmail</a>'+
+    '<a class="sbtn alt" id="sendOutlook" href="#" target="_blank" rel="noopener">Send with Outlook</a>'+
+    '<a class="sbtn alt" id="sendMail" href="#">Mail app</a>'+
     '<button class="sbtn alt" id="sendCopy">Copy result</button>'+
     '<button class="sbtn alt" id="saveRep">Save my report</button></div>'+
-    '<p class="sm" style="margin-top:8px">The report has your path as a diagram, what each choice led to, and why.</p>'+
-    (to.whatsapp||to.email?'':'<p class="sm">Your trainer will tell you where to send it.</p>')+'</div>';}
-function sendText(endKey,e,name){return sessionSummary(endKey,e)+'\n\nResult code for your trainer:\n'+resultCode(endKey,name);}
+    '<p class="sm" style="margin-top:8px">Email goes to '+esc(sendEmail())+'. Gmail and Outlook open in your browser with the email written for you; your result is copied as well, so if the email comes up empty, paste it in. Nothing works? Tap Copy result and send it however you like.</p>'+
+    '<p class="sm">The report has your path as a diagram, what each choice led to, and why.</p></div>';}
+function sendText(endKey,e,name){var c=cardCode(endKey,name);
+  return sessionSummary(endKey,e)+'\n\nResult code for your trainer:\n'+resultCode(endKey,name)+(c?'\n\nYour persona card code:\n'+c:'');}
+/* ---------------------------- v0.5: persona card ----------------------------
+   Indicative bands from this run, for the public card page. The card code carries the scenario, the anchor number,
+   the bands and the learner's name (they can switch it off on the card page) - never their choices or written answers. */
+var CARD_URL='https://gsj24983.github.io/swanubhava-play/card.html';
+var ANCHOR_NO={'acts with integrity under pressure':1,"embodies a learner's mindset":2,'strives for clarity and outcomes':3,
+ 'builds trust and psychological safety':4,'stays present and grounded under ambiguity':5,'listens beyond the ask to uncover the need':6,
+ 'challenges assumptions, reframes and holds a point of view':7,'converts insight into owned outcomes':8};
+function bandOf(f){return f==null?null:f>=0.85?4:f>=0.6?3:f>=0.35?2:1;}
+function cardData(){var s=byId(S.sc),no=ANCHOR_NO[String(anchorOf(s)).trim().toLowerCase()];if(!no)return null;
+  var nodes=s.nodes||{},first={},dec=[],notc=[],say=[];
+  S.log.forEach(function(l){if(l.kind==='choice'&&!(l.node in first))first[l.node]=l;});
+  Object.keys(first).forEach(function(k){var n=nodes[k],c=n&&n.choices&&n.choices[first[k].i];if(!c)return;var g=choiceGood(n,c);if(g!==null)dec.push(g?1:0);});
+  S.log.forEach(function(l){var n=nodes[l.node];if(!n)return;
+    if(l.kind==='multi'){var need=n.correct||[],sel=l.sel||[],hit=0,ex=0;sel.forEach(function(i){need.indexOf(i)>-1?hit++:ex++;});
+      if(need.length)notc.push(Math.max(0,Math.min(1,(hit-ex)/need.length)));}
+    if(l.kind==='written'){var m=l.met||[];if(m.length)say.push(m.filter(Boolean).length/m.length);}});
+  var avg=function(a){return a.length?a.reduce(function(x,y){return x+y;},0)/a.length:null;};
+  var fn=avg(notc),fd=avg(dec),fw=avg(say),all=[fn,fd,fw].filter(function(x){return x!=null;});
+  if(!all.length)return null;
+  return {v:1,s:s.id,t:s.title,a:no,b:[bandOf(fn),bandOf(fd),bandOf(fw)],o:bandOf(avg(all)),r:S.seed||0,d:new Date().toISOString().slice(0,10)};}
+function cardCode(endKey,name){var c=cardData();if(!c)return '';c.n=name||'';return 'CARD1:'+b64(JSON.stringify(c));}
+function cardUrl(name){var c=cardCode(null,name);return c?(DATA.cardUrl||CARD_URL)+'#c='+c.slice(6):'';}
+function cardHTML(){if(!cardData())return '';
+  return '<div class="send pcard"><h3>Make your persona card</h3>'+
+    '<p>See which Swanubhava&trade; persona this run brought out, and share the card if you like. It shows your name, the scenario and indicative bands - never your answers. You can take your name off on the card page.</p>'+
+    '<div class="row"><a class="sbtn" id="cardGo" href="#" target="_blank" rel="noopener">Make my persona card</a></div>'+
+    '<p class="sm"><b>Send your result to your trainer below for your full Swanubhava Revelation.</b></p></div>';}
 function copyText(t,done){var fb=function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
     try{document.execCommand('copy');}catch(x){}document.body.removeChild(ta);done();};
   try{if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,fb);else fb();}catch(x){fb();}}
-function wireSend(endKey,e){var to=DATA.sendTo||{},inp=document.getElementById('lname');if(!inp)return;
+function wireSend(endKey,e){var inp=document.getElementById('lname');if(!inp)return;
   function upd(){var nm=inp.value.trim();try{localStorage.setItem('pup-name',nm);}catch(x){}
-    var t=sendText(endKey,e,nm),wa=String(to.whatsapp||'').replace(/[^0-9]/g,'');
-    document.getElementById('sendWa').href='https://wa.me/'+wa+'?text='+encodeURIComponent(t);
-    document.getElementById('sendMail').href='mailto:'+encodeURIComponent(to.email||'')+'?subject='+
-      encodeURIComponent('Puppeteer result - '+byId(S.sc).title+(nm?' - '+nm:''))+'&body='+encodeURIComponent(t);}
+    var t=sendText(endKey,e,nm);
+    /* v0.5: mailto needs a mail app set as the default, and on many laptops there is none (the browser then asks
+       which app to open, and a browser opens blank). Gmail and Outlook on the web need only a browser. */
+    var to=encodeURIComponent(sendEmail()),su=encodeURIComponent('Puppeteer result - '+byId(S.sc).title+(nm?' - '+nm:'')),bo=encodeURIComponent(t);
+    document.getElementById('sendGmail').href='https://mail.google.com/mail/?view=cm&fs=1&to='+to+'&su='+su+'&body='+bo;
+    document.getElementById('sendOutlook').href='https://outlook.office.com/mail/deeplink/compose?to='+to+'&subject='+su+'&body='+bo;
+    document.getElementById('sendMail').href='mailto:'+to+'?subject='+su+'&body='+bo;
+    var cg=document.getElementById('cardGo');if(cg)cg.href=cardUrl(nm);}
   inp.addEventListener('input',upd);upd();
+  /* every send also copies the result, so a mail page that drops a long body is one paste away */
+  ['sendGmail','sendOutlook','sendMail'].forEach(function(id){document.getElementById(id).addEventListener('click',function(){
+    copyText(sendText(endKey,e,inp.value.trim()),function(){var c=document.getElementById('sendCopy');if(c)c.textContent='Copied too';});});});
   document.getElementById('sendCopy').addEventListener('click',function(){var b=this;
     copyText(sendText(endKey,e,inp.value.trim()),function(){b.textContent='Copied';});});
   document.getElementById('saveRep').addEventListener('click',function(){var b=this;
@@ -1182,8 +1227,7 @@ renderHub();
 <script type="text/plain" id="sample">{
  "deckTitle": "The Puppeteer",
  "sendTo": {
-  "whatsapp": "",
-  "email": ""
+  "email": "swanubhava.by.gsj@gmail.com"
  },
  "scenarios": [
   {
@@ -1552,11 +1596,28 @@ renderHub();
  ]
 }
 </script>
-<script type="text/plain" id="docsrc"><h2>What changed in v0.3</h2>
+<script type="text/plain" id="docsrc"><h2>What changed in v0.5</h2>
+<ul>
+<li><b>No Rubric button for learners.</b> Learners no longer see a Rubric button on the written answer, and their screen says 'Graded against 3 criteria', then '2 of 3 criteria met'. The coaching after each attempt still says what is missing. A scenario with <code>"showRubric": true</code> (a rubric-teaching one) still shows its rubric to everyone, open.</li>
+<li><b>Send with Gmail or Outlook.</b> 'Send by email' used a mailto: link, which needs a mail app set as the default - on many laptops there is none, so the browser asked which app to use, and choosing a browser opened a blank window. The send box now has Send with Gmail and Send with Outlook, which open the web mail page with the email written, plus Mail app (the old mailto) and Copy result. Each send button also copies the result, in case the mail page drops a long body.</li>
+<li><b>Persona card.</b> When a scenario carries an anchor, the ending has a 'Make my persona card' box above the send box. It opens the card page (<code>https://gsj24983.github.io/swanubhava-play/card.html</code>, or the deck's <code>cardUrl</code>) with a card code in the link. The engine works out three indicative bands - Noticing from the notice questions, Deciding from first picks on each decision, Saying it from the written criteria - and an overall band. The code carries the scenario, anchor number, bands, the learner's name and a random number that picks the persona; never choices or answers. The copied result also ends with the card code, so the card page can read a pasted result.</li>
+<li><b>Open scenario file.</b> On the Learner result tab. Pick a scenario file you exported and its scenario joins the JSON on the left, so a learner's result for it can be read. A .json file works as well.</li>
+<li>The criteria are still inside every exported file, because grading runs in the learner's browser. Hiding the button stops a casual look, not someone reading the page source.</li>
+</ul>
+
+<h2>What changed in v0.4</h2>
+<ul>
+<li><b>Send to trainer is email and copy only.</b> The WhatsApp button is gone. Learners send their result by email, copy it, or save their report.</li>
+<li><b>A default address.</b> When the deck sets no <code>sendTo.email</code>, 'Send by email' goes to <code>swanubhava.by.gsj@gmail.com</code>. The address shows under the buttons, so a learner whose mail app does not open can copy the result and send it themselves.</li>
+<li><b>A consent line</b> sits under the name field: 'By sending this, you agree that Gaurav Joshi sees your name, choices and written answers to give you feedback. Your name is optional.'</li>
+<li>Older files with <code>sendTo.whatsapp</code> still load and play; the number is ignored.</li>
+</ul>
+
+<h2>What changed in v0.3</h2>
 <ul>
 <li><b>Trainee edition.</b> This public Studio builds scenarios and trainee files. 'Export for trainees' removes the trainer-only fields (<code>trainerNote</code>, <code>reveals</code>, <code>redFlags</code>), so a curious learner can't read them in the page source. The trainer view, trainer export and class dashboard are in a separate edition.</li>
 <li><b>Briefing and Rubric buttons.</b> The old <b>i</b> and <b>e</b> buttons now say what they do, which matters most on a phone.</li>
-<li><b>Send to trainer.</b> The last screen asks for the learner's name and sends the result by WhatsApp or email, or copies it. The learner can also save a personal report.</li>
+<li><b>Send to trainer.</b> The last screen asks for the learner's name and sends the result by email, or copies it. The learner can also save a personal report.</li>
 <li><b>Learner result.</b> Paste one learner's message and see their path - every decision and what it led to - with their written answer and criteria.</li>
 </ul>
 
@@ -1567,7 +1628,7 @@ renderHub();
 <h2>Scenario shape</h2>
 <pre>{
   "deckTitle": "The Puppeteer",
-  "sendTo": {"whatsapp":"919800000000","email":"you@example.com"},   <span class="k">// v0.3, optional - where 'Send to trainer' goes</span>
+  "sendTo": {"email":"swanubhava.by.gsj@gmail.com"},   <span class="k">// optional - where 'Send by email' goes. Left out, it goes to this address</span>
   "scenarios": [{
     "id": "signoff",              <span class="k">// slug, appears in the session code</span>
     "title": "...", "kicker": "...", "tag": "Product analysis",
@@ -1649,15 +1710,14 @@ renderHub();
 <pre>"context":[{"label":"Policy note","text":"Refunds over 5000 need a second approver."}]</pre>
 <p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
 
-<h2>Send to trainer and result codes<span class="new">v0.3</span></h2>
-<p>The last screen of every run now has a 'Send your result to your trainer' box. The learner types a name and taps one of:</p>
+<h2>Send to trainer and result codes<span class="new">v0.4</span></h2>
+<p>The last screen of every run has a 'Send your result to your trainer' box. The learner types a name if they want to - it is optional - and under the name field reads the consent line: 'By sending this, you agree that Gaurav Joshi sees your name, choices and written answers to give you feedback. Your name is optional.' Then they tap one of:</p>
 <ul>
-<li><b>Send on WhatsApp</b> - opens WhatsApp with the result filled in, to the number in <code>sendTo.whatsapp</code> (digits with country code, for example <code>919800000000</code>). Leave it blank and the learner picks the chat.</li>
-<li><b>Send by email</b> - opens their mail app with the result, to <code>sendTo.email</code>.</li>
-<li><b>Copy result</b> - for anything else: Teams, a Google Form, a class channel.</li>
+<li><b>Send by email</b> - opens their mail app with the result filled in, to <code>sendTo.email</code>, or to <code>swanubhava.by.gsj@gmail.com</code> when the deck sets none. The address is shown under the buttons.</li>
+<li><b>Copy result</b> - for anything else: Teams, a Google Form, a class channel, or when the mail app does not open.</li>
 <li><b>Save my report</b> - downloads a small page with their choices, what they wrote, which criteria they met and the ending. It is theirs to keep.</li>
 </ul>
-<p>The ending screen no longer shows a separate session summary (v0.3) - the send box replaces it. The message it sends holds the plain summary and a <b>result code</b> starting <code>PUP2:</code>. The code carries every choice, every pick in a multi, the written answer, which criteria it met, the number of attempts and whether the model answer was used. It is encoded, not encrypted: anyone with the code can decode it, so treat it like the answer itself. The older <code>PUP|</code> line stays in the summary for your spreadsheets.</p>
+<p>The ending screen does not show a separate session summary - the send box replaces it. The message it sends holds the plain summary and a <b>result code</b> starting <code>PUP2:</code>. The code carries every choice, every pick in a multi, the written answer, which criteria it met, the number of attempts and whether the model answer was used. It is encoded, not encrypted: anyone with the code can decode it, so treat it like the answer itself. The older <code>PUP|</code> line stays in the summary for your spreadsheets.</p>
 
 <h2>Learner result<span class="new">v0.3</span></h2>
 <p>Open the <b>Learner result</b> tab above the preview, paste one learner's message - a whole WhatsApp or email message is fine - and press <b>Show result</b>. Keep their scenario loaded on the left. You see their path as a diagram, each choice, what they noticed and missed, their written answer and which criteria it met. It reads the first <code>PUP2:</code> code only; the class dashboard is in the trainer edition. Nothing here leaves your browser.</p>
@@ -1690,7 +1750,7 @@ renderHub();
 <li>A line starting <code>- </code> - a bullet. Consecutive bullet lines, even with a blank line between them, make one list.</li>
 <li>A line starting <code>1. </code> - a numbered list. Numbering starts from the first number you write.</li>
 </ul>
-<p>Option labels, keywords, model answers, trainer notes and learners' own answers stay plain. The session summary, WhatsApp message and dashboard excerpts drop the marks.</p>
+<p>Option labels, keywords, model answers, trainer notes and learners' own answers stay plain. The session summary, the email message and dashboard excerpts drop the marks.</p>
 
 <h2>Endings</h2>
 <pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",
@@ -1792,7 +1852,7 @@ function validate(json){
       if((k==='trainerNote'||k==='reveals')&&typeof v!=='string')e.push(where+'"'+k+'" must be text');
       else if(v&&typeof v==='object')chkTrainer(v,where);});
   }
-  if(json.sendTo!=null&&(typeof json.sendTo!=='object'||Array.isArray(json.sendTo)))e.push('sendTo must look like {"whatsapp":"919800000000","email":"you@example.com"}');
+  if(json.sendTo!=null&&(typeof json.sendTo!=='object'||Array.isArray(json.sendTo)))e.push('sendTo must look like {"email":"you@example.com"}');
   if(!json.scenarios||!json.scenarios.length){e.push('no scenarios array');return e;}
   json.scenarios.forEach(function(s,si){
     var p='scenario['+si+'] '+(s.id||'(no id)')+': ';
@@ -1901,7 +1961,7 @@ function download(view){
   setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
 }
 
-var SKELETON={deckTitle:'The Puppeteer',sendTo:{whatsapp:'',email:''},scenarios:[{
+var SKELETON={deckTitle:'The Puppeteer',sendTo:{email:'swanubhava.by.gsj@gmail.com'},scenarios:[{
   id:'new_scenario',title:'Untitled scenario',kicker:'',tag:'Training',meta:'5 min - 2 decisions',
   thumb:'stage',blurb:'One sentence of tension. Something is at stake and the learner has to decide.',
   steps:['Briefing','The decision','Write it down','Debrief'],start:'brief',
@@ -1921,6 +1981,43 @@ var SKELETON={deckTitle:'The Puppeteer',sendTo:{whatsapp:'',email:''},scenarios:
     partial:{step:3,scene:'storm',title:'',moral:'',verdict:'',revealed:[['','']]}
   }
 }]};
+
+/* ---------------------------- v0.5: open a scenario file ---------------------------- */
+/* An exported scenario file (builder or Studio, trainee or trainer) carries its deck as 'var DATA = {...};'.
+   Read it back, so results for a scenario built elsewhere can be read here. A .json file works as well. */
+function deckFromFile(text){var t=String(text||''),view=null,j;
+  if(/^\s*[\[{]/.test(t)){j=JSON.parse(t);}
+  else{var a=t.indexOf('var DATA = ');if(a<0)throw new Error('no Puppeteer scenario inside');
+    var b=t.indexOf('\nvar VIEW = ',a);if(b<0)throw new Error('no Puppeteer scenario inside');
+    var raw=t.slice(a+11,b).replace(/\/\*__SCENARIO_JSON__\*\/|\/\*__END__\*\//g,'').trim().replace(/;$/,'');
+    j=JSON.parse(raw);var m=t.slice(b,b+80).match(/\/\*__VIEW__\*\/'(\w+)'/);view=m?m[1]:null;}
+  if(j&&!j.scenarios&&j.id&&j.nodes)j={deckTitle:'The Puppeteer',scenarios:[j]};
+  if(!j||!Array.isArray(j.scenarios)||!j.scenarios.length)throw new Error('no scenarios in it');
+  return {deck:j,view:view};}
+function isSampleDeck(d){var smp=JSON.parse(document.getElementById('sample').textContent);
+  return !d||!d.scenarios||!d.scenarios.length||JSON.stringify(d)===JSON.stringify(smp);}
+function mergeDecks(base,add){
+  if(isSampleDeck(base))return JSON.parse(JSON.stringify(add));
+  var out=JSON.parse(JSON.stringify(base)),at={};out.scenarios.forEach(function(x,i){at[x.id]=i;});
+  add.scenarios.forEach(function(x){if(x.id in at)out.scenarios[at[x.id]]=x;else{at[x.id]=out.scenarios.length;out.scenarios.push(x);}});
+  return out;}
+function openFiles(files){var list=Array.prototype.slice.call(files||[]);if(!list.length)return;
+  var notes=[],thin=[],left=list.length,cur;try{cur=JSON.parse(srcEl.value);}catch(x){cur=null;}
+  list.forEach(function(f){var rd=new FileReader();
+    rd.onload=function(){try{var got=deckFromFile(rd.result);cur=mergeDecks(cur,got.deck);
+        got.deck.scenarios.forEach(function(x){notes.push(x.title||x.id);});
+        if(got.view==='trainee')thin.push(f.name);}
+      catch(ex){notes.push(f.name+' could not be read ('+ex.message+')');}
+      if(--left===0)done();};
+    rd.onerror=function(){notes.push(f.name+' could not be read');if(--left===0)done();};
+    rd.readAsText(f);});
+  function done(){if(cur){srcEl.value=JSON.stringify(cur,null,2);run();}
+    var msg='Loaded: '+notes.join('; ')+'.';
+    if(thin.length)msg+=' '+thin.join(', ')+(thin.length>1?' are trainee files':' is a trainee file')+
+      ': it has no reveals lines, trainer notes or red flags, so the dashboard cannot say what each choice suggests. Open the trainer file for the full picture.';
+    tipEl.textContent=msg;tipEl.classList.remove('hidden');
+    if(D.results&&D.results.length)renderDash();
+    document.getElementById('fileIn').value='';}}
 
 /* ---------------------------- learner result (trainee edition: one learner, one scenario) ---------------------------- */
 var D={results:[],open:null};
@@ -1976,6 +2073,8 @@ function renderDash(){var box=document.getElementById('dashOut'),deck=curDeck(),
 
 /* ---------------------------- wiring ---------------------------- */
 document.getElementById('btnRun').addEventListener('click',run);
+document.getElementById('btnOpenFile').addEventListener('click',function(){document.getElementById('fileIn').click();});
+document.getElementById('fileIn').addEventListener('change',function(){openFiles(this.files);});
 document.getElementById('btnExportT').addEventListener('click',function(){download('trainee');});
 document.getElementById('btnSample').addEventListener('click',function(){
   srcEl.value=JSON.stringify(JSON.parse(document.getElementById('sample').textContent),null,2);run();});

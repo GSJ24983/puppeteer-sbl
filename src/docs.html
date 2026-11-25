@@ -1,8 +1,25 @@
+<h2>What changed in v0.5</h2>
+<ul>
+<li><b>No Rubric button for learners.</b> Learners no longer see a Rubric button on the written answer, and their screen says 'Graded against 3 criteria', then '2 of 3 criteria met'. The coaching after each attempt still says what is missing. A scenario with <code>"showRubric": true</code> (a rubric-teaching one) still shows its rubric to everyone, open.</li>
+<li><b>Send with Gmail or Outlook.</b> 'Send by email' used a mailto: link, which needs a mail app set as the default - on many laptops there is none, so the browser asked which app to use, and choosing a browser opened a blank window. The send box now has Send with Gmail and Send with Outlook, which open the web mail page with the email written, plus Mail app (the old mailto) and Copy result. Each send button also copies the result, in case the mail page drops a long body.</li>
+<li><b>Persona card.</b> When a scenario carries an anchor, the ending has a 'Make my persona card' box above the send box. It opens the card page (<code>https://gsj24983.github.io/swanubhava-play/card.html</code>, or the deck's <code>cardUrl</code>) with a card code in the link. The engine works out three indicative bands - Noticing from the notice questions, Deciding from first picks on each decision, Saying it from the written criteria - and an overall band. The code carries the scenario, anchor number, bands, the learner's name and a random number that picks the persona; never choices or answers. The copied result also ends with the card code, so the card page can read a pasted result.</li>
+<li><b>Open scenario file.</b> On the Learner result tab. Pick a scenario file you exported and its scenario joins the JSON on the left, so a learner's result for it can be read. A .json file works as well.</li>
+<li>The criteria are still inside every exported file, because grading runs in the learner's browser. Hiding the button stops a casual look, not someone reading the page source.</li>
+</ul>
+
+<h2>What changed in v0.4</h2>
+<ul>
+<li><b>Send to trainer is email and copy only.</b> The WhatsApp button is gone. Learners send their result by email, copy it, or save their report.</li>
+<li><b>A default address.</b> When the deck sets no <code>sendTo.email</code>, 'Send by email' goes to <code>swanubhava.by.gsj@gmail.com</code>. The address shows under the buttons, so a learner whose mail app does not open can copy the result and send it themselves.</li>
+<li><b>A consent line</b> sits under the name field: 'By sending this, you agree that Gaurav Joshi sees your name, choices and written answers to give you feedback. Your name is optional.'</li>
+<li>Older files with <code>sendTo.whatsapp</code> still load and play; the number is ignored.</li>
+</ul>
+
 <h2>What changed in v0.3</h2>
 <ul>
 <li><b>Trainee edition.</b> This public Studio builds scenarios and trainee files. 'Export for trainees' removes the trainer-only fields (<code>trainerNote</code>, <code>reveals</code>, <code>redFlags</code>), so a curious learner can't read them in the page source. The trainer view, trainer export and class dashboard are in a separate edition.</li>
 <li><b>Briefing and Rubric buttons.</b> The old <b>i</b> and <b>e</b> buttons now say what they do, which matters most on a phone.</li>
-<li><b>Send to trainer.</b> The last screen asks for the learner's name and sends the result by WhatsApp or email, or copies it. The learner can also save a personal report.</li>
+<li><b>Send to trainer.</b> The last screen asks for the learner's name and sends the result by email, or copies it. The learner can also save a personal report.</li>
 <li><b>Learner result.</b> Paste one learner's message and see their path - every decision and what it led to - with their written answer and criteria.</li>
 </ul>
 
@@ -13,7 +30,7 @@
 <h2>Scenario shape</h2>
 <pre>{
   "deckTitle": "The Puppeteer",
-  "sendTo": {"whatsapp":"919800000000","email":"you@example.com"},   <span class="k">// v0.3, optional - where 'Send to trainer' goes</span>
+  "sendTo": {"email":"swanubhava.by.gsj@gmail.com"},   <span class="k">// optional - where 'Send by email' goes. Left out, it goes to this address</span>
   "scenarios": [{
     "id": "signoff",              <span class="k">// slug, appears in the session code</span>
     "title": "...", "kicker": "...", "tag": "Product analysis",
@@ -95,15 +112,14 @@
 <pre>"context":[{"label":"Policy note","text":"Refunds over 5000 need a second approver."}]</pre>
 <p>Grading is client-side keyword matching, deliberately. An API key in a shareable file is an exposed key. In a live session the rubric on screen is the artifact - you grade in the room.</p>
 
-<h2>Send to trainer and result codes<span class="new">v0.3</span></h2>
-<p>The last screen of every run now has a 'Send your result to your trainer' box. The learner types a name and taps one of:</p>
+<h2>Send to trainer and result codes<span class="new">v0.4</span></h2>
+<p>The last screen of every run has a 'Send your result to your trainer' box. The learner types a name if they want to - it is optional - and under the name field reads the consent line: 'By sending this, you agree that Gaurav Joshi sees your name, choices and written answers to give you feedback. Your name is optional.' Then they tap one of:</p>
 <ul>
-<li><b>Send on WhatsApp</b> - opens WhatsApp with the result filled in, to the number in <code>sendTo.whatsapp</code> (digits with country code, for example <code>919800000000</code>). Leave it blank and the learner picks the chat.</li>
-<li><b>Send by email</b> - opens their mail app with the result, to <code>sendTo.email</code>.</li>
-<li><b>Copy result</b> - for anything else: Teams, a Google Form, a class channel.</li>
+<li><b>Send by email</b> - opens their mail app with the result filled in, to <code>sendTo.email</code>, or to <code>swanubhava.by.gsj@gmail.com</code> when the deck sets none. The address is shown under the buttons.</li>
+<li><b>Copy result</b> - for anything else: Teams, a Google Form, a class channel, or when the mail app does not open.</li>
 <li><b>Save my report</b> - downloads a small page with their choices, what they wrote, which criteria they met and the ending. It is theirs to keep.</li>
 </ul>
-<p>The ending screen no longer shows a separate session summary (v0.3) - the send box replaces it. The message it sends holds the plain summary and a <b>result code</b> starting <code>PUP2:</code>. The code carries every choice, every pick in a multi, the written answer, which criteria it met, the number of attempts and whether the model answer was used. It is encoded, not encrypted: anyone with the code can decode it, so treat it like the answer itself. The older <code>PUP|</code> line stays in the summary for your spreadsheets.</p>
+<p>The ending screen does not show a separate session summary - the send box replaces it. The message it sends holds the plain summary and a <b>result code</b> starting <code>PUP2:</code>. The code carries every choice, every pick in a multi, the written answer, which criteria it met, the number of attempts and whether the model answer was used. It is encoded, not encrypted: anyone with the code can decode it, so treat it like the answer itself. The older <code>PUP|</code> line stays in the summary for your spreadsheets.</p>
 
 <h2>Learner result<span class="new">v0.3</span></h2>
 <p>Open the <b>Learner result</b> tab above the preview, paste one learner's message - a whole WhatsApp or email message is fine - and press <b>Show result</b>. Keep their scenario loaded on the left. You see their path as a diagram, each choice, what they noticed and missed, their written answer and which criteria it met. It reads the first <code>PUP2:</code> code only; the class dashboard is in the trainer edition. Nothing here leaves your browser.</p>
@@ -136,7 +152,7 @@
 <li>A line starting <code>- </code> - a bullet. Consecutive bullet lines, even with a blank line between them, make one list.</li>
 <li>A line starting <code>1. </code> - a numbered list. Numbering starts from the first number you write.</li>
 </ul>
-<p>Option labels, keywords, model answers, trainer notes and learners' own answers stay plain. The session summary, WhatsApp message and dashboard excerpts drop the marks.</p>
+<p>Option labels, keywords, model answers, trainer notes and learners' own answers stay plain. The session summary, the email message and dashboard excerpts drop the marks.</p>
 
 <h2>Endings</h2>
 <pre>{"step":4,"scene":"launch","title":"...","moral":"one line, italic",

@@ -2,6 +2,13 @@
 
 The Studio's version shows in its header, beside the title. Every exported scenario carries it too: hover 'Learn by deciding' in the top bar, or look for `<meta name="generator">` in the file. `index.html` is always the latest; `releases/` keeps a named copy of each version.
 
+## v0.5 - 25 Nov 2026
+
+- **No Rubric button for learners.** The written answer shows 'Graded against 3 criteria', then '2 of 3 criteria met'. The coaching after each attempt still says what is missing. `"showRubric": true` still shows the rubric, open, for a rubric-teaching scenario.
+- **Send with Gmail or Outlook.** The send box opens Gmail or Outlook on the web with the email written, keeps a Mail app link and Copy result, and every send also copies the result. WhatsApp is gone; email goes to `sendTo.email`, or swanubhava.by.gsj@gmail.com when none is set, with a consent line under the name field.
+- **Persona card.** Scenarios tagged with a Swanubhava anchor end with 'Make my persona card', which opens the card page on swanubhava-play with indicative bands and no answers.
+- **Open scenario file** on the Learner result tab reads an exported scenario file back into the JSON pane.
+
 ## v0.3 - 19 Nov 2026
 
 - **Text formatting (23 Nov).** Narrative, consequence, lesson, prompt, question and verdict text take `**bold**`, `__underline__`, `- ` bullets and `1. ` numbering, shown formatted to learners and in their report. Plain places drop the marks; everything else is still escaped.
