@@ -260,6 +260,8 @@ figure.blk.img .b-cap{font-weight:400;margin:8px 6px 2px}
 .send .sbtn{display:inline-block;text-decoration:none;background:var(--teal);color:var(--onTeal);border:0;border-radius:8px;padding:9px 14px;font-weight:650;font-size:14px;cursor:pointer;font-family:inherit}
 .send .sbtn.alt{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
 .send .sm{font-size:12.5px;color:var(--mute);margin:8px 0 0}
+.send .callout{display:flex;gap:11px;align-items:center;margin-top:14px;padding:11px 14px;border-radius:10px;background:rgba(242,193,78,.13);border:1px solid var(--gold);color:var(--ink);font-size:14.5px;line-height:1.45}
+.send .callout svg{flex:none;color:var(--gold)}.send .callout b{color:var(--gold)}.send .callout .arr{margin-left:auto;font-size:20px;font-weight:700;color:var(--gold)}
 </style>
 </head>
 <body>
@@ -1296,7 +1298,8 @@ function cardHTML(){if(!cardData())return '';
   return '<div class="send pcard"><h3>Make your persona card</h3>'+
     '<p>See which Swanubhava&trade; persona this run brought out, and share the card if you like. It shows your name, the scenario and indicative bands - never your answers. You can take your name off on the card page.</p>'+
     '<div class="row"><a class="sbtn" id="cardGo" href="#" target="_blank" rel="noopener">Make my persona card</a></div>'+
-    '<p class="sm"><b>Send your result to your trainer below for your full Swanubhava Revelation.</b></p></div>';}
+    '<div class="callout"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>'+
+    '<span>Want the full read of your decisions? <b>Send your result to your trainer below</b> for your personal Swanubhava Revelation.</span><span class="arr" aria-hidden="true">&darr;</span></div></div>';}
 function copyText(t,done){var fb=function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
     try{document.execCommand('copy');}catch(x){}document.body.removeChild(ta);done();};
   try{if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,fb);else fb();}catch(x){fb();}}
