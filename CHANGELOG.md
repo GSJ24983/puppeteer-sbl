@@ -4,6 +4,7 @@ The Studio's version shows in its header, beside the title. Every exported scena
 
 ## v0.5 - 25 Nov 2026
 
+- **Exports stay out of search results.** Every exported scenario file carries a noindex tag, so a file put on a public site is not listed by Google or Bing. Anyone with the link can still open it.
 - **No Rubric button for learners.** The written answer shows 'Graded against 3 criteria', then '2 of 3 criteria met'. The coaching after each attempt still says what is missing. `"showRubric": true` still shows the rubric, open, for a rubric-teaching scenario.
 - **Send with Gmail or Outlook.** The send box opens Gmail or Outlook on the web with the email written, keeps a Mail app link and Copy result, and every send also copies the result. WhatsApp is gone; email goes to `sendTo.email`, or swanubhava.by.gsj@gmail.com when none is set, with a consent line under the name field.
 - **Persona card.** Scenarios tagged with a Swanubhava anchor end with 'Make my persona card', which opens the card page on swanubhava-play with indicative bands and no answers.

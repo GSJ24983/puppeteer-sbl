@@ -121,7 +121,8 @@ ok(!d.getElementById('modelBtn'),'v0.3: no model answer button for trainees');
  tr.goTo('n3');
  ok(!td.getElementById('modelBtn'),'no model answer button in any view of the trainee edition');
  const tt=tw.build(withNotes,'trainee');
- ok(!tt.includes('secret note'),'trainee export strips trainer-only fields');}
+ ok(!tt.includes('secret note'),'trainee export strips trainer-only fields')
+ ok(/<meta name="robots" content="noindex, nofollow">/.test(tt.split('<title>')[0]),'exports ask search engines not to list them');}
 
 // speaker-framed prompt
 const jd=JSON.parse(fs.readFileSync(SAMPLE,'utf8'));
